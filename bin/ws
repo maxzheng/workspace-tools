@@ -96,7 +96,7 @@ def setup_argparse(parser):
   push_parser.add_argument('branch', nargs='?', help='The branch to push. Defaults to current branch.')
   push_parser.set_defaults(command=push)
 
-  setup_parser = subparsers.add_parser('setup', description=SETUP_DESCRIPTION, formatter_class=argparse.RawDescriptionHelpFormatter, help='Optional (refer to setup --help). Setups workspace environment. Run from primary workspace directory.')
+  setup_parser = subparsers.add_parser('setup', description=SETUP_DESCRIPTION, formatter_class=argparse.RawDescriptionHelpFormatter, help='Optional (refer to setup --help). Setup workspace environment. Run from primary workspace directory.')
   setup_parser.add_argument('-c', '--commands', action='store_true', help='Add convenience bash function for certain commands, such as checkout to run "workspace checkout"')
   setup_parser.add_argument('-a', '--commands-with-aliases', action='store_true', help='Same as --commands plus add shortcut aliases, like "co" for checkout. This is for those developers that want to get as much done with the least key strokes - true efficienist! ;)')
   setup_parser.set_defaults(command=setup)

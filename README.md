@@ -21,7 +21,33 @@ To get started
     - Product that use svn is checked out with git-svn
 * All commands are named appropriately for what they do, but see its --help for additional info.
 
-All of its commands will act differently based on if it is run from a repository (MP) or the workspace that contains repositories.
+Most commands will act differently based on where they are run from:
 * When run from a repository, the command applies to that repository only.
 * When run from a workspace that contains many repository, the command will recursively run against each repository.
   Some commands won't run in this mode, such as commit or push (but may in the future).
+
+Usage
+-----
+usage: ws [-h] [-v] [--debug]
+          {status,ci,co,log,di,up,setup,update,st,clean,commit,push,diff,checkout}
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show program's version number and exit
+  --debug               Turn on debug mode
+
+sub-commands:
+  {status,ci,co,log,di,up,setup,update,st,clean,commit,push,diff,checkout}
+                        List of sub-commands
+    checkout (co)       Checkout products
+    clean               Clean workspace by removing .pyc files
+    commit (ci)         Commit all changes locally, including new files.
+    diff (di)           Show diff on current product or all products in
+                        workspace
+    log                 Show commit logs
+    push                Push changes for branch
+    setup               Optional (refer to setup --help). Setup workspace
+                        environment. Run from primary workspace directory.
+    status (st)         Show status on current product or all products in
+                        workspace
+    update (up)         Update current product or all products in workspace
