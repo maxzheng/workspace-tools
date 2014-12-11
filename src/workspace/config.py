@@ -21,10 +21,6 @@ def product_groups():
   return dict((group, names.split()) for group, names in config().items('product_groups'))
 
 
-def get_command(key):
-  return get_config('commands', key)
-
-
 def get_pref(key):
   return get_config('preferences', key)
 

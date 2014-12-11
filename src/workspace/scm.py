@@ -6,7 +6,7 @@ import sys
 
 from brownie.caching import memoize
 
-from workspace.config import get_command
+from workspace.config import get_pref
 from workspace.utils import run, silent_run, parent_path_with_dir
 
 
@@ -16,22 +16,60 @@ log = logging.getLogger(__name__)
 SVN_COMMIT_HEADER_RE = re.compile('^(-+|r\d+\s.*\slines?|\s+)$')
 GITIGNORE_FILE = '.gitignore'
 GITIGNORE = """\
-*.egg
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
 *.egg-info/
-*.pyc
-*.pyo
-*.sublime-*
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
 .coverage
-.env
-.idea/
-.tox*
-.venv*
-/MANIFEST
-/activate
-/build/
-/config/
-/dist/
-TEST-*.xml
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
 """
 
 
@@ -296,7 +334,7 @@ def master_product_list():
 def svn_revision_range(repo=None, num_commmits=1):
   cmd = ['svn', 'log', '-l', str(num_commmits)]
 
-  if repo and (repo.startswith('http://') or repo.startswith('svn+ssh://')):
+  if repo and (repo.startswith('http://') or repo.startswith('https://') or repo.startswith('svn+ssh://')):
     cmd.append(repo)
     repo = None
 
@@ -317,48 +355,54 @@ def svn_revision_range(repo=None, num_commmits=1):
       return None, None
 
 
-def checkout_product(product, checkout_path, clone_svn_commits=0):
-  """ Checks out the product. Raises on error """
+def checkout_product(product_url, checkout_path):
+  """ Checks out the product from url. Raises on error """
+  clone_svn_commits = get_pref('checkout.use_gitsvn_to_clone_svn_commits')
+  prod_name = product_name(product_url)
 
   if os.path.exists(checkout_path):
-    log.info('%s is already checked out. Updating', product)
+    log.info('%s is already checked out. Updating...', prod_name)
     if is_git_repo(checkout_path):
       checkout_branch('master', checkout_path)
     return update_repo(checkout_path)
 
-  if clone_svn_commits:
-    prod_info = master_product_list().product_info(product)
+  if clone_svn_commits and not product_url.endswith('.git'):
     try:
-      if prod_info.scm_type == 'svn':
-        log.info('Cloning last %d commit(s) for svn repo using git-svn.', clone_svn_commits)
-        if clone_svn_commits > 1:
-          log.info('This might take some time...')
+      log.info('Cloning last %d commit(s) for svn repo using git-svn.', clone_svn_commits)
+      if clone_svn_commits > 1:
+        log.info('This might take some time...')
 
-        repo = product_repo(prod_info.name)
-        svn_url = '/'.join((prod_info.scm_url_prefix, repo, prod_info.name, 'trunk'))
+      from_revision, head_revision = svn_revision_range(product_url, clone_svn_commits)
 
-        from_revision, head_revision = svn_revision_range(svn_url, clone_svn_commits)
+      if not head_revision:
+        raise Exception('Unable to get latest revision from %s' % product_url)
 
-        if not head_revision:
-          raise Exception('Unable to get latest revision from %s' % svn_url)
+      workspace_path = os.path.dirname(checkout_path)
+      revision_range = '-r%d:%s' % (from_revision, head_revision)
 
-        workspace_path = os.path.dirname(checkout_path)
-        revision_range = '-r%d:%s' % (from_revision, head_revision)
-        clone_cmd = ['git', 'svn', 'clone', revision_range, '-T', 'trunk', svn_url.rstrip('/trunk')]
-        silent_run(clone_cmd, cwd=workspace_path)
+      clone_cmd = ['git', 'svn', 'clone', revision_range]
+      if product_url.endswith('/trunk'):
+        clone_cmd.extend(['-T', 'trunk', product_url.rstrip('/trunk'), checkout_path])
+      else:
+        clone_cmd.extend([product_url, checkout_path])
 
-        gitignore_file = os.path.join(workspace_path, prod_info.name, GITIGNORE_FILE)
-        if not os.path.exists(gitignore_file):
-          with open(gitignore_file, 'w') as fp:
-            fp.write(GITIGNORE)
-          log.info('Created %s/%s. Please check that in so git ignores build/temp files.', prod_info.name, os.path.basename(gitignore_file))
+      silent_run(clone_cmd, cwd=workspace_path)
 
-        return
+      gitignore_file = os.path.join(workspace_path, prod_name, GITIGNORE_FILE)
+      if not os.path.exists(gitignore_file):
+        with open(gitignore_file, 'w') as fp:
+          fp.write(GITIGNORE)
+        log.info('Created %s/%s. Please check that in so git ignores build/temp files.', prod_name, os.path.basename(gitignore_file))
+
+      return
     except Exception as e:
-        log.warning('Falling back to svn as git-svn clone failed: %s', e)
-        shutil.rmtree(checkout_path)
+      log.exception('Falling back to svn as git-svn clone failed: %s', e)
+      shutil.rmtree(checkout_path)
 
-  silent_run(['mint', 'checkout', product, '--destination', checkout_path])
+  if product_url.endswith('.git'):
+    silent_run(['git', 'clone', product_url, checkout_path])
+  else:
+    silent_run(['svn', 'checkout', product_url, checkout_path])
 
 
 def checkout_files(files, repo_path=None):
@@ -371,3 +415,18 @@ def checkout_files(files, repo_path=None):
 
 def hard_reset(to_commit):
   run(['git', 'reset', '--hard', to_commit])
+
+
+def product_name(product_url):
+  if product_url.endswith('.git'):
+    name = os.path.basename(product_url).rstrip('.git')
+  else:
+    name = os.path.basename(product_url.rstrip('/trunk'))
+  return name
+
+
+def product_checkout_path(product_url, workspace_path=None):
+  if not workspace_path:
+    workspace_path = os.getcwd()
+
+  return os.path.join(workspace_path, product_name(product_url))

@@ -60,15 +60,3 @@ def expand_product_groups(names):
       unique_names.update(expand_product_groups(names))
 
   return sorted(list(unique_names))
-
-
-def product_checkout_path(product, workspace_path=None):
-  if get_pref('checkout.without_branch_suffix'):
-    checkout_folder = product
-  else:
-    checkout_folder = product + '_trunk'
-
-  if not workspace_path:
-    workspace_path = os.getcwd()
-
-  return os.path.join(workspace_path, checkout_folder)

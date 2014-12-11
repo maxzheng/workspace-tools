@@ -91,7 +91,7 @@ def setup_argparse(parser):
   subparsers = parser.add_subparsers(title='sub-commands', help='List of sub-commands', prog='ws')
 
   checkout_parser = subparsers.add_parser('checkout', aliases=['co'], help='Checkout products')
-  checkout_parser.add_argument('target', nargs='+', help='List of git/svn repository URLs to checkout. When inside a git repo, checkout the branch or file (revert). When inside a svn repo, revert any changes.')
+  checkout_parser.add_argument('target', nargs='+', help='List of git/svn repository URLs to checkout/clone. When inside a git repo, checkout the branch or revert changes for file(s). When inside a svn repo, revert changes for file(s)')
   checkout_parser.set_defaults(command=checkout)
 
   clean_parser = subparsers.add_parser('clean', help='Clean workspace by removing .pyc files')
