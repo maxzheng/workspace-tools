@@ -31,12 +31,12 @@ Usage
 usage: ws [-h] [-v] [--debug]
           {status,ci,co,log,di,up,setup,update,st,clean,commit,push,diff,checkout}
 
-optional arguments:
+optional arguments::
   -h, --help            show this help message and exit
   -v, --version         show program's version number and exit
   --debug               Turn on debug mode
 
-sub-commands:
+sub-commands::
   {status,ci,co,log,di,up,setup,update,st,clean,commit,push,diff,checkout}
                         List of sub-commands
     checkout (co)       Checkout products
@@ -51,3 +51,7 @@ sub-commands:
     status (st)         Show status on current product or all products in
                         workspace
     update (up)         Update current product or all products in workspace
+
+Contribute
+----------
+Github project is at https://github.com/max-zheng/workspace-tools

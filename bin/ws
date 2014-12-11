@@ -20,40 +20,13 @@ from workspace.utils import money_patch_aliases
 SETUP_DESCRIPTION = """
 Sets up workspace environment.
 
-While "workspace" will work for multiple workspaces, this should only be run in your primary workspace directory.
+While "ws" will work for multiple workspaces, this should only be run in your primary workspace directory.
 
 It sets up a "ws" bash function that goes to your workspace directory when no argument is passed in, otherwise
 runs workspace command. And also additional functions / aliases for some commands if --commands/--commands-with-aliases
 is passed in.
 
 This can be re-run to change setup.
-"""
-
-BUMP_DESCRIPTION = """
-[ INTERNAL TOOLS USE ONLY: There is no official technical support. But if you must, try your luck by emailing mzheng@ ]
-
-Bumps dependency versions of a Multiproduct.
-
-For most use cases, you should be using go/pushmyupgrade. For others, bump is here to help.
-
-To ensure transitive bumps work, for any changes that you make that requires a change from another lib,
-append 'require=' to the commit message in your lib. To require a specific version, use 'require=libB>1.2.3'.
-Then whenever someone uses 'bump' to bump versions in your lib, bump will require libB to be bumped as well.
-Obviously, if someone bumps without using "bump" then all bets are off.
-
-Examples:
-
-# Bump all dependencies - creates a new 'bump' branch, checks for new versions, commits change, and creates a RB
-$ bump
-
-# Bump only dependencies in 'deployment' group (as defined in workspace.cfg) with an optional summary message appended
-$ bump deployment -m 'Updating all deployment libs to fix big bad bug'
-
-# Bump only one dependency
-$ bump lipy-fabric
-
-# Append the bump (to a specific version for lipy-fabric - upgrade or downgrade) to an existing branch and RB id
-$ bump deployment lipy-fabric=1.23.4 --append 123456
 """
 
 
