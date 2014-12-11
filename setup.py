@@ -19,6 +19,7 @@ setuptools.setup(
 
   install_requires=[
     'brownie',
+    'subprocess32',
   ],
 
   setup_requires=['setuptools-git'],

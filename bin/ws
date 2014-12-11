@@ -1,0 +1,150 @@
+#!/usr/bin/env python
+
+"""
+"workspace" is designed to simplify development when working with multiple repositories.
+
+Why use workspace?
+* It is SCM agnostic (for git/git-svn and svn (except for commit/push command)). No need to remember different commands to run.
+* Configurable options to meet your habits (in your own ~/.config/workspace.cfg)
+* Checks out svn using git-svn by default (configurable)
+* Path aware context commands that runs across all products (try diff in workspace directory to see diffs for all products!)
+* Simplified command execution for common workflow (instead of several commands to push, just run 'push' command)
+* Easily extensible by adding your own custom commands or wrapping existing ones
+* Lastly, it has tons of cool short-cut aliases (see setup command)!!
+
+All of its commands will act differently based on if it is run from a repository (MP) or the workspace that contains repositories.
+* When run from a repository, the command applies to that repository only.
+* When run from a workspace that contains many repository, the command will recursively run against each repository.
+  Some commands won't run in this mode, such as commit or push.
+
+To get started:
+* Optionally setup workspace environment, run "ws setup -h" for options
+* To checkout a product, run: ws checkout <git or svn repository url>
+  - And product that use svn is checked out with git-svn
+* All commands are named appropriately for what they do, but see its --help for additional info.
+* Config is at .config/workspace.cfg (created by ws setup --config)
+"""
+
+import argparse
+import logging
+import pkg_resources
+import sys
+
+from workspace.commands.checkout import checkout
+from workspace.commands.clean import clean
+from workspace.commands.commit import commit
+from workspace.commands.diff import diff
+from workspace.commands.log import show_log
+from workspace.commands.update import update
+from workspace.commands.status import status
+from workspace.commands.setup import setup
+from workspace.commands.push import push
+from workspace.config import CONFIG_FILE
+from workspace.utils import money_patch_aliases
+
+SETUP_DESCRIPTION = """
+Sets up workspace environment.
+
+While "workspace" will work for multiple workspaces, this should only be run in your primary workspace directory.
+
+It sets up a "ws" bash function that goes to your workspace directory when no argument is passed in, otherwise
+runs workspace command. And also additional functions / aliases for some commands if --commands/--commands-with-aliases
+is passed in.
+
+This can be re-run to change setup.
+"""
+
+BUMP_DESCRIPTION = """
+[ INTERNAL TOOLS USE ONLY: There is no official technical support. But if you must, try your luck by emailing mzheng@ ]
+
+Bumps dependency versions of a Multiproduct.
+
+For most use cases, you should be using go/pushmyupgrade. For others, bump is here to help.
+
+To ensure transitive bumps work, for any changes that you make that requires a change from another lib,
+append 'require=' to the commit message in your lib. To require a specific version, use 'require=libB>1.2.3'.
+Then whenever someone uses 'bump' to bump versions in your lib, bump will require libB to be bumped as well.
+Obviously, if someone bumps without using "bump" then all bets are off.
+
+Examples:
+
+# Bump all dependencies - creates a new 'bump' branch, checks for new versions, commits change, and creates a RB
+$ bump
+
+# Bump only dependencies in 'deployment' group (as defined in workspace.cfg) with an optional summary message appended
+$ bump deployment -m 'Updating all deployment libs to fix big bad bug'
+
+# Bump only one dependency
+$ bump lipy-fabric
+
+# Append the bump (to a specific version for lipy-fabric - upgrade or downgrade) to an existing branch and RB id
+$ bump deployment lipy-fabric=1.23.4 --append 123456
+"""
+
+
+def setup_argparse(parser):
+  money_patch_aliases(parser)
+
+  parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + pkg_resources.get_distribution('workspace-tools').version)
+  parser.add_argument('--debug', action='store_true', help='Turn on debug mode')
+
+  subparsers = parser.add_subparsers(title='sub-commands', help='List of sub-commands', prog='ws')
+
+  checkout_parser = subparsers.add_parser('checkout', aliases=['co'], help='Checkout products')
+  checkout_parser.add_argument('target', nargs='+', help='List of git/svn repository URLs to checkout. When inside a git repo, checkout the branch or file (revert). When inside a svn repo, revert any changes.')
+  checkout_parser.set_defaults(command=checkout)
+
+  clean_parser = subparsers.add_parser('clean', help='Clean workspace by removing .pyc files')
+  clean_parser.set_defaults(command=clean)
+
+  commit_parser = subparsers.add_parser('commit', aliases=['ci'], help='Commit all changes locally, including new files.')
+  commit_parser.add_argument('msg', nargs='?', help='Optional commit message')
+  commit_parser.add_argument('-p', '--push', action='store_true', help='Push the current branch after commit')
+  commit_parser.add_argument('-b', '--branch', help='Create or use existing branch for commit. When creating, it always creates from master branch.')
+  commit_parser.add_argument('-a', '--amend', action='store_true', help='Amend last commit with any new changes made')
+  commit_parser.add_argument('-d', '--dummy', action='store_true', help='Perform a dummy commit without any changes on master branch. This implies --push. Other options are ignored.')
+  commit_parser.add_argument('--discard', metavar='branch', nargs='?', const=True, help='Discard last commit and branch if no more commits left. Defaults to existing branch. Other options are ignored.')
+  commit_parser.add_argument('--move', metavar='branch', nargs=1, help='Move last commit to branch. Other options are ignored.')
+  commit_parser.set_defaults(command=commit)
+
+  diff_parser = subparsers.add_parser('diff', aliases=['di'], help='Show diff on current product or all products in workspace')
+  diff_parser.add_argument('-m', '--master', action='store_true', help='Diff against the master branch')
+  diff_parser.set_defaults(command=diff)
+
+  log_parser = subparsers.add_parser('log', help='Show commit logs')
+  log_parser.add_argument('file', nargs='?', help='File to show logs for')
+  log_parser.add_argument('-p', '--patch', action='store_true', help='Generate patch / show diff')
+  log_parser.add_argument('-n', '--number', type=int, help='Limit number number of log entrie')
+  log_parser.set_defaults(command=show_log)
+
+  push_parser = subparsers.add_parser('push', help='Push changes for branch')
+  push_parser.add_argument('branch', nargs='?', help='The branch to push. Defaults to current branch.')
+  push_parser.set_defaults(command=push)
+
+  setup_parser = subparsers.add_parser('setup', description=SETUP_DESCRIPTION, formatter_class=argparse.RawDescriptionHelpFormatter, help='Optional (refer to setup --help). Setups workspace environment. Run from primary workspace directory.')
+  setup_parser.add_argument('-c', '--commands', action='store_true', help='Add convenience bash function for certain commands, such as checkout to run "workspace checkout"')
+  setup_parser.add_argument('-a', '--commands-with-aliases', action='store_true', help='Same as --commands plus add shortcut aliases, like "co" for checkout. This is for those developers that want to get as much done with the least key strokes - true efficienist! ;)')
+  setup_parser.set_defaults(command=setup)
+
+  status_parser = subparsers.add_parser('status', aliases=['st'], help='Show status on current product or all products in workspace')
+  status_parser.set_defaults(command=status)
+
+  update_parser = subparsers.add_parser('update', aliases=['up'], help='Update current product or all products in workspace')
+  update_parser.set_defaults(command=update)
+
+
+def main():
+  logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
+
+  parser = argparse.ArgumentParser()
+  setup_argparse(parser)
+
+  args = parser.parse_args()
+
+  if args.debug:
+    logging.root.setLevel(logging.DEBUG)
+
+  args.command(**args.__dict__)
+
+if __name__ == '__main__':
+  main()
