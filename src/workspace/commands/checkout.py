@@ -8,7 +8,16 @@ from workspace.utils import log_exception
 log = logging.getLogger(__name__)
 
 
+def setup_checkout_parser(subparsers):
+  checkout_parser = subparsers.add_parser('checkout', aliases=['co'], description=checkout.__doc__, help=checkout.__doc__)
+  checkout_parser.add_argument('target', nargs='+', help='List of git/svn repository URLs to checkout/clone. When inside a git repo, checkout the branch or revert changes for file(s). When inside a svn repo, revert changes for file(s)')
+  checkout_parser.set_defaults(command=checkout)
+
+  return checkout_parser
+
+
 def checkout(target, dependencies=None, **kwargs):
+  """ Checkout products """
 
   if is_repo():
     with log_exception():

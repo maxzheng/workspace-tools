@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import sys
@@ -42,7 +43,29 @@ COMMANDS = {
 }
 
 
+def setup_setup_parser(subparsers):
+  setup_parser = subparsers.add_parser('setup', description=setup.__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, help='Optional (refer to setup --help). Setup workspace environment. Run from primary workspace directory.')
+  group = setup_parser.add_mutually_exclusive_group()
+  group.add_argument('-c', '--commands', action='store_true', help='Add convenience bash function for certain commands, such as checkout to run "workspace checkout"')
+  group.add_argument('-a', '--commands-with-aliases', action='store_true', help='Same as --commands plus add shortcut aliases, like "co" for checkout. This is for those developers that want to get as much done with the least key strokes - true efficienist! ;)')
+  group.add_argument('--uninstall', action='store_true', help='Uninstall all functions/aliases')
+  setup_parser.set_defaults(command=setup)
+
+  return setup_parser
+
+
 def setup(commands=None, commands_with_aliases=None, **kwargs):
+  """
+  Sets up workspace environment.
+
+  While "ws" will work for multiple workspaces, this should only be run in your primary workspace directory.
+
+  It sets up a "ws" bash function that goes to your workspace directory when no argument is passed in, otherwise
+  runs workspace command. And also additional functions / aliases for some commands if --commands/--commands-with-aliases
+  is passed in.
+
+  This can be re-run to change setup.
+  """
   bashrc_content = None
   bashrc_file = "~/.bashrc"
   bashrc_path = os.path.expanduser(bashrc_file)

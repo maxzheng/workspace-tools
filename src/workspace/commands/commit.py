@@ -9,7 +9,22 @@ from workspace.commands.push import push as push_branch
 log = logging.getLogger(__name__)
 
 
+def setup_commit_parser(subparsers):
+  commit_parser = subparsers.add_parser('commit', aliases=['ci'], description=commit.__doc__, help=commit.__doc__)
+  commit_parser.add_argument('msg', nargs='?', help='Optional commit message')
+  commit_parser.add_argument('-p', '--push', action='store_true', help='Push the current branch after commit')
+  commit_parser.add_argument('-b', '--branch', help='Create or use existing branch for commit. When creating, it always creates from master branch.')
+  commit_parser.add_argument('-a', '--amend', action='store_true', help='Amend last commit with any new changes made')
+  commit_parser.add_argument('-d', '--dummy', action='store_true', help='Perform a dummy commit without any changes on master branch. This implies --push. Other options are ignored.')
+  commit_parser.add_argument('--discard', metavar='branch', nargs='?', const=True, help='Discard last commit and branch if no more commits left. Defaults to existing branch. Other options are ignored.')
+  commit_parser.add_argument('--move', metavar='branch', nargs=1, help='Move last commit to branch. Other options are ignored.')
+  commit_parser.set_defaults(command=commit)
+
+  return commit_parser
+
 def commit(msg=None, branch=None, push=False, amend=False, dummy=False, discard=False, move=None, **kwargs):
+  """ Commit all changes locally, including new files. """
+
   git_repo_check()
 
   with log_exception():

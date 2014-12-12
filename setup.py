@@ -10,12 +10,18 @@ def find_files(path):
 
 setuptools.setup(
   name='workspace-tools',
-  version='0.1.2',
+  version='0.1.3',
 
   author='Max Zheng',
   author_email='mzheng@linkedin.com',
 
   description=open('README.md').read(),
+
+  entry_points={
+    'console_scripts': [
+      'ws = workspace.controller:main',
+    ],
+  },
 
   install_requires=[
     'brownie',
@@ -30,7 +36,7 @@ setuptools.setup(
 
   setup_requires=['setuptools-git'],
 
-  scripts=find_files('bin'),
+#  scripts=find_files('bin'),
 
   classifiers=[
     'Development Status :: 5 - Production/Stable',

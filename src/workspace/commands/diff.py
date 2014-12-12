@@ -7,7 +7,17 @@ from workspace.utils import log_exception
 log = logging.getLogger(__name__)
 
 
+def setup_diff_parser(subparsers):
+  diff_parser = subparsers.add_parser('diff', aliases=['di'], description=diff.__doc__, help=diff.__doc__)
+  diff_parser.add_argument('-m', '--master', action='store_true', help='Diff against the master branch')
+  diff_parser.set_defaults(command=diff)
+
+  return subparsers
+
+
 def diff(master=False, **kwargs):
+  """ Show diff on current product or all products in workspace """
+
   optional = len(repos()) == 1
   pager = ProductPager(optional=optional)
 

@@ -6,7 +6,16 @@ from workspace.scm import stat_repo, repos, product_name_for_repo, all_branches,
 log = logging.getLogger(__name__)
 
 
+def setup_status_parser(subparsers):
+  status_parser = subparsers.add_parser('status', aliases=['st'], description=status.__doc__, help=status.__doc__)
+  status_parser.set_defaults(command=status)
+
+  return status_parser
+
+
 def status(**kwargs):
+  """ Show status on current product or all products in workspace """
+
   try:
     optional = len(repos()) == 1
     pager = ProductPager(optional=optional)

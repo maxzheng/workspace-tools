@@ -6,7 +6,16 @@ from workspace.scm import is_git_repo, checkout_branch, update_repo, repos, prod
 log = logging.getLogger(__name__)
 
 
+def setup_update_parser(subparsers):
+  update_parser = subparsers.add_parser('update', aliases=['up'], description=update.__doc__, help=update.__doc__)
+  update_parser.set_defaults(command=update)
+
+  return update_parser
+
+
 def update(**kwargs):
+  """ Update current product or all products in workspace """
+
   for repo in repos():
     log.info('Updating %s', product_name_for_repo(repo))
     try:
