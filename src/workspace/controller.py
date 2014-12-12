@@ -17,48 +17,57 @@ from workspace.config import CONFIG_FILE
 
 
 def main():
-  """ Main controller for 'ws'. Copy this to create your own controller with custom setup_parsers """
-  ws_entry_point(default_setup_argparse)
-
-
-def default_setup_argparse(parser, subparsers):
   """
-  Default setup for parsers. Copy this to customize your own.
+  Main controller for 'ws'. Copy this to create your own controller with custom _setup_parsers.
 
   To customize a command, such as checkout, do this::
 
-    checkout_parser = setup_checkout_parser(subparsers)
-    checkout_parser.add_argument('-c', '--cool-new-feature', action='store_true', help='Adds cool new feature to checkoout')
+    parser, subparsers, parsers = setup_parsers()
+    parsers['checkout'].add_argument('-c', '--cool-new-feature', action='store_true', help='Adds cool new feature to checkoout')
 
   """
+  parser, subparsers, parsers = setup_parsers()
+  ws_entry_point(parser)
+
+
+def setup_parsers():
+  """
+  Default setup for command parsers.
+
+  :ret (parser, subparsers, parsers): parser - :class:`argparse.ArgumentParser' instance
+                                      subparsers - argparse subparsers instance for parser
+                                      parsers - Dict mapping of command to its parser instance
+  """
+  parser = argparse.ArgumentParser()
   setup_parser(parser)
 
-  setup_checkout_parser(subparsers)
-  setup_clean_parser(subparsers)
-  setup_commit_parser(subparsers)
-  setup_develop_parser(subparsers)
-  setup_diff_parser(subparsers)
-  setup_log_parser(subparsers)
-  setup_push_parser(subparsers)
-  setup_setup_parser(subparsers)
-  setup_status_parser(subparsers)
-  setup_update_parser(subparsers)
-
-
-def ws_entry_point(setup_parsers):
-  """
-  Main entry point for 'ws' that sets up argparse and executes command.
-
-  :param setup_parsers: A function to setup argparse that accepts :class:`argparse.ArgumentParser` and subparsers instance.
-                         Customize arguments by providing a custom function based on default_setup_argparse.
-  """
-  logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
-
-  parser = argparse.ArgumentParser()
   _money_patch_aliases(parser)
 
   subparsers = parser.add_subparsers(title='sub-commands', help='List of sub-commands')
-  setup_parsers(parser, subparsers)
+
+  parsers = {
+    'checkout': setup_checkout_parser(subparsers),
+    'clean': setup_clean_parser(subparsers),
+    'commit': setup_commit_parser(subparsers),
+    'develop': setup_develop_parser(subparsers),
+    'diff': setup_diff_parser(subparsers),
+    'log': setup_log_parser(subparsers),
+    'push': setup_push_parser(subparsers),
+    'setup': setup_setup_parser(subparsers),
+    'status': setup_status_parser(subparsers),
+    'update': setup_update_parser(subparsers)
+  }
+
+  return parser, subparsers, parsers
+
+
+def ws_entry_point(parser):
+  """
+  Main entry point for 'ws' that sets up argparse and executes command.
+
+  :param :class:`argparse.ArgumentParser` parser:
+  """
+  logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
   args = parser.parse_args()
 
