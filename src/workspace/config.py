@@ -97,7 +97,7 @@ def write_config_template(file_path=CONFIG_FILE):
     fp.write(config_template)
 
 
-def init_config(config_content_or_files=[DEFAULT_CONFIG, CONFIG_FILE], type_maps=DEFAULT_CONFIG_TYPE_MAP):
+def init_config(config_content_or_files=[StringIO(DEFAULT_CONFIG), CONFIG_FILE], type_maps=DEFAULT_CONFIG_TYPE_MAP):
   """
   Read config string or file
 
