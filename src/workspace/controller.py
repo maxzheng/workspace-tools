@@ -13,7 +13,6 @@ from workspace.commands.update import setup_update_parser
 from workspace.commands.status import setup_status_parser
 from workspace.commands.setup import setup_setup_parser
 from workspace.commands.push import setup_push_parser
-from workspace.config import CONFIG_FILE
 
 
 def main():
