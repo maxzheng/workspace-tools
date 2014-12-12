@@ -3,6 +3,7 @@ import logging
 import pkg_resources
 import sys
 
+from workspace.config import init_config
 from workspace.commands.checkout import setup_checkout_parser
 from workspace.commands.clean import setup_clean_parser
 from workspace.commands.commit import setup_commit_parser
@@ -37,6 +38,8 @@ def setup_parsers():
                                       subparsers - argparse subparsers instance for parser
                                       parsers - Dict mapping of command to its parser instance
   """
+  logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
+
   parser = argparse.ArgumentParser()
   setup_parser(parser)
 
@@ -66,12 +69,12 @@ def ws_entry_point(parser):
 
   :param :class:`argparse.ArgumentParser` parser:
   """
-  logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
-
   args = parser.parse_args()
 
   if args.debug:
     logging.root.setLevel(logging.DEBUG)
+
+  init_config()
 
   args.command(**args.__dict__)
 

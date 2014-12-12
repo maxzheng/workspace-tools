@@ -1,24 +1,44 @@
 import ConfigParser
 import logging
 import os
+from StringIO import StringIO
 import sys
 
 from brownie.caching import memoize
 
 
 log = logging.getLogger()
+config = ConfigParser.RawConfigParser()
 
-
-CONFIG_FILE = 'workspace.cfg'
-CONFIG_FILES = (os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'etc', CONFIG_FILE),
-                      os.path.expanduser('~/.config/' + CONFIG_FILE))
-CONFIG_TYPE_MAP = {
+CONFIG_FILE = os.path.expanduser('~/.config/workspace.cfg')
+DEFAULT_CONFIG_TYPE_MAP = {
   int: ['checkout.use_gitsvn_to_clone_svn_commits']
 }
+DEFAULT_CONFIG = """
+#######################################################################################
+# Define product groups to take action upon (such as ws develop)
+#######################################################################################
+[product_groups]
+#group_name = product_checkout1 lib_checkout2
+
+
+#######################################################################################
+# XXX: Make changes to 'preferences' in your personal ~/.config/workspace.cfg config file by copying content below (NOT above)
+#      These default preferences are meant for everyone, so don't change here.
+#######################################################################################
+[preferences]
+# Check out SVN repo using git-svn and clone the specified # of commits. Set to 0 to disable git-svn clone.
+# Higher the number, the longer it takes to clone.
+checkout.use_gitsvn_to_clone_svn_commits = 10
+
+# Directory for caching, such as checkout dependencies to be bumped
+workspace.cache_directory = /var/tmp/workspace_cache
+"""
+
 
 def product_groups():
   """ Returns a dict with product group name mapped to products """
-  return dict((group, names.split()) for group, names in config().items('product_groups'))
+  return dict((group, names.split()) for group, names in config.items('product_groups'))
 
 
 def get_pref(key):
@@ -32,14 +52,11 @@ def get_config(section, key):
   get_method = get_method_map.get(key, 'get')
 
   try:
-    method = getattr(config(), get_method)
+    method = getattr(config, get_method)
     return method(section, key)
 
   except Exception as e:
-    if key in DEFAULT_CONFIGS:
-      return DEFAULT_CONFIGS[key]
-    else:
-      log.warning("%s: %s", CONFIG_FILE, e)
+    log.warning(e)
 
   return None
 
@@ -69,25 +86,44 @@ def set_config_types(type_map):
 
 def set_config(section, key, value):
   """ Sets the config value for the given section / key """
-  config().set(section, key, value)
+  config.set(section, key, value)
 
 
-@memoize
-def config():
-  """ Returns a :cls:`RawConfigParser` instance for remote and local configs """
+def write_config_template(file_path=CONFIG_FILE):
+  with open(file_path, 'w') as fp:
+    sio = StringIO()
+    config.write(sio)
+    config_template = '#' + '\n#'.join(sio.getvalue().split('\n'))
+    fp.write(config_template)
 
-  config = ConfigParser.RawConfigParser()  # Don't set defaults here as they get injected into product_groups too
+
+def init_config(config_content_or_files=[DEFAULT_CONFIG, CONFIG_FILE], type_maps=DEFAULT_CONFIG_TYPE_MAP):
+  """
+  Read config string or file
+
+  :param list/str config_files: Either string of config content or list of config fh/files to be loaded
+  :param dict type_maps: Dict of type map to pass to set_config_types
+  """
 
   try:
-    config.read(CONFIG_FILES)
+    if isinstance(config_content_or_files, str):
+      config_fp = StringIO(ccof)
+      config.readfp(config_fp)
+    else:
+      for f in config_content_or_files:
+        if isinstance(f, file):
+          config.readfp(f)
+        else:
+          config.read(f)
   except Exception as e:
     log.error(e)
     sys.exit(1)
 
   if not config.sections():
-    log.error('Failed to read from config files: %s', ', '.join(CONFIG_FILES))
+    log.error('No config sections defined in: %s', config_content_or_files)
     sys.exit(1)
 
-  set_config_types(CONFIG_TYPE_MAP)
+  if type_maps:
+    set_config_types(type_maps)
 
   return config
