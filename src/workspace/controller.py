@@ -6,6 +6,7 @@ import sys
 from workspace.commands.checkout import setup_checkout_parser
 from workspace.commands.clean import setup_clean_parser
 from workspace.commands.commit import setup_commit_parser
+from workspace.commands.develop import setup_develop_parser
 from workspace.commands.diff import setup_diff_parser
 from workspace.commands.log import setup_log_parser
 from workspace.commands.update import setup_update_parser
@@ -35,6 +36,7 @@ def default_setup_argparse(parser, subparsers):
   setup_checkout_parser(subparsers)
   setup_clean_parser(subparsers)
   setup_commit_parser(subparsers)
+  setup_develop_parser(subparsers)
   setup_diff_parser(subparsers)
   setup_log_parser(subparsers)
   setup_push_parser(subparsers)
