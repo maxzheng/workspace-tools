@@ -95,7 +95,7 @@ Now you are ready to try out the other commands yourself::
                             workspace
         update (up)         Update current product or all products in workspace
 
-Contribute
-----------
+Contribute / Report Bugs
+-------------------------
 Github project: https://github.com/max-zheng/workspace-tools
-
+Report issues/bugs: https://github.com/max-zheng/workspace-tools/issues
