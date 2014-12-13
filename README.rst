@@ -35,9 +35,9 @@ To checkout a repo::
 
     co git@github.com:max-zheng/workspace-tools.git
 
-.. note:: This would probably stuck forever if there is an input prompt as output is hidden.
-          It will be fixed once I figure out how to stream output from subprocess call.
-          For now, ensure that you are able to checkout repos using 'git clone' without prompt.
+    # This would probably stuck forever if there is an input prompt as output is hidden.
+    # It will be fixed once I figure out how to stream output from subprocess call.
+    # For now, ensure that you are able to checkout repos using 'git clone' without prompt.
 
 To update all repos in your workspace::
 
