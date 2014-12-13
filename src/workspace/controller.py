@@ -16,6 +16,19 @@ from workspace.commands.setup import setup_setup_parser
 from workspace.commands.push import setup_push_parser
 
 
+DESCRIPTION = """
+Tools to simplify workspace / scm management when working with multiple repositories.
+
+To get started
+---------------
+* Optionally setup workspace environment/shortcuts, run "wst setup -h" for options.
+    - "wst setup -a" is recommended. :)
+* To checkout a product, run: wst checkout <git or svn repository url> [<url2> ...]
+    - Product that use svn is checked out with git-svn
+* All commands are named appropriately for what they do, but see its --help for additional info.
+"""
+
+
 def main():
   """
   Main controller for 'ws'. Copy this to create your own controller with custom _setup_parsers.
@@ -40,7 +53,7 @@ def setup_parsers():
   """
   logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser(description=DESCRIPTION, formatter_class=argparse.RawDescriptionHelpFormatter)
   setup_parser(parser)
 
   _money_patch_aliases(parser)
@@ -81,6 +94,7 @@ def ws_entry_point(parser):
 
 def setup_parser(parser):
   """ Sets up the main parser """
+
   parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + pkg_resources.get_distribution('workspace-tools').version)
   parser.add_argument('--debug', action='store_true', help='Turn on debug mode')
 

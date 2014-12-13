@@ -10,7 +10,7 @@ def find_files(path):
 
 setuptools.setup(
   name='workspace-tools',
-  version='0.2.0',
+  version='0.2.1',
 
   author='Max Zheng',
   author_email='mzheng@linkedin.com',
@@ -19,7 +19,7 @@ setuptools.setup(
 
   entry_points={
     'console_scripts': [
-      'ws = workspace.controller:main',
+      'wst = workspace.controller:main',
     ],
   },
 

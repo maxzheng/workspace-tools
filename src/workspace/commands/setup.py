@@ -58,13 +58,13 @@ def setup(commands=None, commands_with_aliases=None, uninstall=False, **kwargs):
   """
   Sets up workspace environment.
 
-  While "ws" will work for multiple workspaces, this should only be run in your primary workspace directory.
+  While "wst" will work for multiple workspaces, this should only be run in your primary workspace directory.
 
   It sets up a "ws" bash function that goes to your workspace directory when no argument is passed in, otherwise
-  runs workspace command. And also additional functions / aliases for some commands if --commands/--commands-with-aliases
-  is passed in.
+  runs wst command. And also additional functions / aliases for some commands if --commands/--commands-with-aliases
+  is passed in. --commands-with-aliases (-a) is recommended. :)
 
-  This can be re-run to change setup.
+  This can be re-run multiple times to change setup.
   """
   bashrc_content = None
   bashrc_file = "~/.bashrc"

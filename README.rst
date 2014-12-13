@@ -15,9 +15,10 @@ Why use workspace-tools
 
 To get started
 ---------------
-* Optionally setup workspace environment, run "ws setup -h" for options.
-    - "ws setup -a" is recommended. :)
-* To checkout a product, run: ws checkout <git or svn repository url> [<url2> ...]
+* Install with: pip install workspace-tools
+* Optionally setup workspace environment/shortcuts, run "wst setup -h" for options.
+    - "wst setup -a" is recommended. :)
+* To checkout a product, run: wst checkout <git or svn repository url> [<url2> ...]
     - Product that use svn is checked out with git-svn
 * All commands are named appropriately for what they do, but see its --help for additional info.
 
@@ -26,10 +27,15 @@ Most commands will act differently based on where they are run from:
 * When run from a workspace that contains many repository, the command will recursively run against each repository.
   Some commands won't run in this mode, such as commit or push (but may in the future).
 
+Contribute
+----------
+Github project: https://github.com/max-zheng/workspace-tools
+
 Usage
 -----
-usage: ws [-h] [-v] [--debug]
-          {status,ci,co,log,di,up,setup,update,st,clean,commit,push,diff,checkout}
+usage: wst [-h] [-v] [--debug]
+           {checkout,co,clean,commit,ci,develop,de,diff,di,log,push,setup,status,st,update,up}
+           ...
 
 optional arguments::
   -h, --help            show this help message and exit
@@ -37,11 +43,13 @@ optional arguments::
   --debug               Turn on debug mode
 
 sub-commands::
-  {status,ci,co,log,di,up,setup,update,st,clean,commit,push,diff,checkout}
+  {checkout,co,clean,commit,ci,develop,de,diff,di,log,push,setup,status,st,update,up}
                         List of sub-commands
     checkout (co)       Checkout products
-    clean               Clean workspace by removing .pyc files
+    clean               Clean workspace by removing build, dist, and .pyc
+                        files
     commit (ci)         Commit all changes locally, including new files.
+    develop (de)        Sets up development environment for product.
     diff (di)           Show diff on current product or all products in
                         workspace
     log                 Show commit logs
@@ -52,6 +60,3 @@ sub-commands::
                         workspace
     update (up)         Update current product or all products in workspace
 
-Contribute
-----------
-Github project is at https://github.com/max-zheng/workspace-tools
