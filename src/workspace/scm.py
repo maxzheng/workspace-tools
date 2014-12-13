@@ -355,6 +355,36 @@ def svn_revision_range(repo=None, num_commmits=1):
       return None, None
 
 
+def clone_svn_repo(product_url, checkout_path, clone_svn_commits):
+  prod_name = product_name(product_url)
+
+  log.info('Cloning last %d commit(s) for svn repo using git-svn.', clone_svn_commits)
+  if clone_svn_commits > 1:
+    log.info('This might take some time...')
+
+  from_revision, head_revision = svn_revision_range(product_url, clone_svn_commits)
+
+  if not head_revision:
+    raise Exception('Unable to get latest revision from %s' % product_url)
+
+  workspace_path = os.path.dirname(checkout_path)
+  revision_range = '-r%d:%s' % (from_revision, head_revision)
+
+  clone_cmd = ['git', 'svn', 'clone', revision_range]
+  if product_url.endswith('/trunk'):
+    clone_cmd.extend(['-T', 'trunk', product_url.rstrip('/trunk'), checkout_path])
+  else:
+    clone_cmd.extend([product_url, checkout_path])
+
+  silent_run(clone_cmd, cwd=workspace_path)
+
+  gitignore_file = os.path.join(workspace_path, prod_name, GITIGNORE_FILE)
+  if not os.path.exists(gitignore_file):
+    with open(gitignore_file, 'w') as fp:
+      fp.write(GITIGNORE)
+    log.info('Created %s/%s. Please check that in so git ignores build/temp files.', prod_name, os.path.basename(gitignore_file))
+
+
 def checkout_product(product_url, checkout_path):
   """ Checks out the product from url. Raises on error """
   clone_svn_commits = get_pref('checkout.use_gitsvn_to_clone_svn_commits')
@@ -368,36 +398,11 @@ def checkout_product(product_url, checkout_path):
 
   if clone_svn_commits and not product_url.endswith('.git'):
     try:
-      log.info('Cloning last %d commit(s) for svn repo using git-svn.', clone_svn_commits)
-      if clone_svn_commits > 1:
-        log.info('This might take some time...')
-
-      from_revision, head_revision = svn_revision_range(product_url, clone_svn_commits)
-
-      if not head_revision:
-        raise Exception('Unable to get latest revision from %s' % product_url)
-
-      workspace_path = os.path.dirname(checkout_path)
-      revision_range = '-r%d:%s' % (from_revision, head_revision)
-
-      clone_cmd = ['git', 'svn', 'clone', revision_range]
-      if product_url.endswith('/trunk'):
-        clone_cmd.extend(['-T', 'trunk', product_url.rstrip('/trunk'), checkout_path])
-      else:
-        clone_cmd.extend([product_url, checkout_path])
-
-      silent_run(clone_cmd, cwd=workspace_path)
-
-      gitignore_file = os.path.join(workspace_path, prod_name, GITIGNORE_FILE)
-      if not os.path.exists(gitignore_file):
-        with open(gitignore_file, 'w') as fp:
-          fp.write(GITIGNORE)
-        log.info('Created %s/%s. Please check that in so git ignores build/temp files.', prod_name, os.path.basename(gitignore_file))
-
-      return
+      return clone_svn_repo(product_url, checkout_path, clone_svn_commits)
     except Exception as e:
       log.exception('Falling back to svn as git-svn clone failed: %s', e)
-      shutil.rmtree(checkout_path)
+      if os.path.exists(checkout_path):
+        shutil.rmtree(checkout_path)
 
   if product_url.endswith('.git'):
     silent_run(['git', 'clone', product_url, checkout_path])

@@ -36,7 +36,6 @@ COMMANDS = {
   'st': 'status',
   'up': 'update',
 
-  '_bu': 'bump',
   '_cl': 'clean',
   '_lo': 'log',
   '_pu': 'push',
@@ -54,7 +53,7 @@ def setup_setup_parser(subparsers):
   return setup_parser
 
 
-def setup(commands=None, commands_with_aliases=None, uninstall=False, **kwargs):
+def setup(commands=None, commands_with_aliases=None, uninstall=False, additional_commands=None, **kwargs):
   """
   Sets up workspace environment.
 
@@ -103,6 +102,9 @@ def setup(commands=None, commands_with_aliases=None, uninstall=False, **kwargs):
 
     fh.write(WS_FUNCTION_TEMPLATE % (os.path.realpath(sys.argv[0]), workspace_dir))
     log.info('Added "ws" bash function with workspace directory set to %s', workspace_dir)
+
+    if additional_commands:
+      COMMANDS.update(additional_commands)
 
     if commands or commands_with_aliases:
       functions = sorted([f for f in COMMANDS.values() if not f.startswith('"')])
