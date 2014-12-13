@@ -17,12 +17,13 @@ To get started
 ---------------
 * Install with: pip install workspace-tools
 * Optionally setup workspace environment/shortcuts, run "wst setup -h" for options.
-    - "wst setup -a" is recommended. :)
+    * "wst setup -a" is recommended. :)
 * To checkout a product, run: wst checkout <git or svn repository url> [<url2> ...]
-    - Product that use svn is checked out with git-svn
+    * Product that use svn is checked out with git-svn
 * All commands are named appropriately for what they do, but see its --help for additional info.
 
 Most commands will act differently based on where they are run from:
+
 * When run from a repository, the command applies to that repository only.
 * When run from a workspace that contains many repository, the command will recursively run against each repository.
   Some commands won't run in this mode, such as commit or push (but may in the future).
@@ -38,11 +39,13 @@ usage: wst [-h] [-v] [--debug]
            ...
 
 optional arguments::
+
   -h, --help            show this help message and exit
   -v, --version         show program's version number and exit
   --debug               Turn on debug mode
 
 sub-commands::
+
   {checkout,co,clean,commit,ci,develop,de,diff,di,log,push,setup,status,st,update,up}
                         List of sub-commands
     checkout (co)       Checkout products
