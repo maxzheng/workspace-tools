@@ -15,7 +15,7 @@ setuptools.setup(
   author='Max Zheng',
   author_email='mzheng@linkedin.com',
 
-  description=open('README.md').read(),
+  description=open('README.rst').read(),
 
   entry_points={
     'console_scripts': [
