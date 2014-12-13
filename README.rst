@@ -13,42 +13,31 @@ Why use workspace-tools
 * Checks out svn using git-svn by default (configurable)
 * Lastly, it has tons of cool short-cut aliases (see setup command)!!
 
-To get started
----------------
-* Install with: pip install workspace-tools
-* Optionally setup workspace environment/shortcuts, run "wst setup -h" for options.
-    * "wst setup -a" is recommended. :)
-* To checkout a product, run: wst checkout <git or svn repository url> [<url2> ...]
-    * Product that use svn is checked out with git-svn
-* All commands are named appropriately for what they do, but see its --help for additional info.
-
-Most commands will act differently based on where they are run from:
-
-* When run from a repository, the command applies to that repository only.
-* When run from a workspace that contains many repository, the command will recursively run against each repository.
-  Some commands won't run in this mode, such as commit or push (but may in the future).
-
-Contribute
-----------
-Github project: https://github.com/max-zheng/workspace-tools
-
-Quick Start Tutorial/Usage
+Quick Start Tutorial
 -------------------------
 
-To setup environment with all bash functions/aliases (the remaining tutorial assumes this is run)::
+First, install it with::
+
+    pip install workspace-tools
+
+Second, setup environment with all bash functions/aliases (the remaining tutorial assumes this is run)::
 
     cd ~/workspace
 
-    wst setup -a  # This creates a "ws" that goes to the current directory (workspace) and more
+    wst setup -a  # This creates a "ws" bash function that goes to the current directory (workspace) and more
     source ~/.bashrc
+
+To go to your workspace directory, run::
+
+    ws
 
 To checkout a repo::
 
     co git@github.com:max-zheng/workspace-tools.git
 
-.. warn:: This would probably stuck forever if there is an input prompt as output is hidden.
-          It will be fixed once I figure out how to stream output from subprocess call.
-          For now, ensure that you are able to checkout repos using 'git clone' without prompt.
+.. attention:: This would probably stuck forever if there is an input prompt as output is hidden.
+               It will be fixed once I figure out how to stream output from subprocess call.
+               For now, ensure that you are able to checkout repos using 'git clone' without prompt.
 
 To update all repos in your workspace::
 
@@ -63,7 +52,7 @@ Make a commit and create a new branch for it::
 
 See status for all of your repos::
 
-    cd ..
+    ws
     st
     # More interesting if you do have changes in your other repos
 
@@ -105,4 +94,8 @@ Now you are ready to try out the other commands yourself::
         status (st)         Show status on current product or all products in
                             workspace
         update (up)         Update current product or all products in workspace
+
+Contribute
+----------
+Github project: https://github.com/max-zheng/workspace-tools
 
