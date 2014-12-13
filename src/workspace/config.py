@@ -111,7 +111,7 @@ def init_config(config_content_or_files=[StringIO(DEFAULT_CONFIG), CONFIG_FILE],
       config.readfp(config_fp)
     else:
       for f in config_content_or_files:
-        if isinstance(f, file):
+        if isinstance(f, file) or isinstance(f, StringIO):
           config.readfp(f)
         else:
           config.read(f)

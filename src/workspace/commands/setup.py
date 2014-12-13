@@ -54,7 +54,7 @@ def setup_setup_parser(subparsers):
   return setup_parser
 
 
-def setup(commands=None, commands_with_aliases=None, **kwargs):
+def setup(commands=None, commands_with_aliases=None, uninstall=False, **kwargs):
   """
   Sets up workspace environment.
 
@@ -94,6 +94,11 @@ def setup(commands=None, commands_with_aliases=None, **kwargs):
   with open(bashrc_path, 'w') as fh:
     if bashrc_script:
       fh.write('\n'.join(bashrc_script) + '\n\n')
+
+    if uninstall:
+      log.info('Removed ws and related functions/aliases from %s', bashrc_file)
+      return
+
     fh.write(WS_SETUP_START)
 
     fh.write(WS_FUNCTION_TEMPLATE % (os.path.realpath(sys.argv[0]), workspace_dir))
