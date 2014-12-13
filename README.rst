@@ -32,34 +32,77 @@ Contribute
 ----------
 Github project: https://github.com/max-zheng/workspace-tools
 
-Usage
------
-usage: wst [-h] [-v] [--debug]
-           {checkout,co,clean,commit,ci,develop,de,diff,di,log,push,setup,status,st,update,up}
-           ...
+Quick Start Tutorial/Usage
+-------------------------
 
-optional arguments::
+To setup environment with all bash functions/aliases (the remaining tutorial assumes this is run)::
 
-  -h, --help            show this help message and exit
-  -v, --version         show program's version number and exit
-  --debug               Turn on debug mode
+    cd ~/workspace
 
-sub-commands::
+    wst setup -a  # This creates a "ws" that goes to the current directory (workspace) and more
+    source ~/.bashrc
 
-  {checkout,co,clean,commit,ci,develop,de,diff,di,log,push,setup,status,st,update,up}
-                        List of sub-commands
-    checkout (co)       Checkout products
-    clean               Clean workspace by removing build, dist, and .pyc
-                        files
-    commit (ci)         Commit all changes locally, including new files.
-    develop (de)        Sets up development environment for product.
-    diff (di)           Show diff on current product or all products in
-                        workspace
-    log                 Show commit logs
-    push                Push changes for branch
-    setup               Optional (refer to setup --help). Setup workspace
-                        environment. Run from primary workspace directory.
-    status (st)         Show status on current product or all products in
-                        workspace
-    update (up)         Update current product or all products in workspace
+To checkout a repo::
+
+    co git@github.com:max-zheng/workspace-tools.git
+
+.. warn:: This would probably stuck forever if there is an input prompt as output is hidden.
+          It will be fixed once I figure out how to stream output from subprocess call.
+          For now, ensure that you are able to checkout repos using 'git clone' without prompt.
+
+To update all repos in your workspace::
+
+    up
+
+Make a commit and create a new branch for it::
+
+    cd workspace-tools
+    # vi README.rst and make some changes
+
+    ci -b test "Updated README.rst"
+
+See status for all of your repos::
+
+    cd ..
+    st
+    # More interesting if you do have changes in your other repos
+
+And finally amend the change and push::
+
+    cd workspace-tools
+    # vi README.rst and make more changes
+
+    ci -a -p
+    # It will fail at push as you are not a committer, but the change was committed to branch, and then merged into master.
+
+Now you are ready to try out the other commands yourself::
+
+    usage: wst [-h] [-v] [--debug]
+               {checkout,co,clean,commit,ci,develop,de,diff,di,log,push,setup,status,st,update,up}
+               ...
+
+    optional arguments:
+
+      -h, --help            show this help message and exit
+      -v, --version         show program's version number and exit
+      --debug               Turn on debug mode
+
+    sub-commands:
+
+      {checkout,co,clean,commit,ci,develop,de,diff,di,log,push,setup,status,st,update,up}
+                            List of sub-commands
+        checkout (co)       Checkout products
+        clean               Clean workspace by removing build, dist, and .pyc
+                            files
+        commit (ci)         Commit all changes locally, including new files.
+        develop (de)        Sets up development environment for product.
+        diff (di)           Show diff on current product or all products in
+                            workspace
+        log                 Show commit logs
+        push                Push changes for branch
+        setup               Optional (refer to setup --help). Setup workspace
+                            environment. Run from primary workspace directory.
+        status (st)         Show status on current product or all products in
+                            workspace
+        update (up)         Update current product or all products in workspace
 
