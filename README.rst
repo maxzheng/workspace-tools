@@ -95,6 +95,16 @@ Now you are ready to try out the other commands yourself::
                             workspace
         update (up)         Update current product or all products in workspace
 
+Customize Commands
+------------------
+
+As simple as two steps:
+
+1. Create your own controller by copying workspace/controller.py:main and add entrypoint to setup.py
+2. Add your own commands or change existing in controller. See workspace/commands package for examples.
+
+TBD for better docs here.
+
 Contribute / Report Bugs
 -------------------------
 Github project: https://github.com/max-zheng/workspace-tools
