@@ -50,6 +50,8 @@ def bump_version(major=False, minor=False):
     sys.exit(1)
 
   def replace_version(match):
+    global new_version
+
     version_parts = match.group(2).split('.')
     i = 0 if major else (1 if minor else 2)
 
