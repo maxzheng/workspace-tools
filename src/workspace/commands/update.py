@@ -13,7 +13,7 @@ def setup_update_parser(subparsers):
   return update_parser
 
 
-def update(**kwargs):
+def update(raises=False, **kwargs):
   """ Update current product or all products in workspace """
 
   for repo in repos():
@@ -32,4 +32,7 @@ def update(**kwargs):
         checkout_branch(branch, repo)
         update_branch(repo)
     except Exception as e:
-      log.error(e)
+      if raises:
+        raise
+      else:
+        log.error(e)

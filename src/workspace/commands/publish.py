@@ -30,16 +30,17 @@ def publish(minor=False, major=False, **kwargs):
 
   silent_run('rm -rf dist/*', shell=True)
 
-  update()
+  with log_exception(exit=1):
+    update(raises=True)
 
-  new_version = bump_version(major, minor)
-  commit(msg='Bump version to ' + new_version, push=True)
+    new_version = bump_version(major, minor)
+    commit(msg='Bump version to ' + new_version, push=True)
 
-  log.info('Building source distribution')
-  silent_run('python setup.py sdist')
+    log.info('Building source distribution')
+    silent_run('python setup.py sdist')
 
-  log.info('Uploading with twine')
-  silent_run('twine upload dist/*')
+    log.info('Uploading with twine')
+    silent_run('twine upload dist/*', shell=True)
 
 
 def bump_version(major=False, minor=False):
@@ -50,7 +51,6 @@ def bump_version(major=False, minor=False):
 
   def replace_version(match):
     global new_version
-    print 'new_version', new_version
 
     version_parts = match.group(2).split('.')
     i = 0 if major else (1 if minor else 2)
@@ -63,6 +63,7 @@ def bump_version(major=False, minor=False):
 
     version_parts[i] = str(int(version_parts[i]) + 1)
     new_version = '.'.join(version_parts)
+
     return 'version=' + match.group(1) + new_version + match.group(1)
 
   content = re.sub('version\s*=\s*([\'"])(.*)[\'"]', replace_version, open(SETUP_FILE).read())
