@@ -424,10 +424,12 @@ def hard_reset(to_commit):
 
 def product_name(product_url):
   if product_url.endswith('.git'):
-    name = os.path.basename(product_url).rstrip('.git')
+    name = product_url[:-4]
+  elif product_url.endswith('_trunk'):
+    name = product_url[:-6]
   else:
-    name = os.path.basename(product_url.rstrip('/trunk'))
-  return name
+    name = product_url
+  return os.path.basename(name)
 
 
 def product_checkout_path(product_url, workspace_path=None):
