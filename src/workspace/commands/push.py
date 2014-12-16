@@ -1,9 +1,8 @@
 import logging
 
-from workspace.config import get_pref
 from workspace.scm import checkout_branch, remove_branch, git_repo_check, current_branch, update_repo,\
     push_repo, merge_branch, local_commit, diff_branch, extract_commit_msgs
-from workspace.utils import log_exception, silent_run
+from workspace.utils import log_exception
 
 log = logging.getLogger(__name__)
 

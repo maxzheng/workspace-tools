@@ -4,9 +4,6 @@ import os
 from StringIO import StringIO
 import sys
 
-from brownie.caching import memoize
-
-
 log = logging.getLogger()
 config = ConfigParser.RawConfigParser()
 
@@ -107,7 +104,7 @@ def init_config(config_content_or_files=[StringIO(DEFAULT_CONFIG), CONFIG_FILE],
 
   try:
     if isinstance(config_content_or_files, str):
-      config_fp = StringIO(ccof)
+      config_fp = StringIO(config_content_or_files)
       config.readfp(config_fp)
     else:
       for f in config_content_or_files:

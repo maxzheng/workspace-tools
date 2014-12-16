@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 
-from workspace.config import product_groups, get_pref
+from workspace.config import product_groups
 
 log = logging.getLogger(__name__)
 

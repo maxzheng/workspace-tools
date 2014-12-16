@@ -24,4 +24,3 @@ def clean(**kwargs):
 
   log.info('Removing *.pyc files')
   silent_run("find . -path /*/.tox -prune -o -path /*/mppy-* -prune -o -name *.pyc -delete", cwd=path)
-

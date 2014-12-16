@@ -5,7 +5,6 @@ import sys
 
 from workspace.commands.update import update
 from workspace.commands.commit import commit
-from workspace.scm import repo_path
 from workspace.utils import log_exception, silent_run
 
 

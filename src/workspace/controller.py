@@ -1,7 +1,6 @@
 import argparse
 import logging
 import pkg_resources
-import sys
 
 from workspace.config import init_config
 from workspace.commands.checkout import setup_checkout_parser

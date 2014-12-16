@@ -44,10 +44,15 @@ COMMANDS = {
 
 
 def setup_setup_parser(subparsers):
-  setup_parser = subparsers.add_parser('setup', description=setup.__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, help='Optional (refer to setup --help). Setup workspace environment. Run from primary workspace directory.')
+  setup_parser = subparsers.add_parser('setup', description=setup.__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
+                                       help='Optional (refer to setup --help). Setup workspace environment. Run from primary '
+                                            'workspace directory.')
   group = setup_parser.add_mutually_exclusive_group()
-  group.add_argument('-c', '--commands', action='store_true', help='Add convenience bash function for certain commands, such as checkout to run "workspace checkout"')
-  group.add_argument('-a', '--commands-with-aliases', action='store_true', help='Same as --commands plus add shortcut aliases, like "co" for checkout. This is for those developers that want to get as much done with the least key strokes - true efficienist! ;)')
+  group.add_argument('-c', '--commands', action='store_true', help='Add convenience bash function for certain commands, such as '
+                                                                   'checkout to run "workspace checkout"')
+  group.add_argument('-a', '--commands-with-aliases', action='store_true',
+                     help='Same as --commands plus add shortcut aliases, like "co" for checkout. This is for those developers '
+                          'that want to get as much done with the least key strokes - true efficienist! ;)')
   group.add_argument('--uninstall', action='store_true', help='Uninstall all functions/aliases')
   setup_parser.set_defaults(command=setup)
 

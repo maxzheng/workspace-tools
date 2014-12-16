@@ -1,11 +1,9 @@
 from glob import glob
 import logging
-from multiprocessing import Pool
 import os
-import signal
 import sys
 
-from workspace.scm import repos, checkout_product, repo_check, product_name, repo_path
+from workspace.scm import repo_check, product_name, repo_path
 from workspace.utils import silent_run, log_exception, run
 
 log = logging.getLogger(__name__)
@@ -13,7 +11,7 @@ log = logging.getLogger(__name__)
 
 def setup_develop_parser(subparsers):
   # XXX: Remove for now as it doesn't work that well
-  develop_parser = subparsers.add_parser('develop', aliases=['de'], description=develop.__doc__)  #, help=develop.__doc__)
+  develop_parser = subparsers.add_parser('develop', aliases=['de'], description=develop.__doc__)  # , help=develop.__doc__)
 
   develop_parser.add_argument('-r', '--recreate', action='store_true', help='Completely recreate the development environment by removing the existing first')
   develop_parser.add_argument('-s', '--show', action='store_true', help='Show where product dependencies are installed from and their versions')

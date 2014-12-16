@@ -330,11 +330,6 @@ def local_commit(msg=None, amend=False, empty=False):
   run(cmd)
 
 
-@memoize
-def master_product_list():
-  return MasterProductList.get_default_list()
-
-
 def svn_revision_range(repo=None, num_commmits=1):
   cmd = ['svn', 'log', '-l', str(num_commmits)]
 
