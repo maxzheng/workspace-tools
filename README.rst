@@ -72,7 +72,7 @@ Or simply push the change::
 Now you are ready to try out the other commands yourself::
 
     usage: wst [-h] [-v] [--debug]
-               {checkout,co,clean,commit,ci,develop,de,diff,di,log,push,setup,status,st,update,up}
+               {checkout,co,clean,commit,ci,diff,di,log,push,setup,status,st,update,up}
                ...
 
     optional arguments:
@@ -83,13 +83,12 @@ Now you are ready to try out the other commands yourself::
 
     sub-commands:
 
-      {checkout,co,clean,commit,ci,develop,de,diff,di,log,push,setup,status,st,update,up}
+      {checkout,co,clean,commit,ci,diff,di,log,push,setup,status,st,update,up}
                             List of sub-commands
         checkout (co)       Checkout products
         clean               Clean workspace by removing build, dist, and .pyc
                             files
         commit (ci)         Commit all changes locally, including new files.
-        develop (de)        Sets up development environment for product.
         diff (di)           Show diff on current product or all products in
                             workspace
         log                 Show commit logs

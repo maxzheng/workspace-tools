@@ -12,7 +12,8 @@ log = logging.getLogger(__name__)
 
 
 def setup_develop_parser(subparsers):
-  develop_parser = subparsers.add_parser('develop', aliases=['de'], description=develop.__doc__, help=develop.__doc__)
+  # XXX: Remove for now as it doesn't work that well
+  develop_parser = subparsers.add_parser('develop', aliases=['de'], description=develop.__doc__)  #, help=develop.__doc__)
 
   develop_parser.add_argument('-r', '--recreate', action='store_true', help='Completely recreate the development environment by removing the existing first')
   develop_parser.add_argument('-s', '--show', action='store_true', help='Show where product dependencies are installed from and their versions')
@@ -23,7 +24,7 @@ def setup_develop_parser(subparsers):
 
 
 def develop(recreate=False, show=False, **kwargs):
-  """ Sets up development environment for product. """
+  """ !! BETA !! Sets up development environment for product. """
   repo_check()
 
   if show:

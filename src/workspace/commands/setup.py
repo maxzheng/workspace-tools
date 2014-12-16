@@ -39,6 +39,7 @@ COMMANDS = {
   '_cl': 'clean',
   '_lo': 'log',
   '_pu': 'push',
+  '_pb': 'publish',
 }
 
 
