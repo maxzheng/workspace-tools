@@ -33,7 +33,7 @@ To go to your workspace directory, run::
 
 To checkout a repo::
 
-    co git@github.com:max-zheng/workspace-tools.git
+    co https://github.com/maxzheng/workspace-tools.git
 
     # This would be stuck forever if there is an input prompt as output is hidden.
     # It will be fixed once I figure out how to stream output from subprocess call.
@@ -63,6 +63,11 @@ And finally amend the change and push::
 
     ci -a -p
     # It will fail at push as you are not a committer, but the change was committed to branch, and then merged into master.
+
+Or simply push the change::
+
+    push
+    # Again, it will fail at push as you are not a committer, but the change was merged into master.
 
 Now you are ready to try out the other commands yourself::
 
