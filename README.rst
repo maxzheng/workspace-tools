@@ -107,5 +107,6 @@ TBD for better docs here.
 
 Contribute / Report Bugs
 -------------------------
-Github project: https://github.com/max-zheng/workspace-tools
-Report issues/bugs: https://github.com/max-zheng/workspace-tools/issues
+Github project: https://github.com/maxzheng/workspace-tools
+
+Report issues/bugs: https://github.com/maxzheng/workspace-tools/issues
