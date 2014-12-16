@@ -298,13 +298,17 @@ def stat_repo(path=None, return_output=False):
   return run(cmd, cwd=path, return_output=return_output)
 
 
-def diff_repo(path=None, branch=None, return_output=False):
+def diff_repo(path=None, branch=None, file=None, return_output=False):
   if is_git_repo(path):
     cmd = ['git', 'diff']
     if branch:
       cmd.append(branch)
+    if file:
+      cmd.append(file)
   else:
-    cmd = 'svn diff'
+    cmd = ['svn', 'diff']
+    if file:
+      cmd.append(file)
 
   return run(cmd, cwd=path, return_output=return_output)
 

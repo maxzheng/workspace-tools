@@ -10,10 +10,11 @@ from workspace.commands.commit import setup_commit_parser
 from workspace.commands.develop import setup_develop_parser
 from workspace.commands.diff import setup_diff_parser
 from workspace.commands.log import setup_log_parser
+from workspace.commands.publish import setup_publish_parser
+from workspace.commands.push import setup_push_parser
 from workspace.commands.update import setup_update_parser
 from workspace.commands.status import setup_status_parser
 from workspace.commands.setup import setup_setup_parser
-from workspace.commands.push import setup_push_parser
 
 
 DESCRIPTION = """
@@ -67,6 +68,7 @@ def setup_parsers():
     'develop': setup_develop_parser(subparsers),
     'diff': setup_diff_parser(subparsers),
     'log': setup_log_parser(subparsers),
+    'publish': setup_publish_parser(subparsers),
     'push': setup_push_parser(subparsers),
     'setup': setup_setup_parser(subparsers),
     'status': setup_status_parser(subparsers),

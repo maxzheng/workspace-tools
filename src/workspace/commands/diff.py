@@ -9,13 +9,14 @@ log = logging.getLogger(__name__)
 
 def setup_diff_parser(subparsers):
   diff_parser = subparsers.add_parser('diff', aliases=['di'], description=diff.__doc__, help=diff.__doc__)
+  diff_parser.add_argument('file', nargs='?', help='Show diff for file only')
   diff_parser.add_argument('-m', '--master', action='store_true', help='Diff against the master branch')
   diff_parser.set_defaults(command=diff)
 
   return subparsers
 
 
-def diff(master=False, **kwargs):
+def diff(file=None, master=False, **kwargs):
   """ Show diff on current product or all products in workspace """
 
   optional = len(repos()) == 1
@@ -24,7 +25,7 @@ def diff(master=False, **kwargs):
   for repo in repos():
     with log_exception():
       branch = 'master' if master else None
-      output = diff_repo(repo, branch=branch, return_output=True)
+      output = diff_repo(repo, branch=branch, file=file, return_output=True)
       if output:
         branch = current_branch(repo) if is_git_repo(repo) else None
         pager.write(product_name_for_repo(repo), output, branch)
