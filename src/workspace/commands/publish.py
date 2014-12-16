@@ -10,6 +10,7 @@ from workspace.utils import log_exception, silent_run
 
 
 log = logging.getLogger(__name__)
+new_version = None  # Doesn't work if it is in bump_version
 
 SETUP_FILE = 'setup.py'
 
@@ -43,14 +44,13 @@ def publish(minor=False, major=False, **kwargs):
 
 def bump_version(major=False, minor=False):
   """ Bumps the patch version unless major/minor is True """
-  new_version = None
-
   if not os.path.exists(SETUP_FILE):
     log.error(SETUP_FILE + 'does not exist.')
     sys.exit(1)
 
   def replace_version(match):
     global new_version
+    print 'new_version', new_version
 
     version_parts = match.group(2).split('.')
     i = 0 if major else (1 if minor else 2)
