@@ -54,11 +54,11 @@ def setup_parsers():
   logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
   parser = argparse.ArgumentParser(description=DESCRIPTION, formatter_class=argparse.RawDescriptionHelpFormatter)
+  parser.register('action', 'parsers', AliasedSubParsersAction)
   setup_parser(parser)
 
-  _money_patch_aliases(parser)
-
   subparsers = parser.add_subparsers(title='sub-commands', help='List of sub-commands')
+  subparsers.remove_parser = lambda *args, **kwargs: _remove_parser(subparsers, *args, **kwargs)
 
   parsers = {
     'checkout': setup_checkout_parser(subparsers),
@@ -100,9 +100,20 @@ def setup_parser(parser):
   parser.add_argument('--debug', action='store_true', help='Turn on debug mode')
 
 
-def _money_patch_aliases(parser):
-  """ Add 'aliases' param to sub parsers """
-  parser.register('action', 'parsers', AliasedSubParsersAction)
+def _remove_parser(self, name, **kwargs):
+    # remove choice help from list
+    if 'help' in kwargs:
+        self._choices_actions = [action
+                                 for action in self._choices_actions
+                                 if action.dest != name]
+
+    # remove the parser from the map
+    self._name_parser_map.pop(name, None)
+
+    # remove aliases
+    aliases = kwargs.pop('aliases', ())
+    for alias in aliases:
+        self._name_parser_map.pop(alias, None)
 
 
 # Copied from https://gist.github.com/sampsyo/471779

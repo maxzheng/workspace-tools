@@ -71,9 +71,7 @@ Or simply push the change::
 
 Now you are ready to try out the other commands yourself::
 
-    usage: wst [-h] [-v] [--debug]
-               {checkout,co,clean,commit,ci,diff,di,log,push,setup,status,st,update,up}
-               ...
+    usage: wst [-h] [-v] [--debug] <sub-command> ...
 
     optional arguments:
 
@@ -82,8 +80,7 @@ Now you are ready to try out the other commands yourself::
       --debug               Turn on debug mode
 
     sub-commands:
-
-      {checkout,co,clean,commit,ci,diff,di,log,push,setup,status,st,update,up}
+      {checkout,co,clean,commit,ci,develop,diff,di,log,publish,push,setup,status,st,update,up}
                             List of sub-commands
         checkout (co)       Checkout products
         clean               Clean workspace by removing build, dist, and .pyc
@@ -92,12 +89,16 @@ Now you are ready to try out the other commands yourself::
         diff (di)           Show diff on current product or all products in
                             workspace
         log                 Show commit logs
+        publish             Bumps version in setup.py (defaults to patch), commits
+                            all changes, builds a source distribution, and uploads
+                            with twine.
         push                Push changes for branch
         setup               Optional (refer to setup --help). Setup workspace
                             environment. Run from primary workspace directory.
         status (st)         Show status on current product or all products in
                             workspace
         update (up)         Update current product or all products in workspace
+
 
 Customize Commands
 ------------------
