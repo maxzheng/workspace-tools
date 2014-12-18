@@ -28,7 +28,5 @@ def show_log(file=None, patch=False, number=None, *args, **kwargs):
   try:
     commit_logs(number, patch=patch, show=True, file=file)
   except Exception as e:
-    msg = str(e)
-    if ' -p' not in msg:  # Oddly, git log -p returns non-zero exit whenever user exits while it is still printing
-      log.error(msg)
-      sys.exit(1)
+    # Oddly, git log returns non-zero exit whenever user exits while it is still printing
+    log.debug(e)
