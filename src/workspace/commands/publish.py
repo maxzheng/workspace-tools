@@ -33,7 +33,7 @@ def publish(minor=False, major=False, **kwargs):
     update(raises=True)
 
     new_version = bump_version(major, minor)
-    commit(msg='Release version ' + new_version, push=True)
+    commit(msg='Publish version ' + new_version, push=True)
 
     log.info('Building source distribution')
     silent_run('python setup.py sdist')
