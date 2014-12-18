@@ -41,6 +41,26 @@ COMMANDS = {
   '_pu': 'push',
   '_pb': 'publish',
 }
+AUTO_COMPLETE_TEMPLATE = """
+function _branch_file_completer() {
+    local cur=${COMP_WORDS[COMP_CWORD]}
+
+    if git status &> /dev/null; then
+        branches=`git branch`
+    else
+        branches=''
+    fi
+
+    COMPREPLY=( $( compgen -W "$branches" -- $cur ) )
+}
+
+complete -o default -F _branch_file_completer co
+complete -o default -F _branch_file_completer checkout
+complete -F _branch_file_completer push
+
+complete -o default log
+complete -o default di
+"""
 
 
 def setup_setup_parser(subparsers):
@@ -125,6 +145,9 @@ def setup(commands=None, commands_with_aliases=None, uninstall=False, additional
       for alias, command in aliases:
         fh.write(COMMAND_ALIAS_TEMPLATE % (alias, command))
       log.info('Added aliases: %s', ', '.join(["%s=%s" % (a, c.lstrip('_')) for a, c in aliases]))
+
+      fh.write('\n')
+      fh.write(AUTO_COMPLETE_TEMPLATE)
 
     fh.write(WS_SETUP_END + '\n')
 
