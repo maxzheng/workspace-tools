@@ -250,7 +250,6 @@ def diff_branch(right_branch, left_branch='master', path=None):
   return run(cmd, cwd=path, return_output=True)
 
 
-@memoize
 def all_branches(repo=None):
   """ Returns all branches. The first element is the current branch. """
   branch_output = silent_run('git branch', cwd=repo, return_output=True)
