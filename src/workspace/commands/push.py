@@ -28,8 +28,7 @@ def push(branch=None, **kwargs):
   log.info('Pushing %s', branch)
 
   with log_exception(exit=1):
-    if branch != 'master':
-      checkout_branch('master')
+    checkout_branch('master')
 
     update_repo()
 
