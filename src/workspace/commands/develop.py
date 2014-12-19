@@ -4,7 +4,7 @@ import os
 import sys
 
 from workspace.scm import repo_check, product_name, repo_path
-from workspace.utils import silent_run, log_exception, run
+from workspace.utils import silent_run, run
 
 log = logging.getLogger(__name__)
 
@@ -43,8 +43,7 @@ def develop(recreate=False, show=False, **kwargs):
   else:
     log.info('Setting up development environment')
 
-  with log_exception():
-    silent_run(cmd)
+  silent_run(cmd)
 
 
 def show_installed_dependencies():
@@ -77,15 +76,14 @@ for lib in sorted(libs):
 print '\\n'.join(output)
 """
 
-  with log_exception():
-    name = product_name(repo_path())
-    script = script_template % name
+  name = product_name(repo_path())
+  script = script_template % name
 
-    python = os.path.join('.tox', name, 'bin', 'python')
+  python = os.path.join('.tox', name, 'bin', 'python')
 
-    if not os.path.exists(python):
-      log.error('Development environment is not setup. Please run develop without --show to set it up first.')
-      sys.exit()
+  if not os.path.exists(python):
+    log.error('Development environment is not setup. Please run develop without --show to set it up first.')
+    sys.exit()
 
-    log.info('Product dependencies:')
-    run([python, '-c', script])
+  log.info('Product dependencies:')
+  run([python, '-c', script])

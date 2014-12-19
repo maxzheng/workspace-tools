@@ -14,6 +14,7 @@ from workspace.commands.push import setup_push_parser
 from workspace.commands.update import setup_update_parser
 from workspace.commands.status import setup_status_parser
 from workspace.commands.setup import setup_setup_parser
+from workspace.utils import log_exception
 
 
 DESCRIPTION = """
@@ -90,7 +91,8 @@ def ws_entry_point(parser):
 
   init_config()
 
-  args.command(**args.__dict__)
+  with log_exception(exit=True, stack=args.debug):
+    args.command(**args.__dict__)
 
 
 def setup_parser(parser):

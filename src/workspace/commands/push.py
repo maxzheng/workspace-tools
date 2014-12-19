@@ -2,7 +2,7 @@ import logging
 
 from workspace.scm import checkout_branch, remove_branch, git_repo_check, current_branch, update_repo,\
     push_repo, merge_branch, local_commit, diff_branch, extract_commit_msgs, update_branch
-from workspace.utils import log_exception
+
 
 log = logging.getLogger(__name__)
 
@@ -27,22 +27,21 @@ def push(branch=None, **kwargs):
 
   log.info('Pushing %s', branch)
 
-  with log_exception(exit=1):
+  checkout_branch('master')
+
+  update_repo()
+
+  if branch != 'master':
+    checkout_branch(branch)
+    update_branch()  # Failed rebase can be continued easily than failed merge
+
     checkout_branch('master')
+    merge_branch(branch)
 
-    update_repo()
+    msgs = filter(lambda m: len(m) > MIN_COMMIT_MSG_LEN, extract_commit_msgs(diff_branch(branch)))
+    local_commit('\n\n'.join(msgs))
 
-    if branch != 'master':
-      checkout_branch(branch)
-      update_branch()  # Failed rebase can be continued easily than failed merge
+  push_repo()
 
-      checkout_branch('master')
-      merge_branch(branch)
-
-      msgs = filter(lambda m: len(m) > MIN_COMMIT_MSG_LEN, extract_commit_msgs(diff_branch(branch)))
-      local_commit('\n\n'.join(msgs))
-
-    push_repo()
-
-    if branch != 'master':
-      remove_branch(branch)
+  if branch != 'master':
+    remove_branch(branch)

@@ -29,17 +29,16 @@ def publish(minor=False, major=False, **kwargs):
 
   silent_run('rm -rf dist/*', shell=True)
 
-  with log_exception(exit=1):
-    update(raises=True)
+  update(raises=True)
 
-    new_version = bump_version(major, minor)
-    commit(msg='Publish version ' + new_version, push=True)
+  new_version = bump_version(major, minor)
+  commit(msg='Publish version ' + new_version, push=True)
 
-    log.info('Building source distribution')
-    silent_run('python setup.py sdist')
+  log.info('Building source distribution')
+  silent_run('python setup.py sdist')
 
-    log.info('Uploading')
-    silent_run('twine upload dist/*', shell=True)
+  log.info('Uploading')
+  silent_run('twine upload dist/*', shell=True)
 
 
 def bump_version(major=False, minor=False):
