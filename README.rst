@@ -25,7 +25,7 @@ Second, setup environment with all bash functions/aliases (the remaining tutoria
     cd ~/workspace
 
     wst setup -a  # This creates a "ws" bash function that goes to the current directory (workspace) and more
-    source ~/.bashrc
+    source ~/.wstrc
 
 To go to your workspace directory, run::
 
@@ -64,7 +64,7 @@ And finally amend the change and push::
     ci -a -p
     # It will fail at push as you are not a committer, but the change was committed to branch, and then merged into master.
 
-Or simply push the change::
+Or simply push the change in your current branch::
 
     push
     # Again, it will fail at push as you are not a committer, but the change was merged into master.
