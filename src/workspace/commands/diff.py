@@ -1,4 +1,5 @@
 import logging
+import os
 
 from workspace.commands.helpers import ProductPager
 from workspace.scm import diff_repo, repos, product_name_for_repo, current_branch, is_git_repo
@@ -18,11 +19,15 @@ def setup_diff_parser(subparsers):
 
 def diff(file=None, master=False, **kwargs):
   """ Show diff on current product or all products in workspace """
+  if file:
+    scm_repos = [os.getcwd()]
+  else:
+    scm_repos = repos()
 
   optional = len(repos()) == 1
   pager = ProductPager(optional=optional)
 
-  for repo in repos():
+  for repo in scm_repos:
     with log_exception():
       branch = 'master' if master else None
       output = diff_repo(repo, branch=branch, file=file, return_output=True)
