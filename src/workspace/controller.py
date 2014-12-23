@@ -78,20 +78,24 @@ def setup_parsers():
   return parser, subparsers, parsers
 
 
-def ws_entry_point(parser):
+def ws_entry_point(parser, init=None):
   """
   Main entry point for 'ws' that sets up argparse and executes command.
 
   :param :class:`argparse.ArgumentParser` parser:
+  :param callable init: A callable to initialize your own config or other settings before running command.
   """
   args = parser.parse_args()
 
   if args.debug:
     logging.root.setLevel(logging.DEBUG)
 
-  init_config()
-
   with log_exception(exit=True, stack=args.debug):
+    init_config()
+
+    if init:
+      init()
+
     args.command(**args.__dict__)
 
 

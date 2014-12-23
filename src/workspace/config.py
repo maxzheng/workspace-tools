@@ -20,16 +20,14 @@ DEFAULT_CONFIG = """
 
 
 #######################################################################################
-# XXX: Make changes to 'preferences' in your personal ~/.config/workspace.cfg config file by copying content below (NOT above)
-#      These default preferences are meant for everyone, so don't change here.
+# Make changes to 'preferences' in your personal ~/.config/workspace.cfg config file by
+# copying content below (NOT above). These default preferences are meant for everyone,
+# so please don't change here.
 #######################################################################################
 [preferences]
 # Check out SVN repo using git-svn and clone the specified # of commits. Set to 0 to disable git-svn clone.
 # Higher the number, the longer it takes to clone.
 checkout.use_gitsvn_to_clone_svn_commits = 10
-
-# Directory for caching, such as checkout dependencies to be bumped
-workspace.cache_directory = /var/tmp/workspace_cache
 """
 
 
