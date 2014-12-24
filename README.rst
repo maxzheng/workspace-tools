@@ -5,9 +5,9 @@ Tools to simplify workspace / scm management when working with multiple reposito
 
 Why use workspace-tools
 -----------------------
-* One tool to rule them all! Seamless integration of full workspace tooling, from commit to publish.
+* One tool to seamlessly manage / integrate all workspace tools, from commit to publish.
 * It is SCM agnostic (for git/git-svn and svn (commit/push command support later)). No need to remember different commands to run.
-* Simplified command execution for common workflow (instead of several commands to push, just run 'push' command)
+* Simplified command execution for common workflow (instead of several commands to push a branch, just run 'push' command)
 * Path aware context commands that runs command across all products (try diff in workspace directory to see diffs for all products!)
 * Extensible by adding your own custom commands or modify existing by wrapping them.
 * Checks out svn using git-svn by default (configurable)
