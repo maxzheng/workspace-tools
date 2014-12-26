@@ -3,20 +3,26 @@ import logging
 from workspace.commands.helpers import expand_product_groups
 from workspace.scm import is_git_repo, checkout_branch, update_repo, repos, product_name_for_repo, current_branch,\
     update_branch
+from workspace.utils import split_doc
 
 log = logging.getLogger(__name__)
 
 
 def setup_update_parser(subparsers):
-  update_parser = subparsers.add_parser('update', aliases=['up'], description=update.__doc__, help=update.__doc__)
-  update_parser.add_argument('products', nargs='*', help='When updating all products, filter by these products or product groups')
+  doc, docs = split_doc(update.__doc__)
+  update_parser = subparsers.add_parser('update', aliases=['up'], description=doc, help=doc)
+  update_parser.add_argument('products', nargs='*', help=docs['products'])
   update_parser.set_defaults(command=update)
 
   return update_parser
 
 
 def update(products=None, raises=False, **kwargs):
-  """ Update current product or all products in workspace """
+  """
+  Update current product or all products in workspace
+
+  :param list products: When updating all products, filter by these products or product groups
+  """
 
   if products:
     products = expand_product_groups(products)

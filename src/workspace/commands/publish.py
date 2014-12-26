@@ -5,7 +5,7 @@ import sys
 
 from workspace.commands.update import update
 from workspace.commands.commit import commit
-from workspace.utils import log_exception, silent_run
+from workspace.utils import log_exception, silent_run, split_doc
 
 
 log = logging.getLogger(__name__)
@@ -15,23 +15,30 @@ SETUP_FILE = 'setup.py'
 
 
 def setup_publish_parser(subparsers):
-  parser = subparsers.add_parser('publish', description=publish.__doc__, help=publish.__doc__)
+  doc, docs = split_doc(publish.__doc__)
+  parser = subparsers.add_parser('publish', description=doc, help=doc)
   group = parser.add_mutually_exclusive_group()
-  group.add_argument('--minor', action='store_true', help='Perform a minor publish by bumping the minor version')
-  group.add_argument('--major', action='store_true', help='Perform a major publish by bumping the major version')
+  group.add_argument('--minor', action='store_true', help=docs['minor'])
+  group.add_argument('--major', action='store_true', help=docs['major'])
   parser.set_defaults(command=publish)
 
   return parser
 
 
 def publish(minor=False, major=False, **kwargs):
-  """ Bumps version in setup.py (defaults to patch), commits all changes, builds a source distribution, and uploads with twine. """
+  """
+  Bumps version in setup.py (defaults to patch), commits all changes, builds a source distribution,
+  and uploads with twine.
+
+  :param bool minor: Perform a minor publish by bumping the minor version
+  :param bool major: Perform a major publish by bumping the major version
+  """
 
   silent_run('rm -rf dist/*', shell=True)
 
   update(raises=True)
 
-  new_version = bump_version(major, minor)
+  new_version = bump_version(minor, major)
   commit(msg='Publish version ' + new_version, push=True)
 
   log.info('Building source distribution')
@@ -41,8 +48,13 @@ def publish(minor=False, major=False, **kwargs):
   silent_run('twine upload dist/*', shell=True)
 
 
-def bump_version(major=False, minor=False):
-  """ Bumps the patch version unless major/minor is True """
+def bump_version(minor=False, major=False):
+  """
+  Bump the version (defaults to patch) in setup.py
+
+  :param bool minor: Bump the minor version instead of patch.
+  :param bool major: Bump the major version instead of patch.
+  """
   if not os.path.exists(SETUP_FILE):
     log.error(SETUP_FILE + 'does not exist.')
     sys.exit(1)

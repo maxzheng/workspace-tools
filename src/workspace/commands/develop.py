@@ -4,17 +4,18 @@ import os
 import sys
 
 from workspace.scm import repo_check, product_name, repo_path
-from workspace.utils import silent_run, run
+from workspace.utils import silent_run, run, split_doc
 
 log = logging.getLogger(__name__)
 
 
 def setup_develop_parser(subparsers):
-  # XXX: Remove for now as it doesn't work that well
-  develop_parser = subparsers.add_parser('develop', aliases=['de'], description=develop.__doc__)  # , help=develop.__doc__)
+  # XXX: Remove from help now as it doesn't work that well
+  doc, docs = split_doc(develop.__doc__)
+  develop_parser = subparsers.add_parser('develop', aliases=['de'], description=doc)  # , help=doc)
 
-  develop_parser.add_argument('-r', '--recreate', action='store_true', help='Completely recreate the development environment by removing the existing first')
-  develop_parser.add_argument('-s', '--show', action='store_true', help='Show where product dependencies are installed from and their versions')
+  develop_parser.add_argument('-r', '--recreate', action='store_true', help=docs['recreate'])
+  develop_parser.add_argument('-s', '--show', action='store_true', help=docs['show'])
 
   develop_parser.set_defaults(command=develop)
 
@@ -22,7 +23,11 @@ def setup_develop_parser(subparsers):
 
 
 def develop(recreate=False, show=False, **kwargs):
-  """ !! BETA !! Sets up development environment for product. """
+  """ !! BETA !! Sets up development environment for product.
+
+  :param bool recreate: Completely recreate the development environment by removing the existing first
+  :param bool show: Show where product dependencies are installed from and their versions
+  """
   repo_check()
 
   if show:

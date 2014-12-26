@@ -32,13 +32,13 @@ To get started
 
 def main():
   """
-  Main controller for 'ws'. Copy this to create your own controller with custom _setup_parsers.
+  Main controller for 'wst'.
+  Copy this to create your own controller to make changes to parsers or pass in an init callable to ws_entry_point.
 
-  To customize a command, such as checkout, do this::
+  I.e. To customize a command, such as checkout, do this::
 
     parser, subparsers, parsers = setup_parsers()
     parsers['checkout'].add_argument('-c', '--cool-new-feature', action='store_true', help='Adds cool new feature to checkoout')
-
   """
   parser, subparsers, parsers = setup_parsers()
   ws_entry_point(parser)
@@ -46,11 +46,13 @@ def main():
 
 def setup_parsers():
   """
-  Default setup for command parsers.
+  Sets up parsers for all commands
 
-  :ret (parser, subparsers, parsers): parser - :class:`argparse.ArgumentParser' instance
-                                      subparsers - argparse subparsers instance for parser
-                                      parsers - Dict mapping of command to its parser instance
+  :return: A tuple of (parser, subparsers, parsers) where::
+              parser - :class:`argparse.ArgumentParser' instance
+              subparsers - argparse subparsers instance for parser
+              parsers - Dict mapping of command to its parser instance
+  :rtype: tuple(argparse.ArgumentParser, argparse._SubParsersAction, dict)
   """
   logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
@@ -80,9 +82,9 @@ def setup_parsers():
 
 def ws_entry_point(parser, init=None):
   """
-  Main entry point for 'ws' that sets up argparse and executes command.
+  Main entry point for 'wst' that parses args, sets up config, and executes command.
 
-  :param :class:`argparse.ArgumentParser` parser:
+  :param argparse.ArgumentParser parser: The parser to get args from
   :param callable init: A callable to initialize your own config or other settings before running command.
   """
   args = parser.parse_args()

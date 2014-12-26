@@ -9,6 +9,14 @@ log = logging.getLogger(__name__)
 
 
 def parent_path_with_dir(directory, path=None):
+  """
+  Find parent that contains the given directory.
+
+  :param str directory: Directory to look for
+  :param str path: Initial path to look from. Defaults to current working directory.
+  :return: Parent path that contains the directory
+  :rtype: str on success or False on failure
+  """
   if path == '/':
     return False
 
@@ -23,7 +31,14 @@ def parent_path_with_dir(directory, path=None):
 
 @contextmanager
 def log_exception(title=None, exit=False, call=None, stack=False):
-  """ A context generator that logs exceptions as error and optionally provides an additional error title, exits, or calls a method. """
+  """
+  Context generator that logs exceptions as error
+
+  :param str title: Title to log before the exception
+  :param bool exit: Do sys.exit when exception occurs
+  :param callable call: Call to make before exit
+  :param bool stack: Log stacktrace
+  """
   try:
     yield
   except Exception as e:
@@ -44,11 +59,23 @@ class RunError(Exception):
 
 
 def silent_run(*args, **kwargs):
+  """ Same as run with slient=True """
   return run(*args, silent=True, **kwargs)
 
 
 def run(cmd, cwd=None, silent=False, return_output=False, raises=True, **subprocess_args):
-  """ Unlike the call counterpart, this runs the cmd to show or return output """
+  """
+  Runs a CLI command.
+
+  :param list/str cmd: Command with args to run.
+  :param str cwd: Change directory to cwd before running
+  :param bool silent: Suppress stdout/stderr
+  :param bool return_output: Return the command output
+  :param bool raises: Raise an exception if command exits with an error code.
+  :param dict subprocess_args: Additional args to pass to subprocess
+  :return: Output or None depending on option selected
+  :raise RunError: if the command exits with an error code and raises=True
+  """
 
   if isinstance(cmd, basestring):
     cmd = cmd.split()
@@ -87,3 +114,23 @@ def run(cmd, cwd=None, silent=False, return_output=False, raises=True, **subproc
     raise RunError('Command "%s" returned non-zero exit status %d' % (cmd_str, exit_code))
 
   return False
+
+
+def split_doc(docstring):
+  """
+  Split the param description from the docstring
+
+  :param str docstring: Docstring to split
+  :return: Tuple of (doc, param_docs) where doc is the part before :param, and param_docs is a dict of param -> param doc.
+  :rtype: tuple(str, dict(str, str))
+  """
+  doc_parts = docstring.split(':param ')
+  doc = doc_parts[0].rstrip()
+  params = {}
+
+  for doc_part in doc_parts[1:]:
+    type_param, param_doc = doc_part.split(':', 1)
+    param = type_param.split()[-1]
+    params[param] = param_doc.strip()
+
+  return doc, params

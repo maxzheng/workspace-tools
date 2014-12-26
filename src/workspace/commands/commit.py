@@ -4,29 +4,40 @@ import re
 from workspace.scm import local_commit, add_files, git_repo_check, checkout_branch,\
     create_branch, update_repo, all_branches, diff_branch, current_branch, remove_branch, hard_reset, commit_logs
 from workspace.commands.push import push as push_branch
+from workspace.utils import split_doc
 
 log = logging.getLogger(__name__)
 
 
 def setup_commit_parser(subparsers):
-  commit_parser = subparsers.add_parser('commit', aliases=['ci'], description=commit.__doc__, help=commit.__doc__)
-  commit_parser.add_argument('msg', nargs='?', help='Optional commit message')
-  commit_parser.add_argument('-p', '--push', action='store_true', help='Push the current branch after commit')
-  commit_parser.add_argument('-b', '--branch', help='Create or use existing branch for commit. When creating, it always creates from master branch.')
-  commit_parser.add_argument('-a', '--amend', action='store_true', help='Amend last commit with any new changes made')
-  commit_parser.add_argument('-d', '--dummy', action='store_true', help='Perform a dummy commit without any changes on master '
-                                                                        'branch. This implies --push. Other options are ignored.')
-  commit_parser.add_argument('--discard', metavar='branch', nargs='?', const=True,
-                             help='Discard last commit and branch if no more commits left. Defaults to existing branch. '
-                                  'Other options are ignored.')
-  commit_parser.add_argument('--move', metavar='branch', nargs=1, help='Move last commit to branch. Other options are ignored.')
+  doc, docs = split_doc(commit.__doc__)
+  commit_parser = subparsers.add_parser('commit', aliases=['ci'], description=doc, help=doc)
+  commit_parser.add_argument('msg', nargs='?', help=docs['msg'])
+  commit_parser.add_argument('-b', '--branch', help=docs['branch'])
+  commit_parser.add_argument('-a', '--amend', action='store_true', help=docs['amend'])
+  commit_parser.add_argument('-p', '--push', action='store_true', help=docs['push'])
+  commit_parser.add_argument('-d', '--dummy', action='store_true', help=docs['dummy'])
+  commit_parser.add_argument('--discard', metavar='branch', nargs='?', const=True, help=docs['branch'])
+  commit_parser.add_argument('--move', metavar='branch', nargs=1, help=docs['move'])
   commit_parser.set_defaults(command=commit)
 
   return commit_parser
 
 
-def commit(msg=None, branch=None, push=False, amend=False, dummy=False, discard=False, move=None, **kwargs):
-  """ Commit all changes locally, including new files. """
+def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=False, move=None, **kwargs):
+  """
+  Commit all changes locally, including new files.
+
+  :param str msg: Commit message
+  :param str branch: Create or use existing branch for commit. When creating, it always creates from master branch.
+  :param bool amend: Amend last commit with any new changes made
+  :param bool push: Push the current branch after commit
+  :param bool dummy: Perform a dummy commit without any changes on master branch. This implies --push.
+                     Other options are ignored.
+  :param bool discard: Discard last commit and branch if no more commits left. Defaults to existing branch.
+                       Other options are ignored.
+  :param bool move: Move last commit to branch. Other options are ignored.
+  """
 
   git_repo_check()
 

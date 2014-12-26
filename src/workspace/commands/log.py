@@ -3,22 +3,30 @@ import signal
 import sys
 
 from workspace.scm import commit_logs, repo_check
+from workspace.utils import split_doc
 
 log = logging.getLogger(__name__)
 
 
 def setup_log_parser(subparsers):
-  log_parser = subparsers.add_parser('log', description=show_log.__doc__, help=show_log.__doc__)
-  log_parser.add_argument('file', nargs='?', help='File to show logs for')
-  log_parser.add_argument('-p', '--patch', action='store_true', help='Generate patch / show diff')
-  log_parser.add_argument('-n', '--number', type=int, help='Limit number number of log entrie')
+  doc, docs = split_doc(show_log.__doc__)
+  log_parser = subparsers.add_parser('log', description=doc, help=doc)
+  log_parser.add_argument('file', nargs='?', help=docs['file'])
+  log_parser.add_argument('-p', '--patch', action='store_true', help=docs['patch'])
+  log_parser.add_argument('-n', '--number', type=int, help=docs['number'])
   log_parser.set_defaults(command=show_log)
 
   return log_parser
 
 
 def show_log(file=None, patch=False, number=None, *args, **kwargs):
-  """ Show commit logs """
+  """
+  Show commit logs
+
+  :param str file: File to show logs for
+  :param bool patch: Generate patch / show diff
+  :param int number: Limit number number of log entries
+  """
 
   repo_check()
 

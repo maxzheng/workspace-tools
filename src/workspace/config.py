@@ -8,9 +8,11 @@ log = logging.getLogger()
 config = ConfigParser.RawConfigParser()
 
 CONFIG_FILE = os.path.expanduser('~/.config/workspace.cfg')
+
 DEFAULT_CONFIG_TYPE_MAP = {
   int: ['checkout.use_gitsvn_to_clone_svn_commits']
 }
+
 DEFAULT_CONFIG = """
 #######################################################################################
 # Define product groups to take action upon (such as ws develop)
@@ -92,13 +94,21 @@ def write_config_template(file_path=CONFIG_FILE):
     fp.write(config_template)
 
 
-def init_config(config_content_or_files=[StringIO(DEFAULT_CONFIG), CONFIG_FILE], type_maps=DEFAULT_CONFIG_TYPE_MAP):
+def init_config(config_content_or_files=None, type_maps=None):
   """
   Read config string or file
 
-  :param list/str config_files: Either string of config content or list of config fh/files to be loaded
-  :param dict type_maps: Dict of type map to pass to set_config_types
+  :param list/str config_files: Either string of config content or list of config fh/files to be loaded.
+                                Defaults to [:class:`StringIO.StringIO` (:const:`DEFAULT_CONFIG`), :const:`CONFIG_FILE`]
+  :param dict type_maps: Dict of type map to pass to set_config_types.
+                         Defaults to :const:DEFAULT_CONFIG_TYPE_MAP
   """
+
+  if not config_content_or_files:
+    config_content_or_files = [StringIO(DEFAULT_CONFIG), CONFIG_FILE]
+
+  if not type_maps:
+    DEFAULT_CONFIG_TYPE_MAP
 
   try:
     if isinstance(config_content_or_files, str):

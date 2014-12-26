@@ -8,6 +8,7 @@ log = logging.getLogger(__name__)
 
 
 class ProductPager(object):
+  """ Pager to show contents from multiple products (repos) """
   MAX_TERMINAL_ROWS = 25
 
   def __init__(self, optional=False):

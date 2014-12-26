@@ -4,6 +4,7 @@ import os
 import sys
 
 from workspace.scm import is_repo
+from workspace.utils import split_doc
 
 
 log = logging.getLogger(__name__)
@@ -68,16 +69,14 @@ complete -o default di
 
 
 def setup_setup_parser(subparsers):
-  setup_parser = subparsers.add_parser('setup', description=setup.__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
+  doc, docs = split_doc(setup.__doc__)
+  setup_parser = subparsers.add_parser('setup', description=doc, formatter_class=argparse.RawDescriptionHelpFormatter,
                                        help='Optional (refer to setup --help). Setup workspace environment. Run from primary '
                                             'workspace directory.')
   group = setup_parser.add_mutually_exclusive_group()
-  group.add_argument('-c', '--commands', action='store_true', help='Add convenience bash function for certain commands, such as '
-                                                                   'checkout to run "workspace checkout"')
-  group.add_argument('-a', '--commands-with-aliases', action='store_true',
-                     help='Same as --commands plus add shortcut aliases, like "co" for checkout. This is for those developers '
-                          'that want to get as much done with the least key strokes - true efficienist! ;)')
-  group.add_argument('--uninstall', action='store_true', help='Uninstall all functions/aliases')
+  group.add_argument('-c', '--commands', action='store_true', help=docs['commands'])
+  group.add_argument('-a', '--commands-with-aliases', action='store_true', help=docs['commands_with_aliases'])
+  group.add_argument('--uninstall', action='store_true', help=docs['uninstall'])
   setup_parser.set_defaults(command=setup)
 
   return setup_parser
@@ -94,6 +93,13 @@ def setup(commands=None, commands_with_aliases=None, uninstall=False, additional
   is passed in. --commands-with-aliases (-a) is recommended. :)
 
   This can be re-run multiple times to change setup.
+
+  :param bool commands: Add convenience bash function for certain commands, such as checkout to run
+                        "workspace checkout"
+  :param bool commands_with_aliases: Same as --commands plus add shortcut aliases, like "co" for checkout.
+                                     This is for those developers that want to get as much done with the least
+                                     key strokes - true efficienist! ;)
+  :param bool uninstall: Uninstall all functions/aliases
   """
   bashrc_content = None
   bashrc_path = os.path.expanduser(BASHRC_FILE)

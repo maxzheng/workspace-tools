@@ -3,22 +3,27 @@ import os
 
 from workspace.commands.helpers import ProductPager
 from workspace.scm import diff_repo, repos, product_name_for_repo, current_branch, is_git_repo
-from workspace.utils import log_exception
+from workspace.utils import log_exception, split_doc
 
 log = logging.getLogger(__name__)
 
 
 def setup_diff_parser(subparsers):
-  diff_parser = subparsers.add_parser('diff', aliases=['di'], description=diff.__doc__, help=diff.__doc__)
-  diff_parser.add_argument('file', nargs='?', help='Show diff for file only')
-  diff_parser.add_argument('-m', '--master', action='store_true', help='Diff against the master branch')
+  doc, docs = split_doc(diff.__doc__)
+  diff_parser = subparsers.add_parser('diff', aliases=['di'], description=doc, help=doc)
+  diff_parser.add_argument('file', nargs='?', help=docs['file'])
+  diff_parser.add_argument('-m', '--master', action='store_true', help=docs['master'])
   diff_parser.set_defaults(command=diff)
 
   return subparsers
 
 
 def diff(file=None, master=False, **kwargs):
-  """ Show diff on current product or all products in workspace """
+  """ Show diff on current product or all products in workspace
+
+  :param str file: Show diff for file only
+  :param bool master: Diff against the master branch
+  """
   if file:
     scm_repos = [os.getcwd()]
   else:
