@@ -18,10 +18,10 @@ API Documentation
    :maxdepth: 2
 
    api/controller
+   api/commands
    api/config
    api/scm
    api/utils
-   api/commands
 
 Indices and tables
 ==================
