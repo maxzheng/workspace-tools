@@ -109,7 +109,7 @@ Customize Commands
 As simple as two steps:
 
 1. Create your own controller by copying workspace/controller.py:main and add entrypoint to setup.py
-2. Add your own commands or change existing in controller. See workspace/commands package for examples.
+2. Add your own commands or change existing in controller. See :mod:`workspace.commands` package for examples.
 
 TBD for better docs here.
 
