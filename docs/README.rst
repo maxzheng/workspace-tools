@@ -5,7 +5,7 @@ Tools to simplify workspace / scm management when working with multiple reposito
 
 Design Goals (Sales Pitch)
 ==========================
-* One tool to seamlessly manage / integrate all workspace tools, from create to publish.
+* One tool to seamlessly manage / integrate all workspace tools, from develop to publish.
 * SCM agnostic (for git/git-svn and svn (commit/push command support later)).
     - No need to remember different commands and arguments to run.
     - Checks out svn using git-svn by default
@@ -110,7 +110,7 @@ Customize Commands
 As simple as two steps:
 
 1. Create your own controller by copying workspace/controller.py:main and add entrypoint to setup.py
-2. Add your own commands or change existing in controller. See :mod:`workspace.commands` package for examples.
+2. Add your own commands or change existing in controller. See `workspace.commands` package for examples.
 
 TBD for better docs here.
 
