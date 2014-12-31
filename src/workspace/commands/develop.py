@@ -1,6 +1,7 @@
 from glob import glob
 import logging
 import os
+import re
 import sys
 
 from workspace.scm import repo_check, product_name, repo_path
@@ -73,6 +74,65 @@ usedevelop = True
 ignore = E111,E121,W292,E123,E226
 max-line-length = 160
 """
+SETUP_PY_TMPL = """\
+#!/usr/bin/env python
+
+import os
+import setuptools
+
+
+setuptools.setup(
+  name='%s',
+  version='0.0.1',
+
+  author='<AUTHOR>',
+  author_email='<AUTHOR_EMAIL>',
+
+  description=open('%s').read(),
+
+#  entry_points={
+#    'console_scripts': [
+#      'script_name = package.module:entry_callable',
+#    ],
+#  },
+
+  install_requires=[
+    'markupsafe',  # readthedocs.org requires this to build doc
+  ],
+
+  license='MIT',
+
+  package_dir={'': 'src'},
+  packages=setuptools.find_packages('src'),
+  include_package_data=True,
+
+  setup_requires=['setuptools-git'],
+
+#  scripts=['bin/cast-example'],
+
+  classifiers=[
+    'Development Status :: 5 - Production/Stable',
+
+    'Intended Audience :: Developers',
+    'Topic :: Software Development :: <SUB-TOPIC>',
+
+    'License :: OSI Approved :: MIT License',
+
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.6',
+    'Programming Language :: Python :: 2.7',
+  ],
+
+  keywords='<KEYWORDS>',
+)
+"""
+README_TMPL = """\
+%s
+===========
+
+<DESCRIPTION>
+"""
+
 
 def setup_develop_parser(subparsers):
   doc, docs = split_doc(develop.__doc__)
@@ -96,7 +156,8 @@ def develop(action='devenv', show=False, recreate=False, init=False, **kwargs):
   :param bool show: Show where product dependencies are installed from and their versions in devenv.
   :param bool recreate: Completely recreate the development environment by removing the existing first
   :param bool init: Initialize development environment by setting up tox with devenv, build,
-                    precommit (flake8), test, and coverage virtual environment.
+                    precommit (flake8), test, and coverage virtual environment. Also create setup.py,
+                    README.rst, and src / test directories if they don't exist.
   """
   repo_check()
 
@@ -135,22 +196,57 @@ def develop(action='devenv', show=False, recreate=False, init=False, **kwargs):
     run(cmd)
 
 
+def _relative_path(path):
+  if path.startswith(os.getcwd() + os.path.sep):
+    path = path[len(os.getcwd())+1:]
+  return path
+
+
 def init_env():
-  tox_ini = TOX_INI_TMPL % product_name(repo_path())
+  name = product_name(repo_path())
+  placeholder_info = '- please update <PLACEHOLDER> with appropriate value'
+
+  tox_ini = TOX_INI_TMPL % name
   tox_ini_file = os.path.join(repo_path(), TOX_INI_FILE)
   with open(tox_ini_file, 'w') as fp:
     fp.write(tox_ini)
 
-  if tox_ini_file.startswith(os.getcwd() + os.path.sep):
-    tox_ini_file = tox_ini_file[len(os.getcwd())+1:]
-  log.info('Created %s', tox_ini_file)
+  log.info('Created %s', _relative_path(tox_ini_file))
+
+  readme_files = glob(os.path.join(repo_path(), 'README*'))
+  if readme_files:
+    readme_file = readme_files[0]
+  else:
+    readme_file = os.path.join(repo_path(), 'README.rst')
+    with open(readme_file, 'w') as fp:
+      fp.write(README_TMPL % name)
+    log.info('Created %s %s', _relative_path(readme_file), placeholder_info)
+
+  setup_py_file = os.path.join(repo_path(), 'setup.py')
+  if not os.path.exists(setup_py_file):
+    readme_name = os.path.basename(readme_file)
+
+    with open(setup_py_file, 'w') as fp:
+      fp.write(SETUP_PY_TMPL % (name, readme_name))
+    log.info('Created %s %s', _relative_path(setup_py_file), placeholder_info)
+
+  src_dir = os.path.join(repo_path(), 'src')
+  if not os.path.exists(src_dir):
+    package_dir = os.path.join(src_dir, re.sub('[^A-Za-z]', '', name))
+    os.makedirs(package_dir)
+    init_file = os.path.join(package_dir, '__init__.py')
+    open(init_file, 'w').close()
+    log.info('Created %s', _relative_path(init_file))
 
   test_dir = os.path.join(repo_path(), 'test')
   if not os.path.exists(test_dir):
     os.makedirs(test_dir)
-    test_file = os.path.join(test_dir, 'test_%s' % product_name(repo_path()).replace('-', '_'))
+    test_file = os.path.join(test_dir, 'test_%s.py' % re.sub('[^A-Za-z]', '_', name))
     with open(test_file, 'w') as fp:
       fp.write('# Placeholder for tests')
+    log.info('Created %s', _relative_path(test_file))
+
+
 
 def show_installed_dependencies():
   script_template = """
