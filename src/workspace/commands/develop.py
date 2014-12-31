@@ -89,7 +89,8 @@ def setup_develop_parser(subparsers):
 
 
 def develop(action='devenv', show=False, recreate=False, init=False, **kwargs):
-  """ Manages development environments for product.
+  """
+  Manages development environments for product.
 
   :param str action: Develop action (for tox -e) to take. Defaults to devenv.
   :param bool show: Show where product dependencies are installed from and their versions in devenv.
