@@ -55,7 +55,7 @@ skipsdist = True
 deps =
 	flake8
 
-[testenv:test]
+[testenv:pytest]
 commands =
 	py.test test
 deps =
