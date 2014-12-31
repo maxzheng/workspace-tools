@@ -36,7 +36,7 @@ COMMANDS = {
 
   'co': 'checkout',
   'ci': 'commit',
-# 'de': 'develop',
+  'de': 'develop',
   'di': '_diff',
   'st': 'status',
   'up': 'update',

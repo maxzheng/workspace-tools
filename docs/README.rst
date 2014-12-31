@@ -83,12 +83,13 @@ Now you are ready to try out the other commands yourself::
       --debug               Turn on debug mode
 
     sub-commands:
-      {checkout,co,clean,commit,ci,develop,diff,di,log,publish,push,setup,status,st,update,up}
+      {checkout,co,clean,commit,ci,develop,de,diff,di,log,publish,push,setup,status,st,update,up}
                             List of sub-commands
         checkout (co)       Checkout products
         clean               Clean workspace by removing build, dist, and .pyc
                             files
         commit (ci)         Commit all changes locally, including new files.
+        develop (de)        Manages development environments for product.
         diff (di)           Show diff on current product or all products in
                             workspace
         log                 Show commit logs
