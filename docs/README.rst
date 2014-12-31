@@ -28,7 +28,7 @@ Second, setup environment with all bash functions/aliases (the remaining tutoria
 
     cd ~/workspace
 
-    wst setup -a  # This creates a "ws" bash function that goes to the current directory (workspace) and more
+    wst setup -a  # This creates a "ws" bash function that goes to the workspace directory and act as an alias for wst
     source ~/.wstrc
 
 To go to your workspace directory, run::
