@@ -115,10 +115,15 @@ As simple as two steps:
 
 TBD for better docs here.
 
-Contribute / Report Bugs
-========================
+More
+====
+
 Documentation: http://workspace-tools.readthedocs.org/
 
 Github project: https://github.com/maxzheng/workspace-tools
 
 Report issues/bugs: https://github.com/maxzheng/workspace-tools/issues
+
+LinkedIn: https://www.linkedin.com/in/maxzheng
+
+Email: maxzheng.os @t gmail.com

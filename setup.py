@@ -13,7 +13,7 @@ setuptools.setup(
   version='0.2.26',
 
   author='Max Zheng',
-  author_email='mzheng@linkedin.com',
+  author_email='maxzheng.os @t gmail.com',
 
   description=open('README.rst').read(),
 
