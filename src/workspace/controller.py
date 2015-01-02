@@ -109,19 +109,20 @@ def setup_parser(parser):
 
 
 def _remove_parser(self, name, **kwargs):
-    # remove choice help from list
-    if 'help' in kwargs:
-        self._choices_actions = [action
-                                 for action in self._choices_actions
-                                 if action.dest != name]
+  # remove choice help from list
+  if 'help' in kwargs:
+    alias_name = '%s (' % name
+    self._choices_actions = [action
+                             for action in self._choices_actions
+                             if action.dest != name and not action.dest.startswith(alias_name)]
 
-    # remove the parser from the map
-    self._name_parser_map.pop(name, None)
+  # remove the parser from the map
+  self._name_parser_map.pop(name, None)
 
-    # remove aliases
-    aliases = kwargs.pop('aliases', ())
-    for alias in aliases:
-        self._name_parser_map.pop(alias, None)
+  # remove aliases
+  aliases = kwargs.pop('aliases', ())
+  for alias in aliases:
+    self._name_parser_map.pop(alias, None)
 
 
 # Copied from https://gist.github.com/sampsyo/471779
