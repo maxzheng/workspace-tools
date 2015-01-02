@@ -12,8 +12,6 @@ from workspace.utils import log_exception, silent_run, split_doc
 log = logging.getLogger(__name__)
 new_version = None  # Doesn't work if it is in bump_version
 
-SETUP_FILE = 'setup.py'
-
 
 def setup_publish_parser(subparsers):
   doc, docs = split_doc(publish.__doc__)
@@ -58,7 +56,8 @@ def bump_version(minor=False, major=False):
   :param bool minor: Bump the minor version instead of patch.
   :param bool major: Bump the major version instead of patch.
   """
-  setup_file = os.path.join(repo_path(), SETUP_FILE)
+  setup_file = os.path.join(repo_path(), 'setup.py')
+
   if not os.path.exists(setup_file):
     log.error(setup_file + ' does not exist.')
     sys.exit(1)
@@ -80,7 +79,7 @@ def bump_version(minor=False, major=False):
 
     return 'version=' + match.group(1) + new_version + match.group(1)
 
-  content = re.sub('version\s*=\s*([\'"])(.*)[\'"]', replace_version, open(SETUP_FILE).read())
+  content = re.sub('version\s*=\s*([\'"])(.*)[\'"]', replace_version, open(setup_file).read())
 
   with open(setup_file, 'w') as fp:
     fp.write(content)
