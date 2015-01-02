@@ -60,7 +60,7 @@ def bump_version(minor=False, major=False):
   """
   setup_file = os.path.join(repo_path(), SETUP_FILE)
   if not os.path.exists(setup_file):
-    log.error(setup_file + 'does not exist.')
+    log.error(setup_file + ' does not exist.')
     sys.exit(1)
 
   def replace_version(match):
