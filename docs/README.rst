@@ -3,8 +3,8 @@ workspace-tools
 
 Tools to simplify workspace / scm management when working with multiple repositories.
 
-Design Goals (Sales Pitch)
-==========================
+Feature Summary
+===============
 * One tool to seamlessly manage / integrate all workspace tools, from develop to publish.
 * Trunk based development. One branch represents one change that is merged into master when pushed.
 * SCM agnostic (for git/git-svn and svn (commit/push command support later)).

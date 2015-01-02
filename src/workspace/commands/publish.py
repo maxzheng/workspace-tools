@@ -5,6 +5,7 @@ import sys
 
 from workspace.commands.update import update
 from workspace.commands.commit import commit
+from workspace.scm import repo_check, repo_path
 from workspace.utils import log_exception, silent_run, split_doc
 
 
@@ -32,8 +33,11 @@ def publish(minor=False, major=False, **kwargs):
   :param bool minor: Perform a minor publish by bumping the minor version
   :param bool major: Perform a major publish by bumping the major version
   """
+  repo_check()
 
-  silent_run('rm -rf dist/*', shell=True)
+  cwd = repo_path()
+
+  silent_run('rm -rf dist/*', shell=True, cwd=cwd)
 
   update(raises=True)
 
@@ -41,10 +45,10 @@ def publish(minor=False, major=False, **kwargs):
   commit(msg='Publish version ' + new_version, push=True)
 
   log.info('Building source distribution')
-  silent_run('python setup.py sdist')
+  silent_run('python setup.py sdist', cwd=cwd)
 
   log.info('Uploading')
-  silent_run('twine upload dist/*', shell=True)
+  silent_run('twine upload dist/*', shell=True, cwd=cwd)
 
 
 def bump_version(minor=False, major=False):
@@ -54,8 +58,9 @@ def bump_version(minor=False, major=False):
   :param bool minor: Bump the minor version instead of patch.
   :param bool major: Bump the major version instead of patch.
   """
-  if not os.path.exists(SETUP_FILE):
-    log.error(SETUP_FILE + 'does not exist.')
+  setup_file = os.path.join(repo_path(), SETUP_FILE)
+  if not os.path.exists(setup_file):
+    log.error(setup_file + 'does not exist.')
     sys.exit(1)
 
   def replace_version(match):
@@ -77,7 +82,7 @@ def bump_version(minor=False, major=False):
 
   content = re.sub('version\s*=\s*([\'"])(.*)[\'"]', replace_version, open(SETUP_FILE).read())
 
-  with open(SETUP_FILE, 'w') as fp:
+  with open(setup_file, 'w') as fp:
     fp.write(content)
 
   if not new_version:
