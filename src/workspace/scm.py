@@ -103,7 +103,7 @@ def commit_logs(limit=None, repo=None, show=False, patch=False, file=None):
     if show and (not limit or limit > 3):
       cmd.extend(['|', os.environ.get('PAGER') or 'less'])
 
-  return run(cmd, return_output=not show, shell=show)
+  return run(cmd, return_output=not show, shell=show, cwd=repo)
 
 
 def add_files(repo=None):

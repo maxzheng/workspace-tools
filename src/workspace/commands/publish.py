@@ -5,12 +5,13 @@ import sys
 
 from workspace.commands.update import update
 from workspace.commands.commit import commit
-from workspace.scm import repo_check, repo_path
+from workspace.scm import repo_check, repo_path, commit_logs, extract_commit_msgs, is_git_repo
 from workspace.utils import log_exception, silent_run, split_doc
 
 
 log = logging.getLogger(__name__)
 new_version = None  # Doesn't work if it is in bump_version
+PUBLISH_VERSION_PREFIX = 'Publish version '
 
 
 def setup_publish_parser(subparsers):
@@ -40,7 +41,9 @@ def publish(minor=False, major=False, **kwargs):
   update(raises=True)
 
   new_version = bump_version(minor, major)
-  commit(msg='Publish version ' + new_version, push=True)
+  update_changelog(new_version)
+
+  commit(msg=PUBLISH_VERSION_PREFIX + new_version, push=True)
 
   log.info('Building source distribution')
   silent_run('python setup.py sdist', cwd=cwd)
@@ -48,6 +51,39 @@ def publish(minor=False, major=False, **kwargs):
   log.info('Uploading')
   silent_run('twine upload dist/*', shell=True, cwd=cwd)
 
+
+def update_changelog(new_version):
+  commit_msgs = extract_commit_msgs(commit_logs(limit=100, repo=repo_path()), is_git_repo())
+  changes = []
+
+  for msg in commit_msgs:
+    if msg.startswith(PUBLISH_VERSION_PREFIX):
+      break
+    changes.append(msg)
+
+  if not changes:
+    log.info('There are no changes since last publish')
+    sys.exit(0)
+
+  docs_dir = os.path.join(repo_path(), 'docs')
+  if not os.path.isdir(docs_dir):
+    os.makedirs(docs_dir)
+
+  changelog_file = os.path.join(docs, 'CHANGELOG.rst')
+  existing_changes = os.path.exists(changelog_file) and open(changelog_file).read()
+
+  with open(changelog_file, 'w') as fp:
+    fp.write('Version %s' % new_version + '\n')
+    fp.write('=' * 80 + '\n\n')
+
+    for i, change in enumerate(changes):
+      num = i + 1
+      indent_spaces = '\n' + ' ' * (len(str(num)) + 2)
+      fp.write('%s. %s\n\n' % (num, change.replace('\n', indent_spaces)))
+
+    if existing_changes:
+      fp.write('\n')
+      fp.write(existing_changes)
 
 def bump_version(minor=False, major=False):
   """
