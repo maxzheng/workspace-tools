@@ -69,7 +69,7 @@ def update_changelog(new_version):
   if not os.path.isdir(docs_dir):
     os.makedirs(docs_dir)
 
-  changelog_file = os.path.join(docs, 'CHANGELOG.rst')
+  changelog_file = os.path.join(docs_dir, 'CHANGELOG.rst')
   existing_changes = os.path.exists(changelog_file) and open(changelog_file).read()
 
   with open(changelog_file, 'w') as fp:
