@@ -25,7 +25,6 @@ setuptools.setup(
 
   install_requires=[
     'brownie',
-    'markupsafe',
   ],
 
   license='MIT',
