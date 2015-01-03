@@ -117,7 +117,8 @@ TBD for better docs here.
 More
 ====
 
-| Documentation: http://workspace-tools.readthedocs.org/
+| Documentation: http://workspace-tools.readthedocs.org
+| Changes: http://workspace-tools.readthedocs.org/en/latest/CHANGELOG.html
 |
 | PyPi Package: https://pypi.python.org/pypi/workspace-tools
 | GitHub Source: https://github.com/maxzheng/workspace-tools
