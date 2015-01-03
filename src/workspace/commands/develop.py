@@ -5,7 +5,7 @@ import re
 import sys
 
 from workspace.scm import repo_check, product_name, repo_path
-from workspace.utils import silent_run, run, split_doc
+from workspace.utils import run, split_doc
 
 log = logging.getLogger(__name__)
 DEVELOP_ACTIONS = ('devenv', 'build', 'pytest', 'precommit', 'coverage')
@@ -148,7 +148,7 @@ def setup_develop_parser(subparsers):
   return develop_parser
 
 
-def develop(action='devenv', show=False, recreate=False, init=False, **kwargs):
+def develop(action='devenv', show=False, recreate=False, init=False, debug=False, **kwargs):
   """
   Manages development environments for product.
 
@@ -170,27 +170,30 @@ def develop(action='devenv', show=False, recreate=False, init=False, **kwargs):
     sys.exit(0)
 
   tox_inis = glob('tox*.ini')
+
   if not tox_inis:
     log.error('No tox.ini found. Please use --init first to setup tox.')
+    sys.exit(1)
+
   elif len(tox_inis) > 1:
     log.warn('More than one ini files found - will use first one: %s', ', '.join(tox_inis))
 
   # Strip out venv bin path to python to avoid issues with it being removed when running tox
-  if hasattr(sys, 'real_prefix'):
-    venv_bin = os.path.dirname(sys.prefix)
+  if 'VIRTUAL_ENV' in os.environ:
+    venv_bin = os.environ['VIRTUAL_ENV']
     os.environ['PATH'] = os.pathsep.join([p for p in os.environ['PATH'].split(os.pathsep)
-                                          if os.path.exists(p) and not os.path.samefile(p, venv_bin)])
+                                          if os.path.exists(p) and not p.startswith(venv_bin)])
 
   cmd = ['tox', '-c', tox_inis[0], '-e', action]
 
   if recreate:
     cmd.append('-r')
     log.info('Recreating development environment')
-    silent_run(cmd)
+    run(cmd, silent=not debug)
 
   elif action == 'devenv':
     log.info('Setting up development environment')
-    silent_run(cmd)
+    run(cmd, silent=not debug)
 
   else:
     run(cmd)
