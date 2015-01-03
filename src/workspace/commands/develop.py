@@ -169,7 +169,7 @@ def develop(action='devenv', show=False, recreate=False, init=False, debug=False
     init_env()
     sys.exit(0)
 
-  tox_inis = glob('tox*.ini')
+  tox_inis = glob(os.path.join(repo_path(), 'tox*.ini'))
 
   if not tox_inis:
     log.error('No tox.ini found. Please use --init first to setup tox.')
@@ -189,14 +189,14 @@ def develop(action='devenv', show=False, recreate=False, init=False, debug=False
   if recreate:
     cmd.append('-r')
     log.info('Recreating development environment')
-    run(cmd, silent=not debug)
+    run(cmd, silent=not debug, cwd=repo_path())
 
   elif action == 'devenv':
     log.info('Setting up development environment')
-    run(cmd, silent=not debug)
+    run(cmd, silent=not debug, cwd=repo_path())
 
   else:
-    run(cmd)
+    run(cmd, cwd=repo_path())
 
 
 def _relative_path(path):
@@ -284,11 +284,11 @@ print '\\n'.join(output)
   name = product_name(repo_path())
   script = script_template % name
 
-  python = os.path.join('.tox', name, 'bin', 'python')
+  python = os.path.join(repo_path(), '.tox', name, 'bin', 'python')
 
   if not os.path.exists(python):
     log.error('Development environment is not setup. Please run develop without --show to set it up first.')
-    sys.exit()
+    sys.exit(1)
 
   log.info('Product dependencies:')
   run([python, '-c', script])
