@@ -27,7 +27,7 @@ def setup_publish_parser(subparsers):
 
 def publish(minor=False, major=False, **kwargs):
   """
-  Bumps version in setup.py (defaults to patch), builds a source distribution, and uploads with twine.
+  Bumps version in setup.py (defaults to patch), writes out changelog, builds a source distribution, and uploads with twine.
 
   :param bool minor: Perform a minor publish by bumping the minor version
   :param bool major: Perform a major publish by bumping the major version
