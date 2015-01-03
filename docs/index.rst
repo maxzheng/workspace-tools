@@ -11,11 +11,6 @@ Welcome to workspace-tools's documentation!
 
    README
 
-.. toctree::
-   :hidden:
-
-   Change Log <CHANGELOG>
-
 API Documentation
 =================
 
