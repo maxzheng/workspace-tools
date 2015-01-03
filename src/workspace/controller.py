@@ -49,7 +49,7 @@ def setup_parsers():
   Sets up parsers for all commands
 
   :return: A tuple of (parser, subparsers, parsers) where::
-              parser - :class:`argparse.ArgumentParser' instance
+              parser - :class:`argparse.ArgumentParser` instance
               subparsers - argparse subparsers instance for parser
               parsers - Dict mapping of command to its parser instance
   :rtype: tuple(argparse.ArgumentParser, argparse._SubParsersAction, dict)

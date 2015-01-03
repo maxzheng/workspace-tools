@@ -5,15 +5,12 @@ Tools to simplify workspace / scm management when working with multiple reposito
 
 Feature Summary
 ===============
+
 * One tool to seamlessly manage / integrate all workspace tools, from develop to publish.
 * Trunk based development. One branch represents one change that is merged into master when pushed.
 * SCM agnostic (for git/git-svn and svn (commit/push command support later)).
-    - No need to remember different commands and arguments to run.
-    - Checks out svn using git-svn by default
 * Simplified command execution for common workflow
-    - Instead of several commands to push a branch, just run 'push' alias
 * Path aware context commands that runs command across all checkouts
-    - I.e. Try diff in workspace directory to see diffs for all products!
 * Extensible by adding your own custom commands or modify existing by wrapping them.
 * Cool and sensible shortcut aliases to help you do more by typing less
 
@@ -54,10 +51,11 @@ Make a commit and create a new branch for it::
 
     ci -b test "Updated README.rst"
 
-See status for all of your repos::
+See status/diff for all of your repos::
 
     ws
     st
+    di
     # More interesting if you do have changes in your other repos
 
 And finally amend the change and push::
@@ -118,12 +116,11 @@ TBD for better docs here.
 More
 ====
 
-Documentation: http://workspace-tools.readthedocs.org/
-
-Github project: https://github.com/maxzheng/workspace-tools
-
-Report issues/bugs: https://github.com/maxzheng/workspace-tools/issues
-
-LinkedIn: https://www.linkedin.com/in/maxzheng
-
-Email: maxzheng.os @t gmail.com
+| Documentation: http://workspace-tools.readthedocs.org/
+|
+| PyPi Package: https://pypi.python.org/pypi/workspace-tools
+| GitHub Source: https://github.com/maxzheng/workspace-tools
+| Report Issues/Bugs: https://github.com/maxzheng/workspace-tools/issues
+|
+| Connect: https://www.linkedin.com/in/maxzheng
+| Contact: maxzheng.os @t gmail.com
