@@ -1,5 +1,11 @@
-Version 0.2.39
+Version 0.2.40
 ================================================================================
+
+* Retain latest major/minor release title in changelog
+
+
+Version 0.2.39
+--------------------------------------------------------------------------------
 
 * Use bullet list for changes in CHANGELOG
 
