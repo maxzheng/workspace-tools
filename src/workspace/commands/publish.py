@@ -34,25 +34,28 @@ def publish(minor=False, major=False, **kwargs):
   """
   repo_check()
 
-  cwd = repo_path()
-
-  silent_run('rm -rf dist/*', shell=True, cwd=cwd)
-
   update(raises=True)
 
-  new_version = bump_version(minor, major)
-  update_changelog(new_version)
+  changes = changes_since_last_publish()
 
+  if not changes:
+    log.info('There are no changes since last publish')
+    sys.exit(0)
+
+  silent_run('rm -rf dist/*', shell=True, cwd=repo_path())
+
+  new_version = bump_version(minor, major)
+  update_changelog(new_version, changes)
   commit(msg=PUBLISH_VERSION_PREFIX + new_version, push=True)
 
   log.info('Building source distribution')
-  silent_run('python setup.py sdist', cwd=cwd)
+  silent_run('python setup.py sdist', cwd=repo_path())
 
   log.info('Uploading')
-  silent_run('twine upload dist/*', shell=True, cwd=cwd)
+  silent_run('twine upload dist/*', shell=True, cwd=repo_path())
 
 
-def update_changelog(new_version):
+def changes_since_last_publish():
   commit_msgs = extract_commit_msgs(commit_logs(limit=100, repo=repo_path()), is_git_repo())
   changes = []
 
@@ -61,10 +64,9 @@ def update_changelog(new_version):
       break
     changes.append(msg)
 
-  if not changes:
-    log.info('There are no changes since last publish')
-    sys.exit(0)
+  return changes
 
+def update_changelog(new_version, changes):
   docs_dir = os.path.join(repo_path(), 'docs')
   if not os.path.isdir(docs_dir):
     os.makedirs(docs_dir)

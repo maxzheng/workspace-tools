@@ -31,8 +31,8 @@ function ws ()
 COMMAND_FUNCTION_TEMPLATE = 'function %s() { _wst %s "$@"; }\n'
 COMMAND_ALIAS_TEMPLATE = 'alias %s=%s\n'
 COMMANDS = {
-  'a': '"source ./activate"',
-  'd': '"deactivate"',
+  'a': "'source .tox/${PWD##*/}/bin/activate'",  # Must use single quote for $PWD##* to work properly
+  'd': "'deactivate'",
 
   'co': 'checkout',
   'ci': 'commit',
@@ -147,7 +147,7 @@ def setup(commands=None, commands_with_aliases=None, uninstall=False, additional
       COMMANDS.update(additional_commands)
 
     if commands or commands_with_aliases:
-      functions = sorted([f for f in COMMANDS.values() if not f.startswith('"')])
+      functions = sorted([f for f in COMMANDS.values() if not (f.startswith("'") or f.startswith('"'))])
       fh.write('\n')
       for func in functions:
         fh.write(COMMAND_FUNCTION_TEMPLATE % (func, func.lstrip('_')))
