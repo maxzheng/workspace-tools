@@ -46,6 +46,7 @@ def publish(minor=False, major=False, **kwargs):
 
   new_version = bump_version(minor, major)
   update_changelog(new_version, changes)
+
   commit(msg=PUBLISH_VERSION_PREFIX + new_version, push=True)
 
   log.info('Building source distribution')
@@ -78,14 +79,12 @@ def update_changelog(new_version, changes):
     fp.write('Version %s' % new_version + '\n')
     fp.write('=' * 80 + '\n\n')
 
-    for i, change in enumerate(changes):
-      num = i + 1
-      indent_spaces = '\n' + ' ' * (len(str(num)) + 2)
-      fp.write('%s. %s\n\n' % (num, change.replace('\n', indent_spaces)))
+    for change in changes:
+      fp.write('* %s\n\n' % (change.replace('\n', '\n  ')))
 
     if existing_changes:
       fp.write('\n')
-      fp.write(existing_changes.repliace('='*80, '-'*80))
+      fp.write(existing_changes.replace('='*80, '-'*80))
 
 def bump_version(minor=False, major=False):
   """
