@@ -26,7 +26,6 @@ basepython = python
 [testenv:devenv]
 commands =
 	pip install -e .
-	ln -sf {envbindir}/activate .
 recreate = False
 skipsdist = True
 deps =
