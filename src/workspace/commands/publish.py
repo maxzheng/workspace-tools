@@ -45,7 +45,7 @@ def publish(minor=False, major=False, **kwargs):
   silent_run('rm -rf dist/*', shell=True, cwd=repo_path())
 
   new_version = bump_version(minor, major)
-  update_changelog(new_version, changes)
+  update_changelog(new_version, changes, minor or major)
 
   commit(msg=PUBLISH_VERSION_PREFIX + new_version, push=True)
 
@@ -67,24 +67,28 @@ def changes_since_last_publish():
 
   return changes
 
-def update_changelog(new_version, changes):
+def update_changelog(new_version, changes, skip_title_change=False):
   docs_dir = os.path.join(repo_path(), 'docs')
   if not os.path.isdir(docs_dir):
     os.makedirs(docs_dir)
 
   changelog_file = os.path.join(docs_dir, 'CHANGELOG.rst')
   existing_changes = os.path.exists(changelog_file) and open(changelog_file).read()
+  major_title = '=' * 80
+  minor_title = '-' * 80
 
   with open(changelog_file, 'w') as fp:
     fp.write('Version %s' % new_version + '\n')
-    fp.write('=' * 80 + '\n\n')
+    fp.write(major_title + '\n\n')
 
     for change in changes:
       fp.write('* %s\n\n' % (change.replace('\n', '\n  ')))
 
     if existing_changes:
       fp.write('\n')
-      fp.write(existing_changes.replace('='*80, '-'*80))
+      if not skip_title_change:
+        existing_changes = existing_changes.replace(major_title, minor_title, 1)
+      fp.write(existing_changes)
 
 def bump_version(minor=False, major=False):
   """
