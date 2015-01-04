@@ -85,7 +85,7 @@ def update_changelog(new_version, changes):
 
     if existing_changes:
       fp.write('\n')
-      fp.write(existing_changes)
+      fp.write(existing_changes.repliace('='*80, '-'*80))
 
 def bump_version(minor=False, major=False):
   """

@@ -23,6 +23,14 @@ API Documentation
    api/scm
    api/utils
 
+Change Log
+=================
+
+.. toctree::
+   :maxdepth: 1
+
+   CHANGELOG
+
 Indices and tables
 ==================
 

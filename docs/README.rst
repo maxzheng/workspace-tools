@@ -118,7 +118,6 @@ More
 ====
 
 | Documentation: http://workspace-tools.readthedocs.org
-| Changes: http://workspace-tools.readthedocs.org/en/latest/CHANGELOG.html
 |
 | PyPI Package: https://pypi.python.org/pypi/workspace-tools
 | GitHub Source: https://github.com/maxzheng/workspace-tools
