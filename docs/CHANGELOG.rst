@@ -1,3 +1,10 @@
+Version 0.2.37
+================================================================================
+
+1. publish: Exit early / without changing version when there are no changes
+   setup: Better 'a' alias to avoid having to do symlink in tox.
+
+
 Version 0.2.36
 ================================================================================
 
