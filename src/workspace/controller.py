@@ -2,7 +2,6 @@ import argparse
 import logging
 import pkg_resources
 
-from workspace.config import init_config
 from workspace.commands.checkout import setup_checkout_parser
 from workspace.commands.clean import setup_clean_parser
 from workspace.commands.commit import setup_commit_parser
@@ -80,12 +79,11 @@ def setup_parsers():
   return parser, subparsers, parsers
 
 
-def ws_entry_point(parser, init=None):
+def ws_entry_point(parser):
   """
   Main entry point for 'wst' that parses args, sets up config, and executes command.
 
   :param argparse.ArgumentParser parser: The parser to get args from
-  :param callable init: A callable to initialize your own config or other settings before running command.
   """
   args = parser.parse_args()
 
@@ -93,11 +91,6 @@ def ws_entry_point(parser, init=None):
     logging.root.setLevel(logging.DEBUG)
 
   with log_exception(exit=True, stack=args.debug):
-    init_config()
-
-    if init:
-      init()
-
     args.command(**args.__dict__)
 
 

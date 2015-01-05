@@ -6,7 +6,7 @@ import sys
 
 from brownie.caching import memoize
 
-from workspace.config import get_pref
+from workspace.config import config
 from workspace.utils import run, silent_run, parent_path_with_dir
 
 
@@ -385,7 +385,7 @@ def clone_svn_repo(product_url, checkout_path, clone_svn_commits):
 
 def checkout_product(product_url, checkout_path):
   """ Checks out the product from url. Raises on error """
-  clone_svn_commits = get_pref('checkout.use_gitsvn_to_clone_svn_commits')
+  clone_svn_commits = config.checkout.use_gitsvn_to_clone_svn_commits
   prod_name = product_name(product_url)
 
   if os.path.exists(checkout_path):

@@ -17,7 +17,7 @@ def setup_commit_parser(subparsers):
   commit_parser.add_argument('-a', '--amend', action='store_true', help=docs['amend'])
   commit_parser.add_argument('-p', '--push', action='store_true', help=docs['push'])
   commit_parser.add_argument('-d', '--dummy', action='store_true', help=docs['dummy'])
-  commit_parser.add_argument('--discard', metavar='branch', nargs='?', const=True, help=docs['branch'])
+  commit_parser.add_argument('--discard', metavar='branch', nargs='?', const=True, help=docs['discard'])
   commit_parser.add_argument('--move', metavar='branch', nargs=1, help=docs['move'])
   commit_parser.set_defaults(command=commit)
 
