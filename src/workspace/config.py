@@ -25,10 +25,10 @@ from remoteconfig import RemoteConfig
 
 
 CONFIG_FILE = 'workspace.cfg'
-USER_CONFIG_FILE = os.path.expanduser(os.path.join('~', '.config', CONFIG_FILE))
+USER_CONFIG_FILE = os.path.join('~', '.config', CONFIG_FILE)
 
 log = logging.getLogger()
-config = RemoteConfig(USER_CONFIG_FILE if os.path.exists(USER_CONFIG_FILE) else None)
+config = RemoteConfig(USER_CONFIG_FILE)
 config.read(__doc__)
 
 
