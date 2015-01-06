@@ -1,5 +1,13 @@
-Version 0.3.0
+Version 0.3.1
 ================================================================================
+
+* Skip checking for user config file existence as that is done in RemoteConfig now
+
+* Add -U to pip install
+
+
+Version 0.3.0
+--------------------------------------------------------------------------------
 
 * Refactor to use remoteconfig
 
