@@ -2,10 +2,15 @@
 # Default config. Change these in your personal ~/.config/workspace.cfg ::
 
   ###########################################################################################################
-  # Define product groups to take action upon (such as ws develop)
+  # Define product groups to take action upon (such as ws develop or bump)
   ###########################################################################################################
   [product_groups]
-  #group_name = product_checkout1 lib_checkout2
+  mzheng-repos =
+    git@github.com:maxzheng/workspace-tools.git
+    git@github.com:maxzheng/clicast.git
+    git@github.com:maxzheng/localconfig.git
+    git@github.com:maxzheng/remoteconfig.git
+  mzheng = workspace-tools clicast localconfig remoteconfig
 
 
   ###########################################################################################################

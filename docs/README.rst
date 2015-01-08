@@ -41,6 +41,9 @@ To checkout a repo::
     # It will be fixed once I figure out how to stream output from subprocess call.
     # For now, ensure that you are able to checkout repos using 'git clone' without prompt.
 
+    # Or checkout a group of repos as defined in workspace.cfg (refer to `workspace.config` API doc)
+    # co mzheng-repos
+
 To update all repos in your workspace::
 
     up
