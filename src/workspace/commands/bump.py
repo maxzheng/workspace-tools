@@ -70,7 +70,7 @@ def bump(names=None, file=None, msg=None, append=False, dry_run=False, quiet=Fal
       sys.exit(1)
     checkout_branch('master')
 
-  #update(raises=True)
+  update(raises=True)
 
   updated_requirement_files = {}
   found_requirement_file = False
