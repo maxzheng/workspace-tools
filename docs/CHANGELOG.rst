@@ -1,5 +1,13 @@
-Version 0.4.0
+Version 0.4.1
 ================================================================================
+
+* Fix product name computation for url ends with /trunk
+
+* Update changelog
+
+
+Version 0.4.0
+--------------------------------------------------------------------------------
 
 * Add example on setting up / using product group
 
