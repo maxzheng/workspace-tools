@@ -1,6 +1,9 @@
 Commands
 ========
 
+.. automodule:: workspace.commands.bump
+   :members:
+
 .. automodule:: workspace.commands.checkout
    :members:
 
