@@ -1,7 +1,7 @@
 import logging
 
 from workspace.commands.helpers import expand_product_groups
-from workspace.scm import is_git_repo, checkout_branch, update_repo, repos, product_name_for_repo, current_branch,\
+from workspace.scm import is_git_repo, checkout_branch, update_repo, repos, product_name, current_branch,\
     update_branch
 from workspace.utils import split_doc
 
@@ -28,7 +28,7 @@ def update(products=None, raises=False, **kwargs):
     products = expand_product_groups(products)
 
   for repo in repos():
-    name = product_name_for_repo(repo)
+    name = product_name(repo)
 
     if products and name not in products:
       continue

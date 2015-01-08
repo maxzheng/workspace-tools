@@ -210,10 +210,6 @@ def repos():
   return repos
 
 
-def product_name_for_repo(repo):
-  return os.path.basename(repo).replace('_trunk', '')
-
-
 def checkout_branch(branch, repo_path=None):
   """ Checks out the branch in the given or current repo. Raises on error. """
   silent_run(['git', 'checkout', branch], cwd=repo_path)
@@ -423,7 +419,7 @@ def hard_reset(to_commit):
 def product_name(product_url):
   if product_url.endswith('.git'):
     name = product_url[:-4]
-  elif product_url.endswith('_trunk'):
+  elif product_url.endswith('_trunk') or product_url.endswith('/trunk'):
     name = product_url[:-6]
   else:
     name = product_url

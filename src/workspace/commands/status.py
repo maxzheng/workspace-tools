@@ -1,7 +1,7 @@
 import logging
 
 from workspace.commands.helpers import ProductPager
-from workspace.scm import stat_repo, repos, product_name_for_repo, all_branches, is_git_repo
+from workspace.scm import stat_repo, repos, product_name, all_branches, is_git_repo
 
 log = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def status(**kwargs):
           output = '# Branches: %s\n#\n%s' % (' '.join(branches), output)
 
       if output and not nothing_to_commit:
-          pager.write(product_name_for_repo(repo), output)
+          pager.write(product_name(repo), output)
   except Exception as e:
     log.error(e)
   finally:

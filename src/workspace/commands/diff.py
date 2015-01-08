@@ -2,7 +2,7 @@ import logging
 import os
 
 from workspace.commands.helpers import ProductPager
-from workspace.scm import diff_repo, repos, product_name_for_repo, current_branch, is_git_repo
+from workspace.scm import diff_repo, repos, product_name, current_branch, is_git_repo
 from workspace.utils import log_exception, split_doc
 
 log = logging.getLogger(__name__)
@@ -38,6 +38,6 @@ def diff(file=None, master=False, **kwargs):
       output = diff_repo(repo, branch=branch, file=file, return_output=True)
       if output:
         branch = current_branch(repo) if is_git_repo(repo) else None
-        pager.write(product_name_for_repo(repo), output, branch)
+        pager.write(product_name(repo), output, branch)
 
   pager.close_and_wait()
