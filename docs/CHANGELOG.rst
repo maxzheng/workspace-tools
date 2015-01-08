@@ -1,17 +1,7 @@
 Version 0.4.0
 ================================================================================
 
-* Uncomment update in bump
-
 * Add example on setting up / using product group
-
-* Update config comment
-
-* Update config comments
-
-* Update config comments
-
-* Add bump to API doc
 
 * Add bump command to bump dependency versions
 
