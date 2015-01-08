@@ -1,25 +1,23 @@
 """
-#######################################################################################
+# Default config. Change these in your personal ~/.config/workspace.cfg
+
 # Define product groups to take action upon (such as ws develop)
-#######################################################################################
 [product_groups]
 #group_name = product_checkout1 lib_checkout2
 
 
-#######################################################################################
-# Setting for checkout command
-#######################################################################################
+# Settings for checkout command
 [checkout]
 
 # Check out SVN repo using git-svn and clone the specified # of commits. Set to 0 to disable git-svn clone.
 # Higher the number, the longer it takes to clone.
 use_gitsvn_to_clone_svn_commits = 10
 
-#######################################################################################
-# Setting for bump command
-#######################################################################################
+
+# Settings for bump command
 [bump]
 
+# List of requirement files to check / bump dependencies in
 requirement_files = requirements.txt pinned.txt
 """
 
