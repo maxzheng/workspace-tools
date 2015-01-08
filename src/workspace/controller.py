@@ -2,6 +2,8 @@ import argparse
 import logging
 import pkg_resources
 
+
+from workspace.commands.bump import setup_bump_parser
 from workspace.commands.checkout import setup_checkout_parser
 from workspace.commands.clean import setup_clean_parser
 from workspace.commands.commit import setup_commit_parser
@@ -63,6 +65,7 @@ def setup_parsers():
   subparsers.remove_parser = lambda *args, **kwargs: _remove_parser(subparsers, *args, **kwargs)
 
   parsers = {
+    'bump': setup_bump_parser(subparsers),
     'checkout': setup_checkout_parser(subparsers),
     'clean': setup_clean_parser(subparsers),
     'commit': setup_commit_parser(subparsers),

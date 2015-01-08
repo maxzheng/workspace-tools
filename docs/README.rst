@@ -86,6 +86,8 @@ Now you are ready to try out the other commands yourself::
       {checkout,co,clean,commit,ci,develop,de,diff,di,log,publish,push,setup,status,st,update,up}
                             List of sub-commands
         checkout (co)       Checkout products
+        bump                Bump dependency versions in requirements.txt,
+                            pinned.txt, or any specified file.
         clean               Clean workspace by removing build, dist, and .pyc
                             files
         commit (ci)         Commit all changes locally, including new files.

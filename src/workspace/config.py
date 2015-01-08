@@ -14,6 +14,13 @@
 # Check out SVN repo using git-svn and clone the specified # of commits. Set to 0 to disable git-svn clone.
 # Higher the number, the longer it takes to clone.
 use_gitsvn_to_clone_svn_commits = 10
+
+#######################################################################################
+# Setting for bump command
+#######################################################################################
+[bump]
+
+requirement_files = requirements.txt pinned.txt
 """
 
 import logging

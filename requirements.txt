@@ -1,0 +1,4 @@
+brownie
+remoteconfig
+requests
+simplejson

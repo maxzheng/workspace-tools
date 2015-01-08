@@ -23,10 +23,7 @@ setuptools.setup(
     ],
   },
 
-  install_requires=[
-    'brownie',
-    'remoteconfig',
-  ],
+  install_requires=open('requirements.txt').read(),
 
   license='MIT',
 
