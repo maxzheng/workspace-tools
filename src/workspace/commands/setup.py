@@ -41,6 +41,7 @@ COMMANDS = {
   'st': 'status',
   'up': 'update',
 
+  '_bu': 'bump',
   '_cl': 'clean',
   '_lo': 'log',
   '_pu': 'push',
