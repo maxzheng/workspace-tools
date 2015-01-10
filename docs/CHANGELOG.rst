@@ -1,5 +1,11 @@
-Version 0.4.2
+Version 0.4.3
 ================================================================================
+
+* Support custom file processing for bump and do not use squash merge for push
+
+
+Version 0.4.2
+--------------------------------------------------------------------------------
 
 * Add bump bash shortcut
 
