@@ -45,10 +45,12 @@ def main():
   ws_entry_point(parser)
 
 
-def setup_parsers():
+def setup_parsers(package_name=None):
   """
   Sets up parsers for all commands
 
+  :param str package_name: Additional package name to show version for.
+                           By default, it shows the version for 'workspace-tools' package when ``wst -v`` is run
   :return: A tuple of (parser, subparsers, parsers) where::
               parser - :class:`argparse.ArgumentParser` instance
               subparsers - argparse subparsers instance for parser
@@ -59,7 +61,7 @@ def setup_parsers():
 
   parser = argparse.ArgumentParser(description=DESCRIPTION, formatter_class=argparse.RawDescriptionHelpFormatter)
   parser.register('action', 'parsers', AliasedSubParsersAction)
-  setup_parser(parser)
+  setup_parser(parser, package_name)
 
   subparsers = parser.add_subparsers(title='sub-commands', help='List of sub-commands')
   subparsers.remove_parser = lambda *args, **kwargs: _remove_parser(subparsers, *args, **kwargs)
@@ -97,10 +99,17 @@ def ws_entry_point(parser):
     args.command(**args.__dict__)
 
 
-def setup_parser(parser):
-  """ Sets up the main parser """
+def setup_parser(parser, package_name=None):
+  """
+  Sets up the main parser
 
-  parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + pkg_resources.get_distribution('workspace-tools').version)
+  :param ArgumentParser parser:
+  :param str package_name: Additional package name to show version for.
+                           By default, it shows the version for 'workspace-tools' package when ``wst -v`` is run
+  """
+  version = '\n'.join('%s %s' % (pkg, pkg_resources.get_distribution(pkg).version)
+                      for pkg in filter(None, [package_name, 'workspace-tools']))
+  parser.add_argument('-v', '--version', action='version', version=version)
   parser.add_argument('--debug', action='store_true', help='Turn on debug mode')
 
 
