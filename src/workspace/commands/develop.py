@@ -187,14 +187,39 @@ def develop(action='devenv', show=False, recreate=False, init=False, debug=False
     cmd.append('-r')
     log.info('Recreating development environment')
     run(cmd, silent=not debug, cwd=repo_path())
+    strip_version_from_entry_scripts(repo_path())
 
   elif action == 'devenv':
     log.info('Setting up development environment')
     run(cmd, silent=not debug, cwd=repo_path())
+    strip_version_from_entry_scripts(repo_path())
 
   else:
     run(cmd, cwd=repo_path())
 
+
+def strip_version_from_entry_scripts(repo):
+  """ Strip out version spec "==1.2.3" from entry scripts as they require re-develop when version is changed in develop mode. """
+  name = product_name(repo)
+  script_bin = os.path.join(repo, '.tox', name, 'bin')
+
+  if os.path.exists(script_bin):
+    name_version_re = re.compile('%s==[0-9\.]+' % name)
+    removed_from = []
+    for script in os.listdir(script_bin):
+      script_path = os.path.join(script_bin, script)
+
+      with open(script_path) as fp:
+        script = fp.read()
+
+      if name_version_re.search(script):
+        new_script = name_version_re.sub(name, script)
+        with open(script_path, 'w') as fp:
+          fp.write(new_script)
+        removed_from.append(os.path.basename(script_path))
+
+    if removed_from:
+      log.info('Removed version spec from entry script(s): %s', ', '.join(removed_from))
 
 def _relative_path(path):
   if path.startswith(os.getcwd() + os.path.sep):
