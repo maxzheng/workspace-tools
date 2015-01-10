@@ -1,13 +1,11 @@
 import logging
 
 from workspace.scm import checkout_branch, remove_branch, git_repo_check, current_branch, update_repo,\
-    push_repo, merge_branch, local_commit, diff_branch, extract_commit_msgs, update_branch
+    push_repo, merge_branch, diff_branch, extract_commit_msgs, update_branch
 from workspace.utils import split_doc
 
 
 log = logging.getLogger(__name__)
-
-MIN_COMMIT_MSG_LEN = 10
 
 
 def setup_push_parser(subparsers):
@@ -43,9 +41,6 @@ def push(branch=None, **kwargs):
 
     checkout_branch('master')
     merge_branch(branch)
-
-    msgs = filter(lambda m: len(m) > MIN_COMMIT_MSG_LEN, extract_commit_msgs(diff_branch(branch)))
-    local_commit('\n\n'.join(msgs))
 
   push_repo()
 
