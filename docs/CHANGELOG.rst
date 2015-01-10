@@ -1,5 +1,11 @@
-Version 0.4.4
+Version 0.4.5
 ================================================================================
+
+* Strip version spec from entry scripts in dev env
+
+
+Version 0.4.4
+--------------------------------------------------------------------------------
 
 * Allow downstream package to show its version with -v
 
