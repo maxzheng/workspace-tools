@@ -1,5 +1,11 @@
-Version 0.4.3
+Version 0.4.4
 ================================================================================
+
+* Allow downstream package to show its version with -v
+
+
+Version 0.4.3
+--------------------------------------------------------------------------------
 
 * Support custom file processing for bump and do not use squash merge for push
 
