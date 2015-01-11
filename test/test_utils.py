@@ -1,17 +1,36 @@
-from workspace.utils import split_doc
+from contextlib import contextmanager
+import os
+import shutil
+from tempfile import mkdtemp
 
-def test_split_doc():
-  """
-  Main doc
-  for test
+from workspace.utils import run
 
-  :param type name: Param description
-                    on second line.
-  :param without_type: No type
-  """
-  assert split_doc(test_split_doc.__doc__) == (
-    '\n  Main doc\n  for test',
-    {'name': 'Param description\n                    on second line.',
-     'without_type': 'No type'
-    }
-  )
+
+@contextmanager
+def temp_dir():
+  try:
+    cwd = os.getcwd()
+    dtemp = mkdtemp()
+    os.chdir(dtemp)
+
+    yield dtemp
+
+  finally:
+    os.chdir(cwd)
+    shutil.rmtree(dtemp)
+
+
+@contextmanager
+def temp_git_repo():
+  with temp_dir() as dir:
+    run('git init')
+    yield dir
+
+
+@contextmanager
+def temp_remote_git_repo():
+  with temp_dir() as dir:
+    run('git clone https://github.com/maxzheng/remoteconfig.git')
+    repo_dir = os.path.join(dir, 'remoteconfig')
+    os.chdir(repo_dir)
+    yield repo_dir

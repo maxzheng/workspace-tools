@@ -17,9 +17,10 @@ def status(**kwargs):
   """ Show status on current product or all products in workspace """
 
   try:
-    optional = len(repos()) == 1
+    scm_repos = repos()
+    optional = len(scm_repos) == 1
     pager = ProductPager(optional=optional)
-    for repo in repos():
+    for repo in scm_repos:
       output = stat_repo(repo, True)
       nothing_to_commit = 'nothing to commit' in output and 'Your branch is ahead of' not in output
 

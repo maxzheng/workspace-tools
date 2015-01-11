@@ -54,6 +54,9 @@ def bump(names=None, append=False, msg=None, file=None, file_updaters=None, dry_
   """
   repo_check()
 
+  if not names:
+    names = []
+
   filter_names = expand_product_groups(names)
 
   if isinstance(file, list):

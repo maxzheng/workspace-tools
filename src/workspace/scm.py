@@ -4,8 +4,6 @@ import re
 import shutil
 import sys
 
-from brownie.caching import memoize
-
 from workspace.config import config
 from workspace.utils import run, silent_run, parent_path_with_dir
 
@@ -156,7 +154,6 @@ def extract_commit_msgs(output, is_git=True):
   return msgs
 
 
-@memoize
 def is_git_svn_repo(path=None):
   """ Checks if given or current path is a git svn repo """
   repo_path = git_repo_path(path)
@@ -167,7 +164,6 @@ def is_repo(path=None):
   return repo_path(path)
 
 
-@memoize
 def repo_path(path=None):
   return git_repo_path(path) or svn_repo_path(path)
 
@@ -176,7 +172,6 @@ def is_svn_repo(path=None):
   return svn_repo_path(path)
 
 
-@memoize
 def svn_repo_path(path=None):
   """ Checks if given or current path is a svn repo """
   return parent_path_with_dir('.svn', path)
@@ -186,13 +181,11 @@ def is_git_repo(path=None):
   return git_repo_path(path)
 
 
-@memoize
 def git_repo_path(path=None):
   """ Checks if given or current path is a git repo """
   return parent_path_with_dir('.git', path)
 
 
-@memoize
 def repos():
   """ Returns a list of repos either for the current directory or in sub-directories. """
   repos = []

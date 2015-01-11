@@ -29,7 +29,7 @@ def diff(file=None, master=False, **kwargs):
   else:
     scm_repos = repos()
 
-  optional = len(repos()) == 1
+  optional = len(scm_repos) == 1
   pager = ProductPager(optional=optional)
 
   for repo in scm_repos:
