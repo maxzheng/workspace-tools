@@ -10,6 +10,7 @@ Welcome to workspace-tools's documentation!
    :maxdepth: 2
 
    README
+   commands
 
 API Documentation
 =================

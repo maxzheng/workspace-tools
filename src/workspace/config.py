@@ -2,7 +2,7 @@
 # Default config. Change these in your personal ~/.config/workspace.cfg ::
 
   ###########################################################################################################
-  # Define product groups to take action upon (such as ws develop or bump)
+  # Define product groups to take action upon (such as wst checkout, develop, or bump)
   ###########################################################################################################
   [product_groups]
   mzheng-repos =

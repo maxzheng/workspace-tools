@@ -3,6 +3,11 @@ workspace-tools
 
 Tools to simplify workspace / scm management when working with multiple repositories.
 
+It is mostly a wrapper on top of existing tools with the end goal of providing a simple, seamless, and
+less repetive experience when working with one or more repositories. Feature support is mostly limited
+to what the author uses as, currently, it is foremost a personal tool to enhance the author's own productivity,
+but sharing it as others might find it useful.
+
 Feature Summary
 ===============
 
@@ -38,11 +43,12 @@ To checkout a repo::
     co https://github.com/maxzheng/workspace-tools.git
 
     # This would be stuck forever if there is an input prompt as output is hidden.
-    # It will be fixed once I figure out how to stream output from subprocess call.
-    # For now, ensure that you are able to checkout repos using 'git clone' without prompt.
+    # So, ensure that you are able to checkout repos using 'git clone' without prompt.
 
-    # Or checkout a group of repos as defined in workspace.cfg (refer to `workspace.config` API doc)
+    # Or checkout a group of repos as defined in workspace.cfg
     # co mzheng-repos
+
+For more info about workspace.cfg, refer to Configuration_ doc.
 
 To update all repos in your workspace::
 
@@ -74,6 +80,13 @@ Or simply push the change in your current branch::
 
     push
     # Again, it will fail at push as you are not a committer, but the change was merged into master.
+
+If you have pinned your dependency requirements and want to update to latest version::
+
+    bump
+
+    # Or bump a defined group of products as defined in workspace.cfg
+    # bump mzheng
 
 Now you are ready to try out the other commands yourself::
 
@@ -108,19 +121,8 @@ Now you are ready to try out the other commands yourself::
                             workspace
         update (up)         Update current product or all products in workspace
 
-
-Customize Commands
-==================
-
-As simple as two steps:
-
-1. Create your own controller by copying workspace/controller.py:main and add entrypoint to setup.py
-2. Add your own commands or change existing in controller. See `workspace.commands` package for examples.
-
-TBD for better docs here.
-
-More
-====
+Links & Contact Info
+====================
 
 | Documentation: http://workspace-tools.readthedocs.org
 |
@@ -130,3 +132,5 @@ More
 |
 | Connect: https://www.linkedin.com/in/maxzheng
 | Contact: maxzheng.os @t gmail.com
+
+.. _Configuration: http://workspace-tools.readthedocs.org/en/latest/api/config.html
