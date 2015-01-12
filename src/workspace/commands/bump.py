@@ -37,7 +37,7 @@ def bump(names=None, append=False, msg=None, file=None, file_updaters=None, dry_
     Bump dependency versions in requirements.txt, pinned.txt, or any specified file.
 
     :param str names: Only bump dependencies that match the name.
-                      Name can be a product group name defined in workspace.cfg
+                      Name can be a product group name defined in workspace.cfg.
                       To bump to a specific version instead of latest, append version to name
                       (i.e. requests==1.2.3 or 'requests>=1.2.3'). When > or < is used, be sure to quote.
     :param bool append: Append bump changes to current branch and update existing rb if any (from .git/config)

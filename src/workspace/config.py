@@ -2,6 +2,15 @@
 # Default config. Change these in your personal ~/.config/workspace.cfg ::
 
   ###########################################################################################################
+  # Remote configuration
+  ###########################################################################################################
+  [remote]
+
+  # Shared configs (such as for product groups or others) can be set in a remote config to simplify management.
+  #config = https://github.com/maxzheng/workspace-tools/blob/master/test/shared.cfg
+
+
+  ###########################################################################################################
   # Define product groups to take action upon (such as wst checkout, develop, or bump)
   ###########################################################################################################
   [product_groups]
