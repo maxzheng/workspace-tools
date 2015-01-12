@@ -87,6 +87,9 @@ If you have pinned your dependency requirements and want to update to latest ver
 
     # Or bump a defined group of products as defined in workspace.cfg
     # bump mzheng
+    #
+    # Or to a specific version (why not just vi? This validates the version for you)
+    # bump requests==2.5.1
 
 Now you are ready to try out the other commands yourself::
 
