@@ -87,7 +87,9 @@ TBD for better docs.
 Want More Docs?
 ---------------
 
-TBD for more docs as I am not sure if there is anyone that actually read this as there probably
+Most commands have help info, so run the command with '-h'.
+
+TBD for more docs as I am not sure if anyone actually read this since there probably
 aren't that many users of workspace-tools. So If you would like to read the rest of the docs,
 let me know (maxzheng.os @t gmail.com), and I will take the time to finish this.
 
