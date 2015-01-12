@@ -1,5 +1,15 @@
-Version 0.4.6
+Version 0.4.7
 ================================================================================
+
+* Fix bump doc
+
+* Update doc
+
+* Update doc
+
+
+Version 0.4.6
+--------------------------------------------------------------------------------
 
 * Add doc for bump / start but not finish Command Reference
 
