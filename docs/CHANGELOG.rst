@@ -1,5 +1,15 @@
-Version 0.4.5
+Version 0.4.6
 ================================================================================
+
+* Add doc for bump / start but not finish Command Reference
+
+* Add tests for bump and remove use of memozie
+
+* Remove ln whitelist from tox
+
+
+Version 0.4.5
+--------------------------------------------------------------------------------
 
 * Strip version spec from entry scripts in dev env
 
