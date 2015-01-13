@@ -8,7 +8,6 @@ from workspace.scm import repo_check, product_name, repo_path
 from workspace.utils import run, split_doc
 
 log = logging.getLogger(__name__)
-DEVELOP_ACTIONS = ('devenv', 'build', 'pytest', 'precommit', 'coverage')
 TOX_INI_FILE = 'tox.ini'
 TOX_INI_TMPL = """\
 [tox]
@@ -134,7 +133,7 @@ README_TMPL = """\
 def setup_develop_parser(subparsers):
   doc, docs = split_doc(develop.__doc__)
   develop_parser = subparsers.add_parser('develop', aliases=['de'], description=doc, help=doc)
-  develop_parser.add_argument('action', nargs='?', choices=DEVELOP_ACTIONS, default='devenv', help=docs['action'])
+  develop_parser.add_argument('action', nargs='?', help=docs['action'])
   group = develop_parser.add_mutually_exclusive_group()
   group.add_argument('-s', '--show', action='store_true', help=docs['show'])
   group.add_argument('-r', '--recreate', action='store_true', help=docs['recreate'])
@@ -145,11 +144,11 @@ def setup_develop_parser(subparsers):
   return develop_parser
 
 
-def develop(action='devenv', show=False, recreate=False, init=False, debug=False, **kwargs):
+def develop(action=None, show=False, recreate=False, init=False, debug=False, **kwargs):
   """
   Manages development environments for product.
 
-  :param str action: Develop action (for tox -e) to take. Defaults to devenv.
+  :param str action: Action for 'tox -e'
   :param bool show: Show where product dependencies are installed from and their versions in devenv.
   :param bool recreate: Completely recreate the development environment by removing the existing first
   :param bool init: Initialize development environment by setting up tox with devenv, build,
@@ -181,21 +180,16 @@ def develop(action='devenv', show=False, recreate=False, init=False, debug=False
     os.environ['PATH'] = os.pathsep.join([p for p in os.environ['PATH'].split(os.pathsep)
                                           if os.path.exists(p) and not p.startswith(venv_bin)])
 
-  cmd = ['tox', '-c', tox_inis[0], '-e', action]
+  cmd = ['tox', '-c', tox_inis[0]]
+
+  if action:
+    cmd.extend(['-e', action])
 
   if recreate:
     cmd.append('-r')
-    log.info('Recreating development environment')
-    run(cmd, silent=not debug, cwd=repo_path())
-    strip_version_from_entry_scripts(repo_path())
 
-  elif action == 'devenv':
-    log.info('Setting up development environment')
-    run(cmd, silent=not debug, cwd=repo_path())
-    strip_version_from_entry_scripts(repo_path())
-
-  else:
-    run(cmd, cwd=repo_path())
+  run(cmd, cwd=repo_path())
+  strip_version_from_entry_scripts(repo_path())
 
 
 def strip_version_from_entry_scripts(repo):
@@ -219,7 +213,7 @@ def strip_version_from_entry_scripts(repo):
         removed_from.append(os.path.basename(script_path))
 
     if removed_from:
-      log.info('Removed version spec from entry script(s): %s', ', '.join(removed_from))
+      log.debug('Removed version spec from entry script(s): %s', ', '.join(removed_from))
 
 def _relative_path(path):
   if path.startswith(os.getcwd() + os.path.sep):
