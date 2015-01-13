@@ -229,8 +229,11 @@ def rename_branch(branch, new_branch):
   silent_run(['git', 'branch', '-m', branch, new_branch])
 
 
-def merge_branch(branch):
-  silent_run(['git', 'merge', branch])
+def merge_branch(branch, squash=False):
+  cmd = ['git', 'merge', branch]
+  if squash:
+    cmd.append('--squash')
+  silent_run(cmd)
 
 
 def diff_branch(right_branch, left_branch='master', path=None):
