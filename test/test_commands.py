@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from workspace.commands.bump import bump
+from workspace.commands.bump import bump, _latest_module_version
 from workspace.scm import local_commit, add_files, remove_branch, checkout_branch
 from workspace.utils import run
 
@@ -26,11 +26,15 @@ def test_bump():
 
     # All requirements are outdated
     with open('requirements.txt', 'w') as fp:
-      fp.write('localconfig==0.0.1\nrequests<0.1')
+      fp.write('# Comment for localconfig\nlocalconfig==0.0.1\n# Comment for requests\nrequests<0.1')
     file, msg = bump().items()[0]
+    versions = (_latest_module_version('localconfig'), _latest_module_version('requests'))
     assert 'requirements.txt' == file
-    assert 'localconfig==' in msg
-    assert 'requests<=' in msg
+    assert 'Update requirements.txt: localconfig==%s requests<=%s' % versions == msg
+
+    with open('requirements.txt') as fp:
+      requirements = fp.read()
+      assert '# Comment for localconfig\nlocalconfig==%s\n# Comment for requests\nrequests<=%s\n' % versions == requirements
 
     # Exisitng bump branch
     with pytest.raises(SystemExit):

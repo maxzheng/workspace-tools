@@ -153,7 +153,7 @@ def update_requirements(file, requirement_filters, append=False, additional_msg=
     req = _parse_requirements(req, file)[0]
 
     if comments:
-      requirement_comments[req] = '\n'.join(comments)
+      requirement_comments[req.project_name] = '\n'.join(comments)
       comments = []
 
     if not requirement_filters or req.project_name in requirement_filters and not requirement_filters[req.project_name].specs:
@@ -170,7 +170,7 @@ def update_requirements(file, requirement_filters, append=False, additional_msg=
             log.warn('%s will not be bumped as it explicitly excludes latest version')
             op = None
           if op:
-            req.specs = [(op, latest_version)]
+            req = pkg_resources.Requirement.parse(req.project_name + op + latest_version)
             updated_requirements.append(str(req))
 
     elif req.project_name in requirement_filters and requirement_filters[req.project_name].specs:
@@ -190,8 +190,8 @@ def update_requirements(file, requirement_filters, append=False, additional_msg=
     if not dry_run:
       with open(file, 'w') as fp:
         for req in requirements:
-          if req in requirement_comments:
-            fp.write(requirement_comments[req] + '\n')
+          if req.project_name in requirement_comments:
+            fp.write(requirement_comments[req.project_name] + '\n')
           fp.write(str(req) + '\n')
 
     requirements = (' ').join(updated_requirements)
