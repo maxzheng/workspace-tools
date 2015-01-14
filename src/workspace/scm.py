@@ -362,7 +362,7 @@ def clone_svn_repo(product_url, checkout_path, clone_svn_commits):
 
   clone_cmd = ['git', 'svn', 'clone', revision_range]
   if product_url.endswith('/trunk'):
-    clone_cmd.extend(['-T', 'trunk', product_url.rstrip('/trunk'), checkout_path])
+    clone_cmd.extend(['-T', 'trunk', product_url[:-6], checkout_path])
   else:
     clone_cmd.extend([product_url, checkout_path])
 
