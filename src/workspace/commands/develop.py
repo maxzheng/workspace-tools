@@ -83,8 +83,8 @@ setuptools.setup(
   name='%s',
   version='0.0.1',
 
-  author='<AUTHOR>',
-  author_email='<AUTHOR_EMAIL>',
+  author='<PLACEHOLDER>',
+  author_email='<PLACEHOLDER>',
 
   description=open('%s').read(),
 
@@ -110,7 +110,7 @@ setuptools.setup(
     'Development Status :: 5 - Production/Stable',
 
     'Intended Audience :: Developers',
-    'Topic :: Software Development :: <SUB-TOPIC>',
+    'Topic :: Software Development :: <PLACEHOLDER SUB-TOPIC>',
 
     'License :: OSI Approved :: MIT License',
 
@@ -126,7 +126,7 @@ README_TMPL = """\
 %s
 ===========
 
-<DESCRIPTION>
+<PLACEHOLDER DESCRIPTION>
 """
 
 
