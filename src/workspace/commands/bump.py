@@ -67,7 +67,7 @@ def bump(names=None, append=False, msg=None, file=None, file_updaters=None, dry_
     requirement_files = config.bump.requirement_files.strip().split()
 
   if not append and is_git_repo():
-    if 'bump' in all_branches():
+    if not dry_run and 'bump' in all_branches():
       log.error('There is already a "bump" branch. Please commit or delete it first before doing another bump.')
       sys.exit(1)
     checkout_branch('master')
