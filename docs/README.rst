@@ -102,7 +102,7 @@ Now you are ready to try out the other commands yourself::
       --debug               Turn on debug mode
 
     sub-commands:
-      {bump,checkout,co,clean,commit,ci,develop,de,diff,di,log,publish,push,setup,status,st,update,up}
+      {bump,checkout,co,clean,commit,ci,diff,di,log,publish,push,setup,status,st,test,update,up}
                             List of sub-commands
         bump                Bump dependency versions in requirements.txt,
                             pinned.txt, or any specified file.
@@ -110,7 +110,6 @@ Now you are ready to try out the other commands yourself::
         clean               Clean workspace by removing build, dist, and .pyc
                             files
         commit (ci)         Commit all changes locally, including new files.
-        develop (de)        Manages development environments for product.
         diff (di)           Show diff on current product or all products in
                             workspace
         log                 Show commit logs
@@ -120,6 +119,7 @@ Now you are ready to try out the other commands yourself::
         push                Push changes for branch
         setup               Optional (refer to setup --help). Setup workspace
                             environment. Run from primary workspace directory.
+        test                Runs tests and manages test environments for product.
         status (st)         Show status on current product or all products in
                             workspace
         update (up)         Update current product or all products in workspace

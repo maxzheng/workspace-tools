@@ -13,9 +13,6 @@ Commands
 .. automodule:: workspace.commands.commit
    :members:
 
-.. automodule:: workspace.commands.develop
-   :members:
-
 .. automodule:: workspace.commands.diff
    :members:
 
@@ -32,6 +29,9 @@ Commands
    :members:
 
 .. automodule:: workspace.commands.status
+   :members:
+
+.. automodule:: workspace.commands.test
    :members:
 
 .. automodule:: workspace.commands.update

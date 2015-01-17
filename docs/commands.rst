@@ -21,36 +21,12 @@ alias for "wst commit" if the -a option is used (--commands-with-aliases). And f
 as push), it also adds auto complete for branch name.
 
 To setup, simply go to your workspace directory, and then run 'wst setup' with the apporpriate options
-(-a is recommended).
+(-a is recommended)::
+
+    wst setup -a
 
 For the sake of readability for the first time user, the remaining reference will use the full wst command
 instead of aliases from setup. But reference to the short version may be provided as a comment.
-
-::
-
-    usage: wst setup [-h] [-c | -a | --uninstall]
-
-      Sets up workspace environment.
-
-      While "wst" will work for multiple workspaces, this should only be run in your primary workspace directory.
-
-      It sets up a "ws" bash function that goes to your workspace directory when no argument is passed in, otherwise
-      runs wst command. And also additional functions / aliases for some commands if --commands/--commands-with-aliases
-      is passed in. --commands-with-aliases (-a) is recommended. :)
-
-      This can be re-run multiple times to change setup.
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      -c, --commands        Add convenience bash function for certain commands,
-                            such as checkout to run "workspace checkout"
-      -a, --commands-with-aliases
-                            Same as --commands plus add shortcut aliases, like
-                            "co" for checkout. This is for those developers that
-                            want to get as much done with the least key strokes -
-                            true efficienist! ;)
-      --uninstall           Uninstall all functions/aliases
-
 
 Checkout a Repository
 ---------------------

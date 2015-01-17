@@ -7,7 +7,7 @@ from workspace.commands.bump import setup_bump_parser
 from workspace.commands.checkout import setup_checkout_parser
 from workspace.commands.clean import setup_clean_parser
 from workspace.commands.commit import setup_commit_parser
-from workspace.commands.develop import setup_develop_parser
+from workspace.commands.test import setup_test_parser
 from workspace.commands.diff import setup_diff_parser
 from workspace.commands.log import setup_log_parser
 from workspace.commands.publish import setup_publish_parser
@@ -71,13 +71,13 @@ def setup_parsers(package_name=None):
     'checkout': setup_checkout_parser(subparsers),
     'clean': setup_clean_parser(subparsers),
     'commit': setup_commit_parser(subparsers),
-    'develop': setup_develop_parser(subparsers),
     'diff': setup_diff_parser(subparsers),
     'log': setup_log_parser(subparsers),
     'publish': setup_publish_parser(subparsers),
     'push': setup_push_parser(subparsers),
     'setup': setup_setup_parser(subparsers),
     'status': setup_status_parser(subparsers),
+    'test': setup_test_parser(subparsers),
     'update': setup_update_parser(subparsers)
   }
 
