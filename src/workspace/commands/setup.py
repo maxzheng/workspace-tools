@@ -232,14 +232,14 @@ def setup_product():
       fp.write(README_TMPL % name)
     log.info('Created %s %s', _relative_path(readme_file), placeholder_info)
 
-  requirements_file = os.path.join(repo_path(), 'requirements.txt')
-  if not os.path.exists(requirements_file):
-    with open(requirements_file, 'w') as fp:
-      pass
-    log.info('Created %s', _relative_path(requirements_file))
-
   setup_py_file = os.path.join(repo_path(), 'setup.py')
   if not os.path.exists(setup_py_file):
+    requirements_file = os.path.join(repo_path(), 'requirements.txt')
+    if not os.path.exists(requirements_file):
+      with open(requirements_file, 'w') as fp:
+        pass
+      log.info('Created %s', _relative_path(requirements_file))
+
     readme_name = os.path.basename(readme_file)
     requirements_name = os.path.basename(requirements_file)
 
