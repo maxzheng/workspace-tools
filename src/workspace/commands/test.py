@@ -9,6 +9,7 @@ from workspace.utils import run, split_doc
 
 log = logging.getLogger(__name__)
 
+
 def setup_test_parser(subparsers):
   doc, docs = split_doc(test.__doc__)
   test_parser = subparsers.add_parser('test', description=doc, help=doc)
@@ -87,11 +88,6 @@ def strip_version_from_entry_scripts(repo):
 
     if removed_from:
       log.debug('Removed version spec from entry script(s): %s', ', '.join(removed_from))
-
-def _relative_path(path):
-  if path.startswith(os.getcwd() + os.path.sep):
-    path = path[len(os.getcwd())+1:]
-  return path
 
 
 

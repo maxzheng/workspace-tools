@@ -1,6 +1,8 @@
 import argparse
+from glob import glob
 import logging
 import os
+import re
 import sys
 
 from workspace.scm import is_repo, repo_check, product_name, repo_path
@@ -83,9 +85,10 @@ basepython = python
 
 [testenv:py27]
 commands =
-	pip install -e .
+	py.test
 recreate = False
 skipsdist = True
+usedevelop = True
 deps =
 	pytest
 	pytest-xdist
@@ -172,8 +175,6 @@ README_TMPL = """\
 
 <PLACEHOLDER DESCRIPTION>
 """
-
-
 
 def setup_setup_parser(subparsers):
   doc, docs = split_doc(setup.__doc__)
@@ -327,3 +328,9 @@ def setup_workspace(commands, commands_with_aliases, uninstall, additional_comma
       fh.write(AUTO_COMPLETE_TEMPLATE)
 
   log.info('To use, run "source %s" or open a new shell.', WSTRC_FILE)
+
+def _relative_path(path):
+  if path.startswith(os.getcwd() + os.path.sep):
+    path = path[len(os.getcwd())+1:]
+  return path
+
