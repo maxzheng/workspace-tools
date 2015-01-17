@@ -95,9 +95,8 @@ deps =
 	pytest-cov
 	{[testenv:style]deps}
 	sphinx!=1.2b2
-whitelist_externals =
-	ln
 envdir = {toxworkdir}/%s
+basepython = python2.7
 
 [testenv:style]
 commands =
@@ -110,6 +109,8 @@ deps =
 [testenv:coverage]
 commands =
 	py.test --cov=src --cov-report=xml --cov-report=html --cov-report=term test
+recreate = False
+skipsdist = True
 deps =
 	pytest
 	pytest-cov
@@ -218,10 +219,11 @@ def setup_product():
 
   tox_ini = TOX_INI_TMPL % name
   tox_ini_file = os.path.join(repo_path(), TOX_INI_FILE)
+  tox_change_word = 'Updated' if os.path.exists(tox_ini_file) else 'Created'
   with open(tox_ini_file, 'w') as fp:
     fp.write(tox_ini)
 
-  log.info('Created %s', _relative_path(tox_ini_file))
+  log.info('%s %s', tox_change_word, _relative_path(tox_ini_file))
 
   readme_files = glob(os.path.join(repo_path(), 'README*'))
   if readme_files:
