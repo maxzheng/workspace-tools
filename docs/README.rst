@@ -102,11 +102,11 @@ Now you are ready to try out the other commands yourself::
       --debug               Turn on debug mode
 
     sub-commands:
-      {checkout,co,clean,commit,ci,develop,de,diff,di,log,publish,push,setup,status,st,update,up}
+      {bump,checkout,co,clean,commit,ci,develop,de,diff,di,log,publish,push,setup,status,st,update,up}
                             List of sub-commands
-        checkout (co)       Checkout products
         bump                Bump dependency versions in requirements.txt,
                             pinned.txt, or any specified file.
+        checkout (co)       Checkout products (repo urls) or revert files.
         clean               Clean workspace by removing build, dist, and .pyc
                             files
         commit (ci)         Commit all changes locally, including new files.
@@ -114,9 +114,9 @@ Now you are ready to try out the other commands yourself::
         diff (di)           Show diff on current product or all products in
                             workspace
         log                 Show commit logs
-        publish             Bumps version in setup.py (defaults to patch), commits
-                            all changes, builds a source distribution, and uploads
-                            with twine.
+        publish             Bumps version in setup.py (defaults to patch), writes
+                            out changelog, builds a source distribution, and
+                            uploads with twine.
         push                Push changes for branch
         setup               Optional (refer to setup --help). Setup workspace
                             environment. Run from primary workspace directory.
