@@ -1,5 +1,11 @@
-Version 0.5.0
+Version 0.5.1
 ================================================================================
+
+* Add tests and support -k / -s options from py.test in test command
+
+
+Version 0.5.0
+--------------------------------------------------------------------------------
 
 * Support multiple test environments and use optimized test run
 
