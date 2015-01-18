@@ -126,7 +126,8 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
             full_command = full_command.replace('{env:PYTESTARGS:}', pytest_args)
             if files:
               full_command += ' ' + ' '.join(files)
-          run(full_command)
+          activate = '. ' + os.path.join(envdir, 'bin', 'activate')
+          run(activate + '; ' + full_command, shell=True)
           if env != envs[-1]:
             print
         else:

@@ -115,11 +115,11 @@ def test_checkout():
     assert os.path.exists('clicast/README.rst')
 
   with temp_dir():
-    checkout(['https://github.com/maxzheng/clicast'])
-    assert os.path.exists('clicast/README.rst')
+    checkout(['https://github.com/maxzheng/localconfig/trunk'])
+    assert os.path.exists('localconfig/README.rst')
 
   with temp_dir():
-    checkout(['https://github.com/maxzheng/localconfig.git'], ['https://github.com/maxzheng/remoteconfig.git'])
+    checkout(['https://github.com/maxzheng/localconfig.git', 'https://github.com/maxzheng/remoteconfig.git'])
     assert os.path.exists('localconfig/README.rst')
     assert os.path.exists('remoteconfig/README.rst')
 
@@ -127,6 +127,7 @@ def test_checkout():
 def test_clean():
   with temp_dir():
     clean()
+
 
 def test_commit():
   with temp_dir():
