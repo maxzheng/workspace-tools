@@ -1,3 +1,4 @@
+localconfig
 remoteconfig
 requests
 simplejson

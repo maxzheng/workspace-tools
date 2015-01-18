@@ -1,9 +1,11 @@
+import argparse
 from glob import glob
 import logging
 import os
 import re
 import sys
 
+from localconfig import LocalConfig
 from workspace.scm import repo_check, product_name, repo_path
 from workspace.utils import run, split_doc
 
@@ -13,10 +15,10 @@ log = logging.getLogger(__name__)
 def setup_test_parser(subparsers):
   doc, docs = split_doc(test.__doc__)
   test_parser = subparsers.add_parser('test', description=doc, help=doc)
-  test_parser.add_argument('env', nargs='?', help=docs['env'])
+  test_parser.add_argument('env_or_file', nargs='*', help=docs['env_or_file'])
   group = test_parser.add_mutually_exclusive_group()
   group.add_argument('-s', '--show', action='store_true', help=docs['show'])
-  group.add_argument('-r', '--redevelop', action='store_true', help=docs['recreate'])
+  group.add_argument('-r', '--redevelop', action='store_true', help=docs['redevelop'])
   group.add_argument('-R', '--recreate', action='store_true', help=docs['recreate'])
 
   test_parser.set_defaults(command=test)
@@ -24,12 +26,14 @@ def setup_test_parser(subparsers):
   return test_parser
 
 
-def test(env=None, show=False, redevelop=False, recreate=False, debug=False, **kwargs):
+def test(env_or_file=None, show=False, redevelop=False, recreate=False, debug=False, **kwargs):
   """
   Runs tests and manages test environments for product.
 
-  :param str env: The tox environment to act upon.
-  :param bool show: Show where product dependencies are installed from and their versions in devenv.
+  :param str env_or_file: The tox environment to act upon, or a file to pass to py.test (only used
+                          if file exists, we don't need to redevelop, and py.test is used as a command
+                          for the default environements). Defaults to the envlist in tox.
+  :param bool show: Show where product dependencies are installed from and their versions
   :param bool redevelop: Redevelop the test environments by running installing on top of existing one.
   :param bool recreate: Completely recreate the test environments by removing the existing ones first
   """
@@ -48,23 +52,70 @@ def test(env=None, show=False, redevelop=False, recreate=False, debug=False, **k
   elif len(tox_inis) > 1:
     log.warn('More than one ini files found - will use first one: %s', ', '.join(tox_inis))
 
+  tox_ini = tox_inis[0]
+
   # Strip out venv bin path to python to avoid issues with it being removed when running tox
   if 'VIRTUAL_ENV' in os.environ:
     venv_bin = os.environ['VIRTUAL_ENV']
     os.environ['PATH'] = os.pathsep.join([p for p in os.environ['PATH'].split(os.pathsep)
                                           if os.path.exists(p) and not p.startswith(venv_bin)])
 
-  cmd = ['tox', '-c', tox_inis[0]]
+  envs = []
+  files = []
 
-  if env:
-    cmd.extend(['-e', env])
+  if env_or_file:
+    for ef in env_or_file:
+      if os.path.exists(ef):
+        files.append(ef)
+      else:
+        envs.append(ef)
 
-  if recreate:
-    cmd.append('-r')
+  if redevelop or recreate:
+    cmd = ['tox', '-c', tox_ini]
 
-  run(cmd, cwd=repo_path())
-  strip_version_from_entry_scripts(repo_path())
+    if envs:
+      cmd.extend(['-e', ','.join(envs)])
 
+    if recreate:
+      cmd.append('-r')
+
+    run(cmd, cwd=repo_path())
+    strip_version_from_entry_scripts(repo_path())
+
+  else:
+    tox = LocalConfig(tox_ini)
+
+    if not envs:
+      envs = filter(None, tox.tox.envlist.split(','))
+
+    for env in envs:
+      env_section = 'testenv:%s' % env
+
+      if env_section not in tox:
+        log.debug('Using default envdir and commands as %s section is not defined in %s', env_section, tox_ini)
+
+      envdir = tox.get(env_section, 'envdir', os.path.join('.tox', env)).replace('{toxworkdir}', '.tox')
+      commands = tox.get(env_section, 'commands', 'py.test')
+
+      if not os.path.exists(envdir):
+        run(['tox', '-c', tox_ini, '-e', env])
+        continue
+
+      if len(envs) > 1:
+        print env
+
+      for command in filter(None, commands.split('\n')):
+        full_command = os.path.join(envdir, 'bin', command)
+
+        command_path = full_command.split()[0]
+        if os.path.exists(command_path):
+          if files and 'py.test' in command_path:
+            full_command += ' ' + ' '.join(files)
+          run(full_command)
+          if env != envs[-1]:
+            print
+        else:
+          log.error('%s does not exist', command_path)
 
 def strip_version_from_entry_scripts(repo):
   """ Strip out version spec "==1.2.3" from entry scripts as they require re-develop when version is changed in develop mode. """
