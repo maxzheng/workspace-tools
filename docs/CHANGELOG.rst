@@ -1,3 +1,21 @@
+Version 0.5.0
+================================================================================
+
+* Support multiple test environments and use optimized test run
+
+* Update tox template
+
+* Skip creating requirements.txt if setup.py already exists
+
+* Fix import issues with setup --product
+
+* Deprecate/break develop into test and setup command
+
+* Update usage in README
+
+* Remove remote doc config as that was checked in accidentally
+
+
 Version 0.4.11
 ================================================================================
 
