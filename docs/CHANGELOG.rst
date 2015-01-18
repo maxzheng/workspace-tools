@@ -1,5 +1,13 @@
-Version 0.5.1
+Version 0.5.2
 ================================================================================
+
+* Activate environment before running py.test
+
+* Use spaces instead of tabs in tox template
+
+
+Version 0.5.1
+--------------------------------------------------------------------------------
 
 * Add tests and support -k / -s options from py.test in test command
 
