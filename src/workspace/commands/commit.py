@@ -36,7 +36,7 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
                      Other options are ignored.
   :param bool discard: Discard last commit and branch if no more commits left. Defaults to existing branch.
                        Other options are ignored.
-  :param bool move: Move last commit to branch. Other options are ignored.
+  :param str move: Move last commit to branch. Other options are ignored.
   """
 
   git_repo_check()

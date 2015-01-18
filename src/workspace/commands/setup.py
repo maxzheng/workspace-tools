@@ -68,6 +68,7 @@ complete -F _branch_file_completer push
 
 complete -o default log
 complete -o default di
+complete -o default test
 """
 TOX_INI_FILE = 'tox.ini'
 TOX_INI_TMPL = """\
@@ -76,7 +77,7 @@ envlist = py27
 
 [testenv]
 commands =
-	py.test
+	py.test {env:PYTESTARGS:}
 downloadcache = {toxworkdir}/_download
 recreate = False
 skipsdist = True
@@ -91,12 +92,16 @@ basepython = python
 deps =
 	pytest
 	pytest-xdist
-	pytest-cov
+
+[testenv:pydev]
+deps =
+	{[testenv:py]deps}
 	{[testenv:style]deps}
+	pytest-cov
 	sphinx!=1.2b2
 
 [testenv:py27]
-deps = {[testenv:py]deps}
+deps = {[testenv:pydev]deps}
 envdir = {toxworkdir}/%s
 basepython = python2.7
 
@@ -108,14 +113,20 @@ deps =
 
 [testenv:coverage]
 commands =
-	py.test --cov=src --cov-report=xml --cov-report=html --cov-report=term test
+	py.test {env:PYTESTARGS:} --cov=src --cov-report=xml --cov-report=html --cov-report=term test
 deps =
-	pytest
+	{[testenv:py]deps}
 	pytest-cov
 
 [flake8]
 ignore = E111,E121,W292,E123,E226
 max-line-length = 160
+
+[pytest]
+addopts = -n 4
+
+[wst]
+template_version = 1
 """
 SETUP_PY_TMPL = """\
 #!/usr/bin/env python
@@ -262,6 +273,7 @@ def setup_product():
     with open(test_file, 'w') as fp:
       fp.write('# Placeholder for tests')
     log.info('Created %s', _relative_path(test_file))
+
 
 def setup_workspace(commands, commands_with_aliases, uninstall, additional_commands):
   bashrc_content = None

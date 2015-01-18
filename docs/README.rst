@@ -11,7 +11,7 @@ but sharing it as others might find it useful.
 Feature Summary
 ===============
 
-* One tool to seamlessly manage / integrate all workspace tools, from develop to publish.
+* One tool to seamlessly manage / integrate all workspace tools, from setup to publish.
 * Trunk based development. One branch represents one change that is merged into master when pushed.
 * SCM agnostic (for git/git-svn and svn (commit/push command support later)).
 * Simplified command execution for common workflow
@@ -60,6 +60,10 @@ Make a commit and create a new branch for it::
     # vi README.rst and make some changes
 
     ci -b test "Updated README.rst"
+
+To setup your test environment and test your change (with tox/py.test)::
+
+    test
 
 See status/diff for all of your repos::
 

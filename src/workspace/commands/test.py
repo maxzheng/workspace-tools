@@ -11,36 +11,39 @@ from workspace.utils import run, split_doc
 
 log = logging.getLogger(__name__)
 
-
 def setup_test_parser(subparsers):
   doc, docs = split_doc(test.__doc__)
   test_parser = subparsers.add_parser('test', description=doc, help=doc)
   test_parser.add_argument('env_or_file', nargs='*', help=docs['env_or_file'])
   group = test_parser.add_mutually_exclusive_group()
-  group.add_argument('-s', '--show', action='store_true', help=docs['show'])
+  group.add_argument('-d', '--dependencies', action='store_true', help=docs['dependencies'])
   group.add_argument('-r', '--redevelop', action='store_true', help=docs['redevelop'])
   group.add_argument('-R', '--recreate', action='store_true', help=docs['recreate'])
+  test_parser.add_argument('-s', action='store_true', dest='show_output', help=docs['show_output'])
+  test_parser.add_argument('-k', metavar='NAME_PATTERN', dest='match_test', help=docs['match_test'])
 
   test_parser.set_defaults(command=test)
 
   return test_parser
 
 
-def test(env_or_file=None, show=False, redevelop=False, recreate=False, debug=False, **kwargs):
+def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None, debug=False, **kwargs):
   """
-  Runs tests and manages test environments for product.
+  Run tests and manage test environments for product.
 
-  :param str env_or_file: The tox environment to act upon, or a file to pass to py.test (only used
-                          if file exists, we don't need to redevelop, and py.test is used as a command
-                          for the default environements). Defaults to the envlist in tox.
-  :param bool show: Show where product dependencies are installed from and their versions
+  :param list env_or_file: The tox environment to act upon, or a file to pass to py.test (only used
+                           if file exists, we don't need to redevelop, and py.test is used as a command
+                           for the default environements). Defaults to the envlist in tox.
+  :param bool dependencies: Show where product dependencies are installed from and their versions
   :param bool redevelop: Redevelop the test environments by running installing on top of existing one.
   :param bool recreate: Completely recreate the test environments by removing the existing ones first
+  :param bool show_output: Show test output [if we don't need to develop].
+  :param bool match_test: Only run tests that contains text [if we don't need to develop].
   """
   repo_check()
 
-  if show:
-    show_installed_dependencies()
+  if dependencies:
+    dependencies_installed_dependencies()
     sys.exit(0)
 
   tox_inis = glob(os.path.join(repo_path(), 'tox*.ini'))
@@ -59,6 +62,16 @@ def test(env_or_file=None, show=False, redevelop=False, recreate=False, debug=Fa
     venv_bin = os.environ['VIRTUAL_ENV']
     os.environ['PATH'] = os.pathsep.join([p for p in os.environ['PATH'].split(os.pathsep)
                                           if os.path.exists(p) and not p.startswith(venv_bin)])
+
+  pytest_args = ''
+  if show_output or match_test:
+    pytest_args = []
+    if show_output:
+      pytest_args.append('-s')
+    if match_test:
+      pytest_args.append('-k ' + match_test)
+    pytest_args = ' '.join(pytest_args)
+    os.environ['PYTESTARGS'] = pytest_args
 
   envs = []
   files = []
@@ -95,10 +108,10 @@ def test(env_or_file=None, show=False, redevelop=False, recreate=False, debug=Fa
         log.debug('Using default envdir and commands as %s section is not defined in %s', env_section, tox_ini)
 
       envdir = tox.get(env_section, 'envdir', os.path.join('.tox', env)).replace('{toxworkdir}', '.tox')
-      commands = tox.get(env_section, 'commands', 'py.test')
+      commands = tox.get(env_section, 'commands', tox.get('testenv', 'commands', 'py.test {env:PYTESTARGS:}'))
 
       if not os.path.exists(envdir):
-        run(['tox', '-c', tox_ini, '-e', env])
+        test([env], redevelop=True)
         continue
 
       if len(envs) > 1:
@@ -109,8 +122,10 @@ def test(env_or_file=None, show=False, redevelop=False, recreate=False, debug=Fa
 
         command_path = full_command.split()[0]
         if os.path.exists(command_path):
-          if files and 'py.test' in command_path:
-            full_command += ' ' + ' '.join(files)
+          if 'py.test' in full_command:
+            full_command = full_command.replace('{env:PYTESTARGS:}', pytest_args)
+            if files:
+              full_command += ' ' + ' '.join(files)
           run(full_command)
           if env != envs[-1]:
             print
@@ -143,7 +158,7 @@ def strip_version_from_entry_scripts(repo):
 
 
 
-def show_installed_dependencies():
+def dependencies_installed_dependencies():
   script_template = """
 import os
 import pkg_resources
@@ -179,7 +194,7 @@ print '\\n'.join(output)
   python = os.path.join(repo_path(), '.tox', name, 'bin', 'python')
 
   if not os.path.exists(python):
-    log.error('Development environment is not setup. Please run develop without --show to set it up first.')
+    log.error('Development environment is not setup. Please run develop without --dependencies to set it up first.')
     sys.exit(1)
 
   log.info('Product dependencies:')
