@@ -30,7 +30,7 @@ def setup_test_parser(subparsers):
   return test_parser
 
 
-def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None, debug=False, **kwargs):
+def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None, tox_cmd=None, tox_ini=None, tox_commands={}, additional_requirements=None, debug=False, **kwargs):
   """
   Run tests and manage test environments for product.
 
@@ -46,6 +46,14 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
   :param bool recreate: Completely recreate the test environments by removing the existing ones first
   :param bool show_output: Show output from tests
   :param bool match_test: Only run tests with method name that matches pattern
+  :param list tox_cmd: Alternative tox command to run.
+                       If recreate is True, '-r' will be appended.
+                       If env is passed in (from env_or_file), '-e env' will be appended as well.
+  :param str tox_ini: Path to tox_ini file.
+  :param dict tox_commands: Map of env to list of commands to override "[testenv:env] commands" setting for env.
+                            Only used when not developing.
+  :param list additional_requirements: Additional requirements files to check for modified time to auto develop when changed.
+                                       By default, setup.py and requirements.txt are checked.
   """
   repo_check()
   repo = repo_path()
@@ -78,7 +86,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
     pytest_args = ' '.join(pytest_args)
     os.environ['PYTESTARGS'] = pytest_args
 
-  tox = ToxIni(repo)
+  tox = ToxIni(repo, tox_ini)
 
   if not envs:
     envs = tox.envlist
@@ -88,7 +96,10 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
       show_installed_dependencies(tox, env)
 
   elif redevelop or recreate:
-    cmd = ['tox', '-c', tox.path]
+    if tox_cmd:
+      cmd = tox_cmd
+    else:
+      cmd = ['tox', '-c', tox.path]
 
     if envs:
       cmd.extend(['-e', ','.join(envs)])
@@ -113,21 +124,26 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
         return req_mtime > os.stat(envdir).st_mtime
 
       if not os.path.exists(envdir) or requirements_updated():
-        test([env], redevelop=True)
+        test([env], redevelop=True, tox_cmd=tox_cmd, tox_ini=tox_ini, tox_commands=tox_commands)
         continue
 
       if len(envs) > 1:
         print env
 
-      for command in tox.commands(env):
+      commands = tox_commands.get(env) or tox.commands(env)
+
+      for command in commands:
         full_command = os.path.join(envdir, 'bin', command)
 
         command_path = full_command.split()[0]
         if os.path.exists(command_path):
           if 'py.test' in full_command:
-            full_command = full_command.replace('{env:PYTESTARGS:}', pytest_args)
+            if 'PYTESTARGS' in full_command:
+              full_command = full_command.replace('{env:PYTESTARGS:}', pytest_args)
+            else:
+              full_command += ' ' + pytest_args
           activate = '. ' + os.path.join(envdir, 'bin', 'activate')
-          run(activate + '; ' + full_command, shell=True, cwd=repo)
+          run(activate + '; ' + full_command, shell=True, cwd=repo, raises=False)
           if env != envs[-1]:
             print
         else:
@@ -173,7 +189,7 @@ output = []
 json_output = %s
 
 if not json_output:
-  print 'Product dependencies in %s:'
+  print '%s:'
 
 def strip_cwd(dir):
   if dir.startswith(cwd + '/'):

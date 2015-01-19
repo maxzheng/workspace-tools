@@ -20,7 +20,7 @@ def clean(**kwargs):
   log.info('Cleaning workspace %s', path)
 
   log.info('Removing build/dist folders')
-  silent_run("rm -rf */build */dist", cwd=path, shell=True)
+  silent_run("rm -rf */build */dist */docs/_build", cwd=path, shell=True)
 
   log.info('Removing *.pyc files')
   silent_run("find . -path /*/.tox -prune -o -path /*/mppy-* -prune -o -name *.pyc -delete", cwd=path)

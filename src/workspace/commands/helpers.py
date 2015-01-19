@@ -1,6 +1,7 @@
 from glob import glob
 import logging
 import os
+import re
 import subprocess
 
 from localconfig import LocalConfig
@@ -13,12 +14,15 @@ log = logging.getLogger(__name__)
 class ToxIni(LocalConfig):
   """ Represents tox.ini """
 
-  def __init__(self, repo=None):
+  VAR_RE = re.compile('{\[(.+)](.+)}')
+
+  def __init__(self, repo=None, tox_ini=None):
     """
     :param str repo: The repo to load tox*.ini from.
+    :param str tox_ini: Path to tox ini file. Defaults to tox*.ini in repo root.
     """
     self.repo = repo
-    self.path = self.path_for(repo)
+    self.path = tox_ini or self.path_for(repo)
     super(ToxIni, self).__init__(self.path)
 
   @classmethod
@@ -55,7 +59,7 @@ class ToxIni(LocalConfig):
     if envsection not in self:
       log.debug('Using default envdir and commands as %s section is not defined in %s', envsection, self.path)
 
-    return self.get(envsection, 'envdir', os.path.join(self.repo, '.tox', env)).replace('{toxworkdir}', self.workdir)
+    return self.expand_vars(self.get(envsection, 'envdir', os.path.join(self.repo, '.tox', env)).replace('{toxworkdir}', self.workdir))
 
   def bindir(self, env, script=None):
     dir = os.path.join(self.envdir(env), 'bin')
@@ -68,6 +72,10 @@ class ToxIni(LocalConfig):
     commands = self.get(envsection, 'commands', self.get('testenv', 'commands', 'py.test {env:PYTESTARGS:}'))
     return filter(None, commands.split('\n'))
 
+  def expand_vars(self, value):
+    if '{' in value:
+      value = self.VAR_RE.sub(lambda m: self.get(m.group(1), m.group(2)), value)
+    return value
 
 
 class ProductPager(object):

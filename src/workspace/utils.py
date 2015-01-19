@@ -87,27 +87,32 @@ def run(cmd, cwd=None, silent=False, return_output=False, raises=True, **subproc
 
   log.debug('Running: %s', cmd_str)
 
-  if silent or return_output:
-    p = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **subprocess_args)
-    output, errors = p.communicate()
-    exit_code = p.returncode
+  try:
+    if silent or return_output:
+      p = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **subprocess_args)
+      output, errors = p.communicate()
+      exit_code = p.returncode
 
-    if exit_code == 0:
-      if return_output:
-        return output
-      else:
+      if exit_code == 0:
+        if return_output:
+          return output
+        else:
+          return True
+
+      elif raises:
+        if output:
+          print output.strip()
+        if errors:
+          print errors.strip()
+
+    else:
+      exit_code = subprocess.call(cmd, cwd=cwd, **subprocess_args)
+      if exit_code == 0:
         return True
 
-    elif raises:
-      if output:
-        print output.strip()
-      if errors:
-        print errors.strip()
-
-  else:
-    exit_code = subprocess.call(cmd, cwd=cwd, **subprocess_args)
-    if exit_code == 0:
-      return True
+  except Exception as e:
+    if raises:
+      raise RunError('Command "%s" could not be run because %s' % (cmd_str, e))
 
   # We only get here if exit code != 0
   if raises:
@@ -134,3 +139,23 @@ def split_doc(docstring):
     params[param] = param_doc.strip()
 
   return doc, params
+
+
+def parallel_call(call, args, workers=10):
+  """
+  Call a callable in parallel for each arg
+
+  :param callable call: Callable to call
+  :param list(tuple) args: List of tuple args to call. Each tuple represents the full args list per call.
+  :param int workers: Number of workers to use.
+  """
+
+  from multiprocessing import Pool
+  import signal
+
+  pool = Pool(workers, lambda: signal.signal(signal.SIGINT, signal.SIG_IGN))
+  try:
+    pool.map_async(call, args).get(9999999)
+  except KeyboardInterrupt:
+    pool.terminate()
+    pool.join()
