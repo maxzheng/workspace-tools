@@ -18,34 +18,34 @@ def setup_test_parser(subparsers):
   doc, docs = split_doc(test.__doc__)
   test_parser = subparsers.add_parser('test', description=doc, help=doc)
   test_parser.add_argument('env_or_file', nargs='*', help=docs['env_or_file'])
-  group = test_parser.add_mutually_exclusive_group()
-  group.add_argument('-d', '--dependencies', action='store_true', help=docs['dependencies'])
-  group.add_argument('-r', '--redevelop', action='store_true', help=docs['redevelop'])
-  group.add_argument('-R', '--recreate', action='store_true', help=docs['recreate'])
   test_parser.add_argument('-s', action='store_true', dest='show_output', help=docs['show_output'])
   test_parser.add_argument('-k', metavar='NAME_PATTERN', dest='match_test', help=docs['match_test'])
+  group = test_parser.add_mutually_exclusive_group()
+  group.add_argument('-d', '--show-dependencies', action='store_true', help=docs['show_dependencies'])
+  group.add_argument('-r', '--redevelop', action='store_true', help=docs['redevelop'])
+  group.add_argument('-R', '--recreate', action='store_true', help=docs['recreate'])
 
   test_parser.set_defaults(command=test)
 
   return test_parser
 
 
-def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None, debug=False, **kwargs):
+def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None, debug=False, **kwargs):
   """
   Run tests and manage test environments for product.
 
   :param list env_or_file: The tox environment to act upon, or a file to pass to py.test (only used
                            if file exists, we don't need to redevelop, and py.test is used as a command
                            for the default environements). Defaults to the envlist in tox.
-  :param bool dependencies: Show where product dependencies are installed from and their versions.
+  :param bool show_dependencies: Show where product dependencies are installed from and their versions.
                             Dependencies can be configured to be installed in editable mode in workspace.cfg
                             with [test] editable_product_dependencies setting.
   :param bool redevelop: Redevelop the test environments by running installing on top of existing one.
                          This is implied if test environment does not exist, or whenever setup.py or
                          requirements.txt is modified after the environment was last updated.
   :param bool recreate: Completely recreate the test environments by removing the existing ones first
-  :param bool show_output: Show test output [if we don't need to develop].
-  :param bool match_test: Only run tests that contains text [if we don't need to develop].
+  :param bool show_output: Show output from tests
+  :param bool match_test: Only run tests with method name that matches pattern
   """
   repo_check()
   repo = repo_path()
@@ -83,7 +83,7 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
   if not envs:
     envs = tox.envlist
 
-  if dependencies:
+  if show_dependencies:
     for env in envs:
       show_installed_dependencies(tox, env)
 
@@ -210,7 +210,7 @@ else:
   python = tox.bindir(env, 'python')
 
   if not os.path.exists(python):
-    log.error('Test environment %s is not installed. Please run without --dependencies to install it first.', env)
+    log.error('Test environment %s is not installed. Please run without -d / --show-dependencies to install it first.', env)
     sys.exit(1)
 
   return run([python, '-c', script], return_output=return_output)
