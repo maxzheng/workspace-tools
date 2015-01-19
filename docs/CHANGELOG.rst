@@ -1,5 +1,21 @@
-Version 0.5.2
+Version 0.5.3
 ================================================================================
+
+* Skip install dependencies in editable mode if already in editable mode
+
+* Add test for status
+
+* Add test.editable_product_dependencies option to auto install dependencies in editable mode
+
+* Support multiple environments when showing product dependencies
+
+* Refactor tox ini code into ToxIni class
+
+* Auto-detect requirement files change to re-develop environment
+
+
+Version 0.5.2
+--------------------------------------------------------------------------------
 
 * Activate environment before running py.test
 
