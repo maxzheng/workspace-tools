@@ -12,14 +12,15 @@ from workspace.commands.log import show_log
 from workspace.commands.push import push
 from workspace.commands.setup import setup as wst_setup
 from workspace.commands.test import test as wst_test
+from workspace.commands.status import status
 from workspace.scm import local_commit, add_files, remove_branch, checkout_branch, stat_repo, all_branches, commit_logs
 from workspace.utils import run, RunError
 
 from test_stubs import temp_dir, temp_git_repo, temp_remote_git_repo
 
 
-@pytest.mark.parametrize('command,exception', [(diff, None), (show_log, SystemExit)])
-def test_basic_sanity(command, exception):
+@pytest.mark.parametrize('command,exception', [(diff, None), (show_log, SystemExit), (status, None)])
+def test_sanity(command, exception):
   with temp_dir():
     if exception:
       with pytest.raises(exception):
