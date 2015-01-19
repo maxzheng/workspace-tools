@@ -14,6 +14,15 @@
 
 
   ###########################################################################################################
+  # Settings for bump command
+  ###########################################################################################################
+  [bump]
+
+  # List of requirement files to check / bump dependencies in
+  requirement_files = requirements.txt pinned.txt
+
+
+  ###########################################################################################################
   # Settings for checkout command
   ###########################################################################################################
   [checkout]
@@ -24,12 +33,13 @@
 
 
   ###########################################################################################################
-  # Settings for bump command
+  # Settings for test command
   ###########################################################################################################
-  [bump]
+  [test]
 
-  # List of requirement files to check / bump dependencies in
-  requirement_files = requirements.txt pinned.txt
+  # Always install these product dependencies in editable mode (can use product group)
+  # if they are checked out in workspace.
+  editable_product_dependencies =
 """
 
 import logging

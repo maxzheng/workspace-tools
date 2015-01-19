@@ -1,10 +1,63 @@
+from glob import glob
 import logging
 import os
 import subprocess
 
+from localconfig import LocalConfig
+
 from workspace.config import product_groups
 
 log = logging.getLogger(__name__)
+
+
+class ToxIni(LocalConfig):
+  """ Represents tox.ini """
+
+  def __init__(self, repo=None):
+    """
+    :param str repo: The repo to load tox*.ini from.
+    """
+    self.repo = repo
+    self.path = self.path_for(repo)
+    super(ToxIni, self).__init__(self.path)
+
+  @classmethod
+  def path_for(cls, repo):
+    """
+    :param str repo: Repo to get tox*.ini for
+    :return: Path to tox*.ini file in :attr:`self.repo`
+    :raise FileNotFoundError: if there is no tox*.ini found
+    """
+
+    tox_inis = glob(os.path.join(repo, 'tox*.ini'))
+
+    if not tox_inis:
+      raise FileNotFoundError('No tox.ini found in %s. Please run "wst setup --product" first to setup tox.' % self.repo)
+
+    elif len(tox_inis) > 1:
+      log.warn('More than one ini files found - will use first one: %s', ', '.join(tox_inis))
+
+    return tox_inis[0]
+
+  @property
+  def envlist(self):
+    return filter(None, self.tox.envlist.split(','))
+
+  def envsection(self, env):
+    return 'testenv:%s' % env
+
+  def envdir(self, env):
+    envsection = self.envsection(env)
+    if envsection not in self:
+      log.debug('Using default envdir and commands as %s section is not defined in %s', envsection, self.path)
+
+    return os.path.join(self.repo, self.get(envsection, 'envdir', os.path.join('.tox', env)).replace('{toxworkdir}', '.tox'))
+
+  def commands(self, env):
+    envsection = self.envsection(env)
+    commands = self.get(envsection, 'commands', self.get('testenv', 'commands', 'py.test {env:PYTESTARGS:}'))
+    return filter(None, commands.split('\n'))
+
 
 
 class ProductPager(object):

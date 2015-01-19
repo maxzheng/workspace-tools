@@ -1,15 +1,16 @@
 import argparse
-from glob import glob
 import logging
 import os
 import re
 import sys
 
-from localconfig import LocalConfig
+from workspace.commands.helpers import expand_product_groups, ToxIni
+from workspace.config import config
 from workspace.scm import repo_check, product_name, repo_path
 from workspace.utils import run, split_doc
 
 log = logging.getLogger(__name__)
+
 
 def setup_test_parser(subparsers):
   doc, docs = split_doc(test.__doc__)
@@ -34,7 +35,7 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
   :param list env_or_file: The tox environment to act upon, or a file to pass to py.test (only used
                            if file exists, we don't need to redevelop, and py.test is used as a command
                            for the default environements). Defaults to the envlist in tox.
-  :param bool dependencies: Show where product dependencies are installed from and their versions
+  :param bool dependencies: Show where product dependencies are installed from and their versions.
   :param bool redevelop: Redevelop the test environments by running installing on top of existing one.
                          This is implied if test environment does not exist, or whenever setup.py or
                          requirements.txt is modified after the environment was last updated.
@@ -43,22 +44,11 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
   :param bool match_test: Only run tests that contains text [if we don't need to develop].
   """
   repo_check()
+  repo = repo_path()
 
   if dependencies:
-    dependencies_installed_dependencies()
+    show_installed_dependencies(repo)
     sys.exit(0)
-
-  repo = repo_path()
-  tox_inis = glob(os.path.join(repo, 'tox*.ini'))
-
-  if not tox_inis:
-    log.error('No tox.ini found. Please run "wst setup --product" first to setup tox.')
-    sys.exit(1)
-
-  elif len(tox_inis) > 1:
-    log.warn('More than one ini files found - will use first one: %s', ', '.join(tox_inis))
-
-  tox_ini = tox_inis[0]
 
   # Strip out venv bin path to python to avoid issues with it being removed when running tox
   if 'VIRTUAL_ENV' in os.environ:
@@ -88,8 +78,10 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
     pytest_args = ' '.join(pytest_args)
     os.environ['PYTESTARGS'] = pytest_args
 
+  tox = ToxIni(repo)
+
   if redevelop or recreate:
-    cmd = ['tox', '-c', tox_ini]
+    cmd = ['tox', '-c', tox.path]
 
     if envs:
       cmd.extend(['-e', ','.join(envs)])
@@ -98,22 +90,17 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
       cmd.append('-r')
 
     run(cmd, cwd=repo)
-    strip_version_from_entry_scripts(repo)
-
-  else:
-    tox = LocalConfig(tox_ini)
-
-    if not envs:
-      envs = filter(None, tox.tox.envlist.split(','))
 
     for env in envs:
-      env_section = 'testenv:%s' % env
+      strip_version_from_entry_scripts(repo, env)
+      install_editable_dependencies(repo, env)
 
-      if env_section not in tox:
-        log.debug('Using default envdir and commands as %s section is not defined in %s', env_section, tox_ini)
+  else:
+    if not envs:
+      envs = tox.envlist
 
-      envdir = os.path.join(repo, tox.get(env_section, 'envdir', os.path.join('.tox', env)).replace('{toxworkdir}', '.tox'))
-      commands = tox.get(env_section, 'commands', tox.get('testenv', 'commands', 'py.test {env:PYTESTARGS:}'))
+    for env in envs:
+      envdir = tox.envdir(env)
 
       def requirements_updated():
         req_mtime = os.stat(os.path.join(repo, 'setup.py')).st_mtime
@@ -128,7 +115,7 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
       if len(envs) > 1:
         print env
 
-      for command in filter(None, commands.split('\n')):
+      for command in tox.commands(env):
         full_command = os.path.join(envdir, 'bin', command)
 
         command_path = full_command.split()[0]
@@ -168,7 +155,7 @@ def strip_version_from_entry_scripts(repo):
 
 
 
-def dependencies_installed_dependencies():
+def show_installed_dependencies(repo):
   script_template = """
 import os
 import pkg_resources
@@ -198,10 +185,10 @@ for lib in sorted(libs):
 print '\\n'.join(output)
 """
 
-  name = product_name(repo_path())
+  name = product_name(repo)
   script = script_template % name
 
-  python = os.path.join(repo_path(), '.tox', name, 'bin', 'python')
+  python = os.path.join(repo, '.tox', name, 'bin', 'python')
 
   if not os.path.exists(python):
     log.error('Development environment is not setup. Please run develop without --dependencies to set it up first.')
@@ -209,3 +196,25 @@ print '\\n'.join(output)
 
   log.info('Product dependencies:')
   run([python, '-c', script])
+
+
+def install_editable_dependencies(repo):
+  if not config.test.editable_product_dependencies:
+    return
+
+  editable_dependencies = expand_product_groups(config.test.editable_product_dependencies.split())
+
+  log.info('Installing %d product dependencies in editable mode', len(editable_dependencies))
+
+  pip = os.path.join(repo, '.tox', name, 'bin', 'pip')
+
+  for lib in editable_dependencies:
+    with log_exception('An error occurred when installing %s in editable mode' % lib):
+      run([pip, 'uninstall', lib, '-y'], raises=False, silent=not debug)
+
+      checkout_path = product_checkout_path(lib, workspace_path)
+      if not os.path.exists(checkout_path):
+        log.info('Checking out %s', lib)
+        checkout_product(lib, checkout_path)
+
+      run([pip, 'install', '--editable', product_checkout_path(lib, workspace_path)], silent=not debug)
