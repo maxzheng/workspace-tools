@@ -46,12 +46,22 @@ class ToxIni(LocalConfig):
   def envsection(self, env):
     return 'testenv:%s' % env
 
+  @property
+  def workdir(self):
+    return os.path.join(self.repo, self.get('tox', 'toxworkdir', '.tox'))
+
   def envdir(self, env):
     envsection = self.envsection(env)
     if envsection not in self:
       log.debug('Using default envdir and commands as %s section is not defined in %s', envsection, self.path)
 
-    return os.path.join(self.repo, self.get(envsection, 'envdir', os.path.join('.tox', env)).replace('{toxworkdir}', '.tox'))
+    return self.get(envsection, 'envdir', os.path.join(self.repo, '.tox', env)).replace('{toxworkdir}', self.workdir)
+
+  def bindir(self, env, script=None):
+    dir = os.path.join(self.envdir(env), 'bin')
+    if script:
+      dir = os.path.join(dir, script)
+    return dir
 
   def commands(self, env):
     envsection = self.envsection(env)

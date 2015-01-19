@@ -46,10 +46,6 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
   repo_check()
   repo = repo_path()
 
-  if dependencies:
-    show_installed_dependencies(repo)
-    sys.exit(0)
-
   # Strip out venv bin path to python to avoid issues with it being removed when running tox
   if 'VIRTUAL_ENV' in os.environ:
     venv_bin = os.environ['VIRTUAL_ENV']
@@ -80,7 +76,13 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
 
   tox = ToxIni(repo)
 
-  if redevelop or recreate:
+  if dependencies:
+    if not envs:
+      envs = tox.envlist
+    for env in envs:
+      show_installed_dependencies(tox, env)
+
+  elif redevelop or recreate:
     cmd = ['tox', '-c', tox.path]
 
     if envs:
@@ -92,8 +94,8 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
     run(cmd, cwd=repo)
 
     for env in envs:
-      strip_version_from_entry_scripts(repo, env)
-      install_editable_dependencies(repo, env)
+      strip_version_from_entry_scripts(tox, env)
+      install_editable_dependencies(tox, env)
 
   else:
     if not envs:
@@ -129,10 +131,10 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
         else:
           log.error('%s does not exist', command_path)
 
-def strip_version_from_entry_scripts(repo):
+def strip_version_from_entry_scripts(tox, env):
   """ Strip out version spec "==1.2.3" from entry scripts as they require re-develop when version is changed in develop mode. """
-  name = product_name(repo)
-  script_bin = os.path.join(repo, '.tox', name, 'bin')
+  name = product_name(tox.repo)
+  script_bin = tox.bindir(env)
 
   if os.path.exists(script_bin):
     name_version_re = re.compile('%s==[0-9\.]+' % name)
@@ -155,7 +157,7 @@ def strip_version_from_entry_scripts(repo):
 
 
 
-def show_installed_dependencies(repo):
+def show_installed_dependencies(tox, env):
   script_template = """
 import os
 import pkg_resources
@@ -165,6 +167,8 @@ workspace_dir = os.path.dirname(cwd)
 
 libs = [r.key for r in pkg_resources.get_distribution('%s').requires()]
 output = []
+
+print 'Product dependencies in %s:'
 
 def strip_cwd(dir):
   if dir.startswith(cwd + '/'):
@@ -176,25 +180,24 @@ def strip_cwd(dir):
 for lib in sorted(libs):
   try:
     dist = pkg_resources.get_distribution(lib)
-    output.append('%%-25s %%-10s  %%s' %% (lib, dist.version, strip_cwd(dist.location)))
+    output.append('  %%-25s %%-10s  %%s' %% (lib, dist.version, strip_cwd(dist.location)))
   except pkg_resources.DistributionNotFound:
-    print '%%s is not installed' %% lib
+    print '  %%s is not installed' %% lib
   except Exception as e:
-    print e
+    print '  %%s' %% e
 
 print '\\n'.join(output)
 """
 
-  name = product_name(repo)
-  script = script_template % name
+  name = product_name(tox.repo)
+  script = script_template % (name, env)
 
-  python = os.path.join(repo, '.tox', name, 'bin', 'python')
+  python = tox.bindir(env, 'python')
 
   if not os.path.exists(python):
-    log.error('Development environment is not setup. Please run develop without --dependencies to set it up first.')
+    log.error('Test environment %s is not installed. Please run without --dependencies to install it first.', env)
     sys.exit(1)
 
-  log.info('Product dependencies:')
   run([python, '-c', script])
 
 
