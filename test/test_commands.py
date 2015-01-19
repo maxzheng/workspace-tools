@@ -173,7 +173,7 @@ def test_test():
       wst_test()
 
   with temp_git_repo():
-    with pytest.raises(SystemExit):
+    with pytest.raises(IOError):
       wst_test()
     wst_setup(product=True)
 

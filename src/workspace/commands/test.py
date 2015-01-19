@@ -6,8 +6,8 @@ import sys
 
 from workspace.commands.helpers import expand_product_groups, ToxIni
 from workspace.config import config
-from workspace.scm import repo_check, product_name, repo_path
-from workspace.utils import run, split_doc
+from workspace.scm import repo_check, product_name, repo_path, product_repos, product_path
+from workspace.utils import run, split_doc, log_exception
 
 log = logging.getLogger(__name__)
 
@@ -36,6 +36,8 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
                            if file exists, we don't need to redevelop, and py.test is used as a command
                            for the default environements). Defaults to the envlist in tox.
   :param bool dependencies: Show where product dependencies are installed from and their versions.
+                            Dependencies can be configured to be installed in editable mode in workspace.cfg
+                            with [test] editable_product_dependencies setting.
   :param bool redevelop: Redevelop the test environments by running installing on top of existing one.
                          This is implied if test environment does not exist, or whenever setup.py or
                          requirements.txt is modified after the environment was last updated.
@@ -76,9 +78,10 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
 
   tox = ToxIni(repo)
 
+  if not envs:
+    envs = tox.envlist
+
   if dependencies:
-    if not envs:
-      envs = tox.envlist
     for env in envs:
       show_installed_dependencies(tox, env)
 
@@ -95,12 +98,9 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
 
     for env in envs:
       strip_version_from_entry_scripts(tox, env)
-      install_editable_dependencies(tox, env)
+      install_editable_dependencies(tox, env, debug)
 
   else:
-    if not envs:
-      envs = tox.envlist
-
     for env in envs:
       envdir = tox.envdir(env)
 
@@ -201,23 +201,27 @@ print '\\n'.join(output)
   run([python, '-c', script])
 
 
-def install_editable_dependencies(repo):
+def install_editable_dependencies(tox, env, debug):
   if not config.test.editable_product_dependencies:
     return
 
+  name = product_name(tox.repo)
+
+  python = tox.bindir(env, 'python')
+  script = "import pkg_resources; print ' '.join([r.key for r in pkg_resources.get_distribution('%s').requires()])" % name
+
   editable_dependencies = expand_product_groups(config.test.editable_product_dependencies.split())
+  product_dependencies = run([python, '-c', script], return_output=True).split()
+  available_products = [os.path.basename(r) for r in product_repos()]
+  libs = [d for d in editable_dependencies if d in available_products and d in product_dependencies]
 
-  log.info('Installing %d product dependencies in editable mode', len(editable_dependencies))
+  pip = tox.bindir(env, 'pip')
 
-  pip = os.path.join(repo, '.tox', name, 'bin', 'pip')
+  for lib in libs:
+    log.info('Installing %s in editable mode', lib)
 
-  for lib in editable_dependencies:
     with log_exception('An error occurred when installing %s in editable mode' % lib):
       run([pip, 'uninstall', lib, '-y'], raises=False, silent=not debug)
 
-      checkout_path = product_checkout_path(lib, workspace_path)
-      if not os.path.exists(checkout_path):
-        log.info('Checking out %s', lib)
-        checkout_product(lib, checkout_path)
-
-      run([pip, 'install', '--editable', product_checkout_path(lib, workspace_path)], silent=not debug)
+      lib_path = product_path(lib)
+      run([pip, 'install', '--editable', lib_path], silent=not debug)

@@ -186,10 +186,14 @@ def git_repo_path(path=None):
   return parent_path_with_dir('.git', path)
 
 
-def repos():
-  """ Returns a list of repos either for the current directory or in sub-directories. """
+def product_repos():
+  """ Product repos for the current workspace. """
+  return repos(workspace_path())
+
+def repos(dir=None):
+  """ Returns a list of repos either for the given directory or current directory or in sub-directories. """
   repos = []
-  cwd = os.getcwd()
+  cwd = dir or os.getcwd()
 
   if is_repo(cwd):
     repos.append(repo_path(cwd))
@@ -422,8 +426,12 @@ def product_name(product_url):
   return os.path.basename(name)
 
 
-def product_checkout_path(product_url, workspace_path=None):
-  if not workspace_path:
-    workspace_path = os.getcwd()
+def product_checkout_path(product_url, workspace_dir=None):
+  return product_path(product_name(product_url), workspace_dir)
 
-  return os.path.join(workspace_path, product_name(product_url))
+
+def product_path(name, workspace_dir=None):
+  if not workspace_dir:
+    workspace_dir = workspace_path()
+
+  return os.path.join(workspace_dir, name)

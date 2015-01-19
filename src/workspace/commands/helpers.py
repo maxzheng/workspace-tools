@@ -25,14 +25,14 @@ class ToxIni(LocalConfig):
   def path_for(cls, repo):
     """
     :param str repo: Repo to get tox*.ini for
-    :return: Path to tox*.ini file in :attr:`self.repo`
-    :raise FileNotFoundError: if there is no tox*.ini found
+    :return: Path to tox*.ini
+    :raise IOError: if there is no tox*.ini found
     """
 
     tox_inis = glob(os.path.join(repo, 'tox*.ini'))
 
     if not tox_inis:
-      raise FileNotFoundError('No tox.ini found in %s. Please run "wst setup --product" first to setup tox.' % self.repo)
+      raise IOError('No tox.ini found in %s. Please run "wst setup --product" first to setup tox.' % repo)
 
     elif len(tox_inis) > 1:
       log.warn('More than one ini files found - will use first one: %s', ', '.join(tox_inis))
