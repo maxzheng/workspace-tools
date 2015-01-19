@@ -4,6 +4,8 @@ import os
 import re
 import sys
 
+import simplejson as json
+
 from workspace.commands.helpers import expand_product_groups, ToxIni
 from workspace.config import config
 from workspace.scm import repo_check, product_name, repo_path, product_repos, product_path
@@ -157,8 +159,9 @@ def strip_version_from_entry_scripts(tox, env):
 
 
 
-def show_installed_dependencies(tox, env):
+def show_installed_dependencies(tox, env, return_output = False):
   script_template = """
+import json
 import os
 import pkg_resources
 
@@ -167,8 +170,10 @@ workspace_dir = os.path.dirname(cwd)
 
 libs = [r.key for r in pkg_resources.get_distribution('%s').requires()]
 output = []
+json_output = %s
 
-print 'Product dependencies in %s:'
+if not json_output:
+  print 'Product dependencies in %s:'
 
 def strip_cwd(dir):
   if dir.startswith(cwd + '/'):
@@ -180,17 +185,27 @@ def strip_cwd(dir):
 for lib in sorted(libs):
   try:
     dist = pkg_resources.get_distribution(lib)
-    output.append('  %%-25s %%-10s  %%s' %% (lib, dist.version, strip_cwd(dist.location)))
+    if json_output:
+      output.append((lib, dist.version, dist.location))
+    else:
+      output.append('  %%-25s %%-10s  %%s' %% (lib, dist.version, strip_cwd(dist.location)))
   except pkg_resources.DistributionNotFound:
-    print '  %%s is not installed' %% lib
+    if json_output:
+      output.append((lib, None, None))
+    else:
+      print '  %%s is not installed' %% lib
   except Exception as e:
-    print '  %%s' %% e
+    if not json_output:
+      print '  %%s' %% e
 
-print '\\n'.join(output)
+if json_output:
+  print json.dumps(output)
+else:
+  print '\\n'.join(output)
 """
 
   name = product_name(tox.repo)
-  script = script_template % (name, env)
+  script = script_template % (name, return_output, env)
 
   python = tox.bindir(env, 'python')
 
@@ -198,7 +213,7 @@ print '\\n'.join(output)
     log.error('Test environment %s is not installed. Please run without --dependencies to install it first.', env)
     sys.exit(1)
 
-  run([python, '-c', script])
+  return run([python, '-c', script], return_output=return_output)
 
 
 def install_editable_dependencies(tox, env, debug):
@@ -207,18 +222,21 @@ def install_editable_dependencies(tox, env, debug):
 
   name = product_name(tox.repo)
 
-  python = tox.bindir(env, 'python')
-  script = "import pkg_resources; print ' '.join([r.key for r in pkg_resources.get_distribution('%s').requires()])" % name
+  dependencies_output = show_installed_dependencies(tox, env, return_output=True)
+  product_dependencies_list = json.loads(dependencies_output)
+  product_dependencies = {}
+
+  for dep, _, path in product_dependencies_list:
+    product_dependencies[dep] = path
 
   editable_dependencies = expand_product_groups(config.test.editable_product_dependencies.split())
-  product_dependencies = run([python, '-c', script], return_output=True).split()
   available_products = [os.path.basename(r) for r in product_repos()]
-  libs = [d for d in editable_dependencies if d in available_products and d in product_dependencies]
+  libs = [d for d in editable_dependencies if d in available_products and d in product_dependencies and tox.workdir in product_dependencies[d]]
 
   pip = tox.bindir(env, 'pip')
 
   for lib in libs:
-    log.info('Installing %s in editable mode', lib)
+    log.info('%s: Installing %s in editable mode' % (env, lib))
 
     with log_exception('An error occurred when installing %s in editable mode' % lib):
       run([pip, 'uninstall', lib, '-y'], raises=False, silent=not debug)
