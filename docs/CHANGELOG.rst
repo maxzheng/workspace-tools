@@ -1,5 +1,13 @@
-Version 0.5.3
+Version 0.5.4
 ================================================================================
+
+* Rename dependencies to show_dependencies for test arg and update test usage
+
+* Add example to setup tox and run style/coverage
+
+
+Version 0.5.3
+--------------------------------------------------------------------------------
 
 * Skip install dependencies in editable mode if already in editable mode
 
