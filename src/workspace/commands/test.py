@@ -36,6 +36,8 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
                            for the default environements). Defaults to the envlist in tox.
   :param bool dependencies: Show where product dependencies are installed from and their versions
   :param bool redevelop: Redevelop the test environments by running installing on top of existing one.
+                         This is implied if test environment does not exist, or whenever setup.py or
+                         requirements.txt is modified after the environment was last updated.
   :param bool recreate: Completely recreate the test environments by removing the existing ones first
   :param bool show_output: Show test output [if we don't need to develop].
   :param bool match_test: Only run tests that contains text [if we don't need to develop].
@@ -46,7 +48,8 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
     dependencies_installed_dependencies()
     sys.exit(0)
 
-  tox_inis = glob(os.path.join(repo_path(), 'tox*.ini'))
+  repo = repo_path()
+  tox_inis = glob(os.path.join(repo, 'tox*.ini'))
 
   if not tox_inis:
     log.error('No tox.ini found. Please run "wst setup --product" first to setup tox.')
@@ -63,25 +66,27 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
     os.environ['PATH'] = os.pathsep.join([p for p in os.environ['PATH'].split(os.pathsep)
                                           if os.path.exists(p) and not p.startswith(venv_bin)])
 
-  pytest_args = ''
-  if show_output or match_test:
-    pytest_args = []
-    if show_output:
-      pytest_args.append('-s')
-    if match_test:
-      pytest_args.append('-k ' + match_test)
-    pytest_args = ' '.join(pytest_args)
-    os.environ['PYTESTARGS'] = pytest_args
-
   envs = []
   files = []
 
   if env_or_file:
     for ef in env_or_file:
       if os.path.exists(ef):
-        files.append(ef)
+        files.append(os.path.abspath(ef))
       else:
         envs.append(ef)
+
+  pytest_args = ''
+  if show_output or match_test or files:
+    pytest_args = []
+    if show_output:
+      pytest_args.append('-s')
+    if match_test:
+      pytest_args.append('-k ' + match_test)
+    if files:
+      pytest_args.extend(files)
+    pytest_args = ' '.join(pytest_args)
+    os.environ['PYTESTARGS'] = pytest_args
 
   if redevelop or recreate:
     cmd = ['tox', '-c', tox_ini]
@@ -92,8 +97,8 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
     if recreate:
       cmd.append('-r')
 
-    run(cmd, cwd=repo_path())
-    strip_version_from_entry_scripts(repo_path())
+    run(cmd, cwd=repo)
+    strip_version_from_entry_scripts(repo)
 
   else:
     tox = LocalConfig(tox_ini)
@@ -107,10 +112,16 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
       if env_section not in tox:
         log.debug('Using default envdir and commands as %s section is not defined in %s', env_section, tox_ini)
 
-      envdir = tox.get(env_section, 'envdir', os.path.join('.tox', env)).replace('{toxworkdir}', '.tox')
+      envdir = os.path.join(repo, tox.get(env_section, 'envdir', os.path.join('.tox', env)).replace('{toxworkdir}', '.tox'))
       commands = tox.get(env_section, 'commands', tox.get('testenv', 'commands', 'py.test {env:PYTESTARGS:}'))
 
-      if not os.path.exists(envdir):
+      def requirements_updated():
+        req_mtime = os.stat(os.path.join(repo, 'setup.py')).st_mtime
+        if os.path.exists(os.path.join(repo, 'requirements.txt')):
+          req_mtime = max(req_mtime, os.stat(os.path.join(repo, 'requirements.txt')).st_mtime)
+        return req_mtime > os.stat(envdir).st_mtime
+
+      if not os.path.exists(envdir) or requirements_updated():
         test([env], redevelop=True)
         continue
 
@@ -124,10 +135,8 @@ def test(env_or_file=None, dependencies=False, redevelop=False, recreate=False, 
         if os.path.exists(command_path):
           if 'py.test' in full_command:
             full_command = full_command.replace('{env:PYTESTARGS:}', pytest_args)
-            if files:
-              full_command += ' ' + ' '.join(files)
           activate = '. ' + os.path.join(envdir, 'bin', 'activate')
-          run(activate + '; ' + full_command, shell=True)
+          run(activate + '; ' + full_command, shell=True, cwd=repo)
           if env != envs[-1]:
             print
         else:
