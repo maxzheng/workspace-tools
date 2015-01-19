@@ -61,9 +61,16 @@ Make a commit and create a new branch for it::
 
     ci -b test "Updated README.rst"
 
-To setup your test environment and test your change (with tox/py.test)::
+To install your test environment and test your change (with tox/py.test)::
 
     test
+
+    # To setup tox with test, style, and coverage environments, run:
+    # ws setup --product
+    #
+    # To check style or generate coverage report, run:
+    # test style
+    # test coverage
 
 See status/diff for all of your repos::
 
