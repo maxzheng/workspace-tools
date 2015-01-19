@@ -1,5 +1,11 @@
-Version 0.5.4
+Version 0.5.5
 ================================================================================
+
+* Better support for customizing test command
+
+
+Version 0.5.4
+--------------------------------------------------------------------------------
 
 * Rename dependencies to show_dependencies for test arg and update test usage
 
