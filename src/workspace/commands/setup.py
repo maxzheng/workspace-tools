@@ -78,6 +78,7 @@ envlist = py27
 [testenv]
 commands =
     py.test {env:PYTESTARGS:}
+install_command = pip install -U {packages} --download-cache={[testenv]downloadcache}
 downloadcache = {toxworkdir}/_download
 recreate = False
 skipsdist = True
