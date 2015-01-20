@@ -1,5 +1,11 @@
-Version 0.5.6
+Version 0.5.7
 ================================================================================
+
+* Add install_command with -U to ensure latest versions are installed and without {opts} to always install dependencies
+
+
+Version 0.5.6
+--------------------------------------------------------------------------------
 
 * Better exception handling/output for test
 
