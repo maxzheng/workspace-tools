@@ -28,6 +28,7 @@ To get started
 * To checkout a product, run: wst checkout <git or svn repository url> [<url2> ...]
     - Product that use svn is checked out with git-svn
 * All commands are named appropriately for what they do, but see its --help for additional info.
+* For more info, read the docs at http://workspace-tools.readthedocs.org
 """
 
 
