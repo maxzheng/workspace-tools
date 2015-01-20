@@ -187,13 +187,13 @@ def test_test():
 
     with open('test/test_fail.py', 'w') as fp:
       fp.write(fail_test + '\n' + pass_test)
-    with pytest.raises(RunError):
+    with pytest.raises(SystemExit):
       wst_test()
 
     wst_test(['test/test_pass.py'])
     wst_test(match_test='test_pass', show_output=True)
 
-    with pytest.raises(RunError):
+    with pytest.raises(SystemExit):
       wst_test(['style'])
     with open('test/test_fail.py', 'w') as fp:
       fp.write(fail_test + '\n\n\n' + pass_test)

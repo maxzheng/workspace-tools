@@ -107,7 +107,8 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
     if recreate:
       cmd.append('-r')
 
-    run(cmd, cwd=repo)
+    if not run(cmd, cwd=repo, raises=False):
+      sys.exit(1)
 
     for env in envs:
       strip_version_from_entry_scripts(tox, env)
@@ -143,7 +144,8 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
             else:
               full_command += ' ' + pytest_args
           activate = '. ' + os.path.join(envdir, 'bin', 'activate')
-          run(activate + '; ' + full_command, shell=True, cwd=repo, raises=False)
+          if not run(activate + '; ' + full_command, shell=True, cwd=repo, raises=False):
+            sys.exit(1)
           if env != envs[-1]:
             print
         else:
@@ -180,16 +182,29 @@ def show_installed_dependencies(tox, env, return_output = False):
 import json
 import os
 import pkg_resources
+import sys
+
+# Required params to run this script
+package = '%s'
+json_output = %s
+env = '%s'
 
 cwd = os.getcwd()
 workspace_dir = os.path.dirname(cwd)
 
-libs = [r.key for r in pkg_resources.get_distribution('%s').requires()]
+try:
+  libs = [r.key for r in pkg_resources.get_distribution(package).requires()]
+except pkg_resources.DistributionNotFound as e:
+  print "%%s: %%s is not installed" %% (env, e)
+  sys.exit(1)
+except Exception as e:
+  print e
+  sys.exit(1)
+
 output = []
-json_output = %s
 
 if not json_output:
-  print '%s:'
+  print env + ':'
 
 def strip_cwd(dir):
   if dir.startswith(cwd + '/'):
@@ -229,7 +244,7 @@ else:
     log.error('Test environment %s is not installed. Please run without -d / --show-dependencies to install it first.', env)
     sys.exit(1)
 
-  return run([python, '-c', script], return_output=return_output)
+  return run([python, '-c', script], return_output=return_output, raises=False)
 
 
 def install_editable_dependencies(tox, env, debug):
