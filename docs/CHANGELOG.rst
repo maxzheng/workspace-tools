@@ -1,5 +1,11 @@
-Version 0.5.5
+Version 0.5.6
 ================================================================================
+
+* Better exception handling/output for test
+
+
+Version 0.5.5
+--------------------------------------------------------------------------------
 
 * Better support for customizing test command
 
