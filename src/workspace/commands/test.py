@@ -30,7 +30,7 @@ def setup_test_parser(subparsers):
   return test_parser
 
 
-def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None, tox_cmd=None, tox_ini=None, tox_commands={}, additional_requirements=None, debug=False, **kwargs):
+def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None, tox_cmd=None, tox_ini=None, tox_commands={}, additional_requirements=None, debug=False, silent=False, **kwargs):
   """
   Run tests and manage test environments for product.
 
@@ -54,6 +54,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
                             Only used when not developing.
   :param list additional_requirements: Additional requirements files to check for modified time to auto develop when changed.
                                        By default, setup.py and requirements.txt are checked.
+  :param bool silent: Run tox/py.test silently. Only errors are printed and followed by exit.
   :return: Dict of env to commands ran on success
   """
   repo_check()
@@ -110,13 +111,13 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
     if recreate:
       cmd.append('-r')
 
-    if not run(cmd, cwd=repo, raises=False):
+    if not run(cmd, cwd=repo, raises=False, silent=silent):
       sys.exit(1)
 
     for env in envs:
       env_commands[env] = ' '.join(cmd)
       strip_version_from_entry_scripts(tox, env)
-      install_editable_dependencies(tox, env, debug)
+      install_editable_dependencies(tox, env, silent, debug)
 
   else:
     for env in envs:
@@ -124,16 +125,22 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
 
       def requirements_updated():
         req_mtime = os.stat(os.path.join(repo, 'setup.py')).st_mtime
-        if os.path.exists(os.path.join(repo, 'requirements.txt')):
-          req_mtime = max(req_mtime, os.stat(os.path.join(repo, 'requirements.txt')).st_mtime)
+        requirements_files = ['requirements.txt']
+        if additional_requirements:
+          requirements_files.extend(additional_requirements)
+        for req_file in requirements_files:
+          req_path = os.path.join(repo, req_file)
+          if os.path.exists(req_path):
+            req_mtime = max(req_mtime, os.stat(req_path).st_mtime)
         return req_mtime > os.stat(envdir).st_mtime
 
       if not os.path.exists(envdir) or requirements_updated():
-        env_commands.update(test([env], redevelop=True, tox_cmd=tox_cmd, tox_ini=tox_ini, tox_commands=tox_commands))
+        env_commands.update(test([env], redevelop=True, tox_cmd=tox_cmd, tox_ini=tox_ini, tox_commands=tox_commands,
+                                 show_output=show_output, match_test=match_test, silent=silent, debug=debug))
         continue
 
-      if len(envs) > 1:
-        print env
+      if len(envs) > 1 and not silent:
+          print env
 
       commands = tox_commands.get(env) or tox.commands(env)
       env_commands[env] = '\n'.join(commands)
@@ -149,12 +156,13 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
             else:
               full_command += ' ' + pytest_args
           activate = '. ' + os.path.join(envdir, 'bin', 'activate')
-          if not run(activate + '; ' + full_command, shell=True, cwd=repo, raises=False):
+          if not run(activate + '; ' + full_command, shell=True, cwd=repo, raises=False, silent=silent):
             sys.exit(1)
-          if env != envs[-1]:
+          if env != envs[-1] and not silent:
             print
         else:
           log.error('%s does not exist', command_path)
+          sys.exit(1)
 
   return env_commands
 
@@ -254,7 +262,7 @@ else:
   return run([python, '-c', script], return_output=return_output, raises=False)
 
 
-def install_editable_dependencies(tox, env, debug):
+def install_editable_dependencies(tox, env, silent, debug):
   if not config.test.editable_product_dependencies:
     return
 
@@ -274,7 +282,8 @@ def install_editable_dependencies(tox, env, debug):
   pip = tox.bindir(env, 'pip')
 
   for lib in libs:
-    log.info('%s: Installing %s in editable mode' % (env, lib))
+    if not silent or debug:
+      log.info('%s: Installing %s in editable mode' % (env, lib))
 
     with log_exception('An error occurred when installing %s in editable mode' % lib):
       run([pip, 'uninstall', lib, '-y'], raises=False, silent=not debug)

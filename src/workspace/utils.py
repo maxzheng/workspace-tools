@@ -69,7 +69,7 @@ def run(cmd, cwd=None, silent=False, return_output=False, raises=True, **subproc
 
   :param list/str cmd: Command with args to run.
   :param str cwd: Change directory to cwd before running
-  :param bool silent: Suppress stdout/stderr
+  :param bool/int silent: Suppress stdout/stderr. If True/1, completely silent. If 2, print cmd output on error.
   :param bool return_output: Return the command output
   :param bool raises: Raise an exception if command exits with an error code.
   :param dict subprocess_args: Additional args to pass to subprocess
@@ -99,7 +99,7 @@ def run(cmd, cwd=None, silent=False, return_output=False, raises=True, **subproc
         else:
           return True
 
-      elif raises:
+      elif raises or silent == 2:
         if output:
           print output.strip()
         if errors:

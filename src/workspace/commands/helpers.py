@@ -70,7 +70,7 @@ class ToxIni(LocalConfig):
   def commands(self, env):
     envsection = self.envsection(env)
     commands = self.get(envsection, 'commands', self.get('testenv', 'commands', 'py.test {env:PYTESTARGS:}'))
-    return filter(None, commands.split('\n'))
+    return filter(None, self.expand_vars(commands).split('\n'))
 
   def expand_vars(self, value):
     if '{' in value:
