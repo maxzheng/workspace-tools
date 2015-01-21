@@ -1,5 +1,14 @@
-Version 0.5.7
+Version 0.5.8
 ================================================================================
+
+* Add tv alias to open files from ag in vim.
+  Add env auto complete for test command
+
+* Add doc link to usage
+
+
+Version 0.5.7
+--------------------------------------------------------------------------------
 
 * Add install_command with -U to ensure latest versions are installed and without {opts} to always install dependencies
 
