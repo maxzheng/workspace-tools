@@ -183,24 +183,32 @@ def test_test():
 
     with open('test/test_pass.py', 'w') as fp:
       fp.write(pass_test)
-    wst_test()
+    commands = wst_test()
+    assert 'py27' in commands
+    assert 'tox' in commands['py27']
 
     with open('test/test_fail.py', 'w') as fp:
       fp.write(fail_test + '\n' + pass_test)
     with pytest.raises(SystemExit):
       wst_test()
 
-    wst_test(['test/test_pass.py'])
-    wst_test(match_test='test_pass', show_output=True)
+    commands = wst_test(['test/test_pass.py'])
+    assert 'py27' in commands
+    assert 'py.test' in commands['py27']
+
+    os.utime('requirements.txt', None)
+    commands = wst_test(match_test='test_pass', show_output=True)
+    assert 'py27' in commands
+    assert 'tox' in commands['py27']
 
     with pytest.raises(SystemExit):
       wst_test(['style'])
     with open('test/test_fail.py', 'w') as fp:
       fp.write(fail_test + '\n\n\n' + pass_test)
-    wst_test(['style'])
+    assert 'style' in wst_test(['style'])
 
     os.unlink('test/test_fail.py')
-    wst_test(['coverage'])
+    assert 'coverage' in wst_test(['coverage'])
     assert os.path.exists('coverage.xml')
     assert os.path.exists('htmlcov/index.html')
 

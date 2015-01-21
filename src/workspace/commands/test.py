@@ -54,6 +54,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
                             Only used when not developing.
   :param list additional_requirements: Additional requirements files to check for modified time to auto develop when changed.
                                        By default, setup.py and requirements.txt are checked.
+  :return: Dict of env to commands ran on success
   """
   repo_check()
   repo = repo_path()
@@ -91,6 +92,8 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
   if not envs:
     envs = tox.envlist
 
+  env_commands = {}
+
   if show_dependencies:
     for env in envs:
       show_installed_dependencies(tox, env)
@@ -111,6 +114,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
       sys.exit(1)
 
     for env in envs:
+      env_commands[env] = ' '.join(cmd)
       strip_version_from_entry_scripts(tox, env)
       install_editable_dependencies(tox, env, debug)
 
@@ -125,13 +129,14 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
         return req_mtime > os.stat(envdir).st_mtime
 
       if not os.path.exists(envdir) or requirements_updated():
-        test([env], redevelop=True, tox_cmd=tox_cmd, tox_ini=tox_ini, tox_commands=tox_commands)
+        env_commands.update(test([env], redevelop=True, tox_cmd=tox_cmd, tox_ini=tox_ini, tox_commands=tox_commands))
         continue
 
       if len(envs) > 1:
         print env
 
       commands = tox_commands.get(env) or tox.commands(env)
+      env_commands[env] = '\n'.join(commands)
 
       for command in commands:
         full_command = os.path.join(envdir, 'bin', command)
@@ -150,6 +155,8 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
             print
         else:
           log.error('%s does not exist', command_path)
+
+  return env_commands
 
 def strip_version_from_entry_scripts(tox, env):
   """ Strip out version spec "==1.2.3" from entry scripts as they require re-develop when version is changed in develop mode. """
