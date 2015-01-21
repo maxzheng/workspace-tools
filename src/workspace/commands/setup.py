@@ -29,12 +29,42 @@ function ws ()
     ls
   fi
 }
+
+function open_files_from_last_command() {
+    last_command=`history 10 | grep -v "  tv" | tail -1`
+    declare -a "parts=($last_command)"
+    command=${parts[1]}
+    if [[ $command == "ag" ]]; then
+        full_command=${parts[@]:1}
+
+        pattern=+/${parts[2]}
+
+        raw_parts=(${last_command// / })  # Need the quote retained to sub properly
+        last=${raw_parts[@]:(-1)}
+        if [[ $last != "-l" ]]; then
+            sub="$last=$last -l"
+        else
+            sub=
+        fi
+
+        if [ -z "$sub" ]; then
+            vim -p `fc -s $command` "$pattern" --cmd "set ignorecase smartcase"
+        else
+            vim -p `fc -s "$sub" $command` "$pattern" --cmd "set ignorecase smartcase"
+        fi
+    elif [[ $command == "find" ]]; then
+        vim -p `fc -s $command`
+    else
+        echo tv: last command "$command" is not supported.
+    fi
+}
 """
 COMMAND_FUNCTION_TEMPLATE = 'function %s() { _wst %s "$@"; }\n'
 COMMAND_ALIAS_TEMPLATE = 'alias %s=%s\n'
 COMMANDS = {
-  'a': "'source .tox/${PWD##*/}/bin/activate'",  # Must use single quote for $PWD##* to work properly
+  'a': " 'source .tox/${PWD##*/}/bin/activate'",  # Must use single quote for $PWD##* to work properly
   'd': "'deactivate'",
+  'tv': "'open_files_from_last_command'  # from ag or find [t]o [v]im",
 
   'co': 'checkout',
   'ci': 'commit',
@@ -51,24 +81,34 @@ COMMANDS = {
 }
 AUTO_COMPLETE_TEMPLATE = """
 function _branch_file_completer() {
-    local cur=${COMP_WORDS[COMP_CWORD]}
+  local cur=${COMP_WORDS[COMP_CWORD]}
 
-    if git status &> /dev/null; then
-        branches=`git branch`
-    else
-        branches=''
-    fi
+  if git status &> /dev/null; then
+    branches=`git branch`
+  else
+    branches=
+  fi
 
+  if [ ! -z "$branches" ]; then
     COMPREPLY=( $( compgen -W "$branches" -- $cur ) )
+  fi
+}
+function _env_file_completer() {
+  local cur=${COMP_WORDS[COMP_CWORD]}
+
+  if ls tox*.ini &>/dev/null || ls .tox*.ini &>/dev/null; then
+    envs=`grep -h '^\[testenv:' .tox*.ini tox*.ini 2>/dev/null | sed -E 's/^\[testenv:(.+)]/\\1/' | grep -vE '^(py|pydev)$'`
+    COMPREPLY=( $( compgen -W "$envs" -- $cur ) )
+  fi
 }
 
 complete -o default -F _branch_file_completer co
 complete -o default -F _branch_file_completer checkout
+complete -o default -F _env_file_completer test
 complete -F _branch_file_completer push
 
 complete -o default log
 complete -o default di
-complete -o default test
 """
 TOX_INI_FILE = 'tox.ini'
 TOX_INI_TMPL = """\
@@ -323,19 +363,22 @@ def setup_workspace(commands, commands_with_aliases, uninstall, additional_comma
     if additional_commands:
       COMMANDS.update(additional_commands)
 
+    special = lambda c: c.startswith("'") or c.startswith('"') or c.startswith(' ')
+
     if commands or commands_with_aliases:
-      functions = sorted([f for f in COMMANDS.values() if not (f.startswith("'") or f.startswith('"'))])
+      functions = sorted([f for f in COMMANDS.values() if not special(f)])
       fh.write('\n')
       for func in functions:
         fh.write(COMMAND_FUNCTION_TEMPLATE % (func, func.lstrip('_')))
-      log.info('Added additional bash functions: %s', ', '.join([f for f in functions if not f.startswith('_')]))
+      log.info('Added bash functions: %s', ', '.join([f for f in functions if not f.startswith('_')]))
 
     if commands_with_aliases:
       fh.write('\n')
-      aliases = [item for item in sorted(COMMANDS.items(), key=lambda x: x[0]) if not item[0].startswith('_')]
+      aliases = [item for item in sorted(COMMANDS.items(), key=lambda x: x[1].lstrip('_')) if not item[0].startswith('_')]
       for alias, command in aliases:
-        fh.write(COMMAND_ALIAS_TEMPLATE % (alias, command))
-      log.info('Added aliases: %s', ', '.join(["%s=%s" % (a, c.lstrip('_')) for a, c in aliases]))
+        fh.write(COMMAND_ALIAS_TEMPLATE % (alias, command.lstrip(' ')))
+      log.info('Added aliases: %s', ', '.join(["%s=%s" % (a, c.lstrip('_ ')) for a, c in aliases if not special(c)]))
+      log.info('Added special aliases: %s', ', '.join(["%s=%s" % (a, c.lstrip('_ ')) for a, c in aliases if special(c)]))
 
       fh.write(AUTO_COMPLETE_TEMPLATE)
 

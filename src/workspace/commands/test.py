@@ -40,10 +40,10 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
   :param bool show_dependencies: Show where product dependencies are installed from and their versions.
                             Dependencies can be configured to be installed in editable mode in workspace.cfg
                             with [test] editable_product_dependencies setting.
-  :param bool redevelop: Redevelop the test environments by running installing on top of existing one.
+  :param bool redevelop: Redevelop the test environment by installing on top of existing one.
                          This is implied if test environment does not exist, or whenever setup.py or
                          requirements.txt is modified after the environment was last updated.
-  :param bool recreate: Completely recreate the test environments by removing the existing ones first
+  :param bool recreate: Completely recreate the test environment by removing the existing one first.
   :param bool show_output: Show output from tests
   :param bool match_test: Only run tests with method name that matches pattern
   :param list tox_cmd: Alternative tox command to run.
