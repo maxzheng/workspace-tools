@@ -1,5 +1,11 @@
-Version 0.5.8
+Version 0.5.9
 ================================================================================
+
+* Return commands ran per env for test command
+
+
+Version 0.5.8
+--------------------------------------------------------------------------------
 
 * Add tv alias to open files from ag in vim.
   Add env auto complete for test command
