@@ -269,6 +269,9 @@ def install_editable_dependencies(tox, env, silent, debug):
   name = product_name(tox.repo)
 
   dependencies_output = show_installed_dependencies(tox, env, return_output=True)
+  if not dependencies_output:
+    log.debug('%s is not installed or there is no dependencies - skipping editable mode changes', name)
+    return
   product_dependencies_list = json.loads(dependencies_output)
   product_dependencies = {}
 
