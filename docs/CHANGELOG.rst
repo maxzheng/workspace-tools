@@ -1,5 +1,11 @@
-Version 0.5.10
+Version 0.5.11
 ================================================================================
+
+* Skip editable mode change if there are no dependencies
+
+
+Version 0.5.10
+--------------------------------------------------------------------------------
 
 * Support silent run that outputs on error and use on test command
 
