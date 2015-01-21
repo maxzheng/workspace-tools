@@ -1,5 +1,11 @@
-Version 0.5.9
+Version 0.5.10
 ================================================================================
+
+* Support silent run that outputs on error and use on test command
+
+
+Version 0.5.9
+--------------------------------------------------------------------------------
 
 * Return commands ran per env for test command
 
