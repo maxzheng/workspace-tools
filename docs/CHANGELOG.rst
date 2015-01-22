@@ -1,5 +1,11 @@
-Version 0.6.1
+Version 0.6.2
 ================================================================================
+
+* Only use first line when showing what changed for svn during bump
+
+
+Version 0.6.1
+--------------------------------------------------------------------------------
 
 * Update checkout usage
 

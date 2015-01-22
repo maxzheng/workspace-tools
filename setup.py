@@ -10,7 +10,7 @@ def find_files(path):
 
 setuptools.setup(
   name='workspace-tools',
-  version='0.6.1',
+  version='0.6.2',
 
   author='Max Zheng',
   author_email='maxzheng.os @t gmail.com',
