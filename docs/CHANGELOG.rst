@@ -1,5 +1,11 @@
-Version 0.6.0
+Version 0.6.1
 ================================================================================
+
+* Update checkout usage
+
+
+Version 0.6.0
+--------------------------------------------------------------------------------
 
 * Commit multiple file bumps as a single commit and use --msg as the summary (prepended)
 
