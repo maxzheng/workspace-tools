@@ -31,32 +31,53 @@ function ws ()
 }
 
 function open_files_from_last_command() {
-    last_command=`history 10 | grep -v "  tv" | tail -1`
-    declare -a "parts=($last_command)"
-    command=${parts[1]}
-    if [[ $command == "ag" ]]; then
-        full_command=${parts[@]:1}
+  last_command=`history 100 | grep  -E "^\s+[0-9]+\s+(ag|find) " | tail -1`
 
-        pattern=+/${parts[2]}
+  if [ -z "$last_command" ]; then
+    echo No ag or find command found in last 100 commands.
+    return
+  fi
 
-        raw_parts=(${last_command// / })  # Need the quote retained to sub properly
-        last=${raw_parts[@]:(-1)}
-        if [[ $last != "-l" ]]; then
-            sub="$last=$last -l"
-        else
-            sub=
-        fi
+  declare -a "parts=($last_command)"
+  command=${parts[1]}
 
-        if [ -z "$sub" ]; then
-            vim -p `fc -s $command` "$pattern" --cmd "set ignorecase smartcase"
-        else
-            vim -p `fc -s "$sub" $command` "$pattern" --cmd "set ignorecase smartcase"
-        fi
-    elif [[ $command == "find" ]]; then
-        vim -p `fc -s $command`
+  if [[ $command == "ag" ]]; then
+    full_command=${parts[@]:1}
+    pattern=+/${parts[2]}
+
+    raw_parts=(${last_command// / })  # Need the quote retained to sub properly
+    last_part=${raw_parts[@]:(-1)}
+
+    if [[ $last_part != "-l" ]]; then
+        sub_expr="$last_part=$last_part -l"
     else
-        echo tv: last command "$command" is not supported.
+        sub_expr=
     fi
+
+    if [ -z "$sub_expr" ]; then
+      files=`fc -s $command`
+    else
+      files=`fc -s "$sub_expr" $command`
+    fi
+
+    if [ -z "$files" ]; then
+      echo No files found from output
+    else
+      vim -p $files "$pattern" --cmd "set ignorecase smartcase"
+    fi
+
+  elif [[ $command == "find" ]]; then
+    files=`fc -s $command`
+
+    if [ -z "$files" ]; then
+      echo No files found from output
+    else
+      vim -p $files
+    fi
+
+  else
+    echo tv: last command "$command" is not supported.
+  fi
 }
 """
 COMMAND_FUNCTION_TEMPLATE = 'function %s() { _wst %s "$@"; }\n'
