@@ -41,7 +41,7 @@ def bump(names=None, append=False, msg=None, file=None, file_updaters=None, dry_
                       To bump to a specific version instead of latest, append version to name
                       (i.e. requests==1.2.3 or 'requests>=1.2.3'). When > or < is used, be sure to quote.
     :param bool append: Append bump changes to current branch and update existing rb if any (from .git/config)
-    :param str msg: Summary commit message to be appended
+    :param str msg: Summary commit message
     :param str/list file: Requirement file to bump. Defaults to requirements.txt or pinned.txt
                           that are set by bump.requirement_files in workspace.cfg.
     :param dict file_updaters: Optionally provide a mapping from file to custom updater callable.
@@ -92,7 +92,7 @@ def bump(names=None, append=False, msg=None, file=None, file_updaters=None, dry_
     found_requirement_files.append(file)
 
     update_file = file_updaters and file_updaters.get(file) or update_requirements
-    commit_msg, matched = update_file(file, requirement_filters, append, msg, dry_run, **kwargs)
+    commit_msg, matched = update_file(file, requirement_filters, append, dry_run, **kwargs)
 
     if commit_msg:
       commit_msgs[file] = commit_msg
@@ -106,20 +106,32 @@ def bump(names=None, append=False, msg=None, file=None, file_updaters=None, dry_
     log.error('None of the specified dependencies were found in %s', ', '.join(found_requirement_files))
     sys.exit(1)
 
-  if not commit_msgs:
+  if commit_msgs:
+    commit_msg = '\n\n'.join(sorted(commit_msgs.values()))
+    if msg:
+      commit_msg = msg + '\n\n' + commit_msg
+
+    if dry_run:
+      log.info("Changes that would be made:\n\n%s\n", commit_msg)
+    elif is_git_repo():
+      branch = None if append else 'bump'
+      commit(msg=commit_msg, branch=branch)
+    else:
+      log.info(commit_msg.replace('\n', '').replace('Update', 'Updated').replace('Bump', 'Bumped'))
+
+  else:
     log.info('No need to bump. Everything is up to date!')
 
   return commit_msgs
 
 
-def update_requirements(file, requirement_filters, append=False, additional_msg=None, dry_run=False, **kwargs):
+def update_requirements(file, requirement_filters, append=False, dry_run=False, **kwargs):
   """
   Update dependencies in requirements file.
 
   :param str file: Requirements file to update
   :param dict requirement_filters: Dict of dependency name to its :class:`pkg_resources.Requirement` instance.
   :param bool append: Append changes instead of creating a new branch
-  :param str additional_msg: Additional commit message to be appended
   :param bool dry_run: Perform a dry run
   :param dict kwargs: Additional args from argparse
   :return: Tuple of (commit_msg, filter_matched) where filter_matched is True if there is no filter or filter matched.
@@ -187,26 +199,15 @@ def update_requirements(file, requirement_filters, append=False, additional_msg=
     requirements.append(req)
 
   if updated_requirements:
+    updated_requirements = (' ').join(updated_requirements)
+    commit_msg += 'Update %s: %s' % (os.path.basename(file), updated_requirements)
+
     if not dry_run:
       with open(file, 'w') as fp:
         for req in requirements:
           if req.project_name in requirement_comments:
             fp.write(requirement_comments[req.project_name] + '\n')
           fp.write(str(req) + '\n')
-
-    requirements = (' ').join(updated_requirements)
-    commit_msg += 'Update %s: %s' % (os.path.basename(file), requirements)
-    if additional_msg:
-      commit_msg += '\n' + additional_msg
-    commit_msg = commit_msg.strip()
-
-    if dry_run:
-      log.info("Changes that would be made:\n\n%s\n", commit_msg)
-    elif is_git_repo():
-      branch = None if append else 'bump'
-      commit(msg=commit_msg, branch=branch)
-    else:
-      log.info(commit_msg.replace('\n', '').replace('Update', 'Updated'))
 
   return commit_msg, filter_matched
 
