@@ -117,7 +117,7 @@ def bump(names=None, append=False, msg=None, file=None, file_updaters=None, dry_
       branch = None if append else 'bump'
       commit(msg=commit_msg, branch=branch)
     else:
-      log.info(commit_msg.replace('\n', '').replace('Update', 'Updated').replace('Bump', 'Bumped'))
+      log.info(commit_msg.split('\n')[0].replace('\n', '').replace('Update', 'Updated').replace('Bump', 'Bumped'))
 
   else:
     log.info('No need to bump. Everything is up to date!')
