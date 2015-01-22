@@ -1,3 +1,11 @@
+Version 0.6.0
+================================================================================
+
+* Commit multiple file bumps as a single commit and use --msg as the summary (prepended)
+
+* Improved tv alias
+
+
 Version 0.5.11
 ================================================================================
 
