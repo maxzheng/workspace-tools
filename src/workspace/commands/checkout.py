@@ -17,7 +17,7 @@ def setup_checkout_parser(subparsers):
 
 def checkout(target, **kwargs):
   """
-  Checkout products (repo urls) or revert files.
+  Checkout products (repo urls) or branch, or revert files.
 
   :param list target: List of products (git/svn repository URLs) to checkout. When inside a git repo,
                       checkout the branch or revert changes for file(s). When inside a svn repo, revert
