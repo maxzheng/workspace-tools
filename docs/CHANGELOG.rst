@@ -1,5 +1,13 @@
-Version 0.6.5
+Version 0.6.6
 ================================================================================
+
+* Add -n pass thru option for py.test
+
+* Only install editable dependencies in [tox] envlist environments
+
+
+Version 0.6.5
+--------------------------------------------------------------------------------
 
 * Support checking out from github using product name or user/name format
 
