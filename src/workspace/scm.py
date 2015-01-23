@@ -4,6 +4,8 @@ import re
 import shutil
 import sys
 
+import requests
+
 from workspace.config import config
 from workspace.utils import run, silent_run, parent_path_with_dir
 
@@ -189,6 +191,7 @@ def git_repo_path(path=None):
 def product_repos():
   """ Product repos for the current workspace. """
   return repos(workspace_path())
+
 
 def repos(dir=None):
   """ Returns a list of repos either for the given directory or current directory or in sub-directories. """
@@ -389,6 +392,24 @@ def checkout_product(product_url, checkout_path):
     if is_git_repo(checkout_path):
       checkout_branch('master', checkout_path)
     return update_repo(checkout_path)
+
+  if re.match('[\w-]+$', product_url):
+    try:
+      logging.getLogger('requests').setLevel(logging.WARN)
+      response = requests.get(config.checkout.search_api_url, params={'q': product_url}, timeout=10)
+      response.raise_for_status()
+      results = response.json()['items']
+      if not results:
+        log.error('No repo matching "%s" found.', product_url)
+        sys.exit(1)
+      product_url = results[0]['ssh_url']
+      log.info('Using repo url %s', product_url)
+    except Exception as e:
+      log.error('Could not find repo for %s using %s due to error: ', product_url, config.checkout.search_api_url, e)
+      sys.exit(1)
+
+  elif re.match('[\w-]+/[\w-]+$', product_url):
+    product_url = config.checkout.user_repo_url % product_url
 
   if clone_svn_commits and not product_url.endswith('.git'):
     try:

@@ -31,6 +31,13 @@
   # Higher the number, the longer it takes to clone.
   use_gitsvn_to_clone_svn_commits = 10
 
+  # API used to find git repo for single word checkout (i.e. wst checkout workspace-tools)
+  # It should accept a ?q=singleWord param
+  search_api_url = https://api.github.com/search/repositories
+
+  # URL to use when checking out a user repo reference (i.e. wst checkout maxzheng/workspace-tools)
+  user_repo_url = git@github.com:%s.git
+
 
   ###########################################################################################################
   # Settings for test command
@@ -44,8 +51,6 @@
 
 import logging
 import os
-from StringIO import StringIO
-import sys
 
 from remoteconfig import RemoteConfig
 

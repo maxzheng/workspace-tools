@@ -48,6 +48,10 @@ To checkout a repo::
     # Or checkout a group of repos as defined in workspace.cfg
     # co mzheng-repos
 
+    # Or checkout a repo from GitHub:
+    # co workspace-tools                # Best match
+    # co maxzheng/workspace-tools       # Exact match
+
 For more info about workspace.cfg, refer to Configuration_ doc.
 
 To update all repos in your workspace::

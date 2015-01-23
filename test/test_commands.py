@@ -13,8 +13,8 @@ from workspace.commands.push import push
 from workspace.commands.setup import setup as wst_setup
 from workspace.commands.test import test as wst_test
 from workspace.commands.status import status
-from workspace.scm import local_commit, add_files, remove_branch, checkout_branch, stat_repo, all_branches, commit_logs
-from workspace.utils import run, RunError
+from workspace.scm import remove_branch, checkout_branch, stat_repo, all_branches, commit_logs
+from workspace.utils import RunError
 
 from test_stubs import temp_dir, temp_git_repo, temp_remote_git_repo
 
@@ -101,8 +101,8 @@ def test_bump():
 
 def test_checkout():
   with temp_dir():
-    with pytest.raises(RunError):
-      checkout(['foo'])
+    with pytest.raises(SystemExit):
+      checkout(['foobazbar-no-such-repo'])
 
     checkout(['mzheng-repos'])
     checkout(['clicast'])
