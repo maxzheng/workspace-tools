@@ -30,7 +30,7 @@ def setup_test_parser(subparsers):
   return test_parser
 
 
-def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None, tox_cmd=None, tox_ini=None, tox_commands={}, additional_requirements=None, debug=False, silent=False, **kwargs):
+def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None, tox_cmd=None, tox_ini=None, tox_commands={}, debug=False, silent=False, **kwargs):
   """
   Run tests and manage test environments for product.
 
@@ -41,8 +41,8 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
                             Dependencies can be configured to be installed in editable mode in workspace.cfg
                             with [test] editable_product_dependencies setting.
   :param bool redevelop: Redevelop the test environment by installing on top of existing one.
-                         This is implied if test environment does not exist, or whenever setup.py or
-                         requirements.txt is modified after the environment was last updated.
+                         This is implied if test environment does not exist, or whenever requirements.txt or
+                         pinned.txt is modified after the environment was last updated.
   :param bool recreate: Completely recreate the test environment by removing the existing one first.
   :param bool show_output: Show output from tests
   :param bool match_test: Only run tests with method name that matches pattern
@@ -52,8 +52,6 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
   :param str tox_ini: Path to tox_ini file.
   :param dict tox_commands: Map of env to list of commands to override "[testenv:env] commands" setting for env.
                             Only used when not developing.
-  :param list additional_requirements: Additional requirements files to check for modified time to auto develop when changed.
-                                       By default, setup.py and requirements.txt are checked.
   :param bool silent: Run tox/py.test silently. Only errors are printed and followed by exit.
   :return: Dict of env to commands ran on success
   """
@@ -124,10 +122,8 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
       envdir = tox.envdir(env)
 
       def requirements_updated():
-        req_mtime = os.stat(os.path.join(repo, 'setup.py')).st_mtime
-        requirements_files = ['requirements.txt']
-        if additional_requirements:
-          requirements_files.extend(additional_requirements)
+        req_mtime = 0
+        requirements_files = ['requirements.txt', 'pinned.txt']
         for req_file in requirements_files:
           req_path = os.path.join(repo, req_file)
           if os.path.exists(req_path):
