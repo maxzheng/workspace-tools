@@ -1,4 +1,3 @@
-import argparse
 import logging
 import os
 import re
@@ -30,7 +29,8 @@ def setup_test_parser(subparsers):
   return test_parser
 
 
-def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None, tox_cmd=None, tox_ini=None, tox_commands={}, debug=False, silent=False, **kwargs):
+def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None,
+         tox_cmd=None, tox_ini=None, tox_commands={}, debug=False, silent=False, **kwargs):
   """
   Run tests and manage test environments for product.
 
@@ -115,7 +115,8 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
     for env in envs:
       env_commands[env] = ' '.join(cmd)
       strip_version_from_entry_scripts(tox, env)
-      install_editable_dependencies(tox, env, silent, debug)
+      if env in tox.envlist:
+        install_editable_dependencies(tox, env, silent, debug)
 
   else:
     for env in envs:
@@ -162,6 +163,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
 
   return env_commands
 
+
 def strip_version_from_entry_scripts(tox, env):
   """ Strip out version spec "==1.2.3" from entry scripts as they require re-develop when version is changed in develop mode. """
   name = product_name(tox.repo)
@@ -186,9 +188,7 @@ def strip_version_from_entry_scripts(tox, env):
       log.debug('Removed version spec from entry script(s): %s', ', '.join(removed_from))
 
 
-
-
-def show_installed_dependencies(tox, env, return_output = False):
+def show_installed_dependencies(tox, env, return_output=False):
   script_template = """
 import json
 import os

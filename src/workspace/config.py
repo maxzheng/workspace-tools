@@ -45,7 +45,7 @@
   [test]
 
   # Always install these product dependencies in editable mode (can use product group)
-  # if they are checked out in workspace.
+  # for the environments in [tox] envlist setting if they are checked out in workspace.
   editable_product_dependencies =
 """
 
