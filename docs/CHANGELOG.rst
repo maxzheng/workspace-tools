@@ -1,5 +1,11 @@
-Version 0.6.4
+Version 0.6.5
 ================================================================================
+
+* Support checking out from github using product name or user/name format
+
+
+Version 0.6.4
+--------------------------------------------------------------------------------
 
 * Remove checking of setup.py for test as that is affected by version bumps.
   Add pinned.txt to be checked
