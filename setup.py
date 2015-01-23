@@ -33,8 +33,6 @@ setuptools.setup(
 
   setup_requires=['setuptools-git'],
 
-#  scripts=find_files('bin'),
-
   classifiers=[
     'Development Status :: 5 - Production/Stable',
 
