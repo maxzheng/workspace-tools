@@ -1,5 +1,12 @@
-Version 0.6.3
+Version 0.6.4
 ================================================================================
+
+* Remove checking of setup.py for test as that is affected by version bumps.
+  Add pinned.txt to be checked
+
+
+Version 0.6.3
+--------------------------------------------------------------------------------
 
 * Faster clean for *.pyc files
 
