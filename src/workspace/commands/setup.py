@@ -31,7 +31,7 @@ function ws ()
 }
 
 function open_files_from_last_command() {
-  last_command=`history 100 | grep  -E "^\s+[0-9]+\s+(ag|find) " | tail -1`
+  last_command=`history 100 | grep  -E "^\s+[0-9]+\s+(ag|find|which) " | tail -1`
 
   if [ -z "$last_command" ]; then
     echo No ag or find command found in last 100 commands.
@@ -66,7 +66,7 @@ function open_files_from_last_command() {
       vim -p $files "$pattern" --cmd "set ignorecase smartcase"
     fi
 
-  elif [[ $command == "find" ]]; then
+  else
     files=`fc -s $command`
 
     if [ -z "$files" ]; then
@@ -75,8 +75,6 @@ function open_files_from_last_command() {
       vim -p $files
     fi
 
-  else
-    echo tv: last command "$command" is not supported.
   fi
 }
 """
@@ -85,7 +83,7 @@ COMMAND_ALIAS_TEMPLATE = 'alias %s=%s\n'
 COMMANDS = {
   'a': " 'source .tox/${PWD##*/}/bin/activate'",  # Must use single quote for $PWD##* to work properly
   'd': "'deactivate'",
-  'tv': "'open_files_from_last_command'  # from ag or find [t]o [v]im",
+  'tv': "'open_files_from_last_command'  # from ag/find/which [t]o [v]im",
 
   'co': 'checkout',
   'ci': 'commit',
@@ -247,6 +245,7 @@ README_TMPL = """\
 <PLACEHOLDER DESCRIPTION>
 """
 
+
 def setup_setup_parser(subparsers):
   doc, docs = split_doc(setup.__doc__)
   setup_parser = subparsers.add_parser('setup', description=doc, formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -353,7 +352,7 @@ def setup_workspace(commands, commands_with_aliases, uninstall, additional_comma
       if line in (WS_SETUP_START, WS_SETUP_END):
         skip = not skip
         continue
-      if not skip and not WSTRC_FILE in line:
+      if not skip and WSTRC_FILE not in line:
         bashrc_script.append(line)
 
     bashrc_script = '\n'.join(bashrc_script).strip().split('\n')  # could be better
@@ -405,8 +404,8 @@ def setup_workspace(commands, commands_with_aliases, uninstall, additional_comma
 
   log.info('To use, run "source %s" or open a new shell.', WSTRC_FILE)
 
+
 def _relative_path(path):
   if path.startswith(os.getcwd() + os.path.sep):
     path = path[len(os.getcwd())+1:]
   return path
-
