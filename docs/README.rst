@@ -16,7 +16,7 @@ Feature Summary
 ===============
 
 * One tool to seamlessly manage / integrate all workspace tools, from setup to publish.
-* SCM agnostic (for git/git-svn and svn (commit/push command support later - keep holding your breath...)).
+* SCM agnostic for git/git-svn/svn - svn commit support later or never? Keep holding your breath... :)
 * Simplified command execution for common workflow - just run one command, instead of many individual native ones.
 * Command execution is also smart / optimized - i.e. test command auto detects requirement changes to redevelop.
 * Path aware context commands that run across all checkouts - i.e. see status / diff for all repos.
