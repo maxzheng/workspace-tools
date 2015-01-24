@@ -21,6 +21,10 @@ from workspace.utils import log_exception
 DESCRIPTION = """
 Tools to simplify workspace / scm management when working with multiple repositories.
 
+It helps you do more with less work by seamlessly integrating all workspace tooling into one where
+you can simply run one command instead of many native commands individually to do common tasks.
+And it is SCM agnostic (git/git-svn/svn), so you don't need to remember the different syntaxes.
+
 To get started
 ---------------
 * Optionally setup workspace environment/shortcuts, run "wst setup -h" for options.
