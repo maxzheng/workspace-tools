@@ -1,7 +1,7 @@
 import argparse
 import logging
 import pkg_resources
-
+import sys
 
 from workspace.commands.bump import setup_bump_parser
 from workspace.commands.checkout import setup_checkout_parser
@@ -17,6 +17,8 @@ from workspace.commands.status import setup_status_parser
 from workspace.commands.setup import setup_setup_parser
 from workspace.utils import log_exception
 
+
+log = logging.getLogger(__name__)
 
 DESCRIPTION = """
 Tools to simplify workspace / scm management when working with multiple repositories.
@@ -89,19 +91,26 @@ def setup_parsers(package_name=None):
   return parser, subparsers, parsers
 
 
-def ws_entry_point(parser):
+def ws_entry_point(parser, commands_with_extra_args=['test']):
   """
   Main entry point for 'wst' that parses args, sets up config, and executes command.
 
   :param argparse.ArgumentParser parser: The parser to get args from
+  :param list commands_with_extra_args: Commands that accepts an extra_args, list of unknown args, from argparse.
   """
-  args = parser.parse_args()
+  args, extra_args = parser.parse_known_args()
+
+  if args.command.__name__ not in commands_with_extra_args and extra_args:
+    log.error('Unrecognized arguments: %s', ' '.join(extra_args))
+    sys.exit(1)
 
   if args.debug:
     logging.root.setLevel(logging.DEBUG)
 
   with log_exception(exit=True, stack=args.debug):
-    args.command(**args.__dict__)
+    args_dict = args.__dict__
+    args_dict['extra_args'] = extra_args
+    args.command(**args_dict)
 
 
 def setup_parser(parser, package_name=None):

@@ -15,9 +15,8 @@ log = logging.getLogger(__name__)
 
 def setup_test_parser(subparsers):
   doc, docs = split_doc(test.__doc__)
-  test_parser = subparsers.add_parser('test', description=doc, help=doc)
+  test_parser = subparsers.add_parser('test', description=doc, help=doc.split('\n')[1])
   test_parser.add_argument('env_or_file', nargs='*', help=docs['env_or_file'])
-  test_parser.add_argument('-s', action='store_true', dest='show_output', help=docs['show_output'])
   test_parser.add_argument('-k', metavar='NAME_PATTERN', dest='match_test', help=docs['match_test'])
   test_parser.add_argument('-n', metavar='NUM_PROCESSES', dest='num_processes', help=docs['num_processes'])
   group = test_parser.add_mutually_exclusive_group()
@@ -30,10 +29,12 @@ def setup_test_parser(subparsers):
   return test_parser
 
 
-def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, show_output=False, match_test=None,
-         num_processes=None, tox_cmd=None, tox_ini=None, tox_commands={}, silent=False, debug=False, **kwargs):
+def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, match_test=None,
+         num_processes=None, tox_cmd=None, tox_ini=None, tox_commands={}, silent=False, debug=False, extra_args=None, **kwargs):
   """
   Run tests and manage test environments for product.
+
+  Extra optional boolean args (such as -s, -v, -vv, etc) are passed to py.test.
 
   :param list env_or_file: The tox environment to act upon, or a file to pass to py.test (only used
                            if file exists, we don't need to redevelop, and py.test is used as a command
@@ -45,7 +46,6 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
                          This is implied if test environment does not exist, or whenever requirements.txt or
                          pinned.txt is modified after the environment was last updated.
   :param bool recreate: Completely recreate the test environment by removing the existing one first.
-  :param bool show_output: Show output from tests
   :param bool match_test: Only run tests with method name that matches pattern
   :param int num_processes: Number of processes to use when running tests in parallel
   :param list tox_cmd: Alternative tox command to run.
@@ -57,6 +57,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
   :param list args: Additional args to pass to py.test
   :param bool silent: Run tox/py.test silently. Only errors are printed and followed by exit.
   :param bool debug: Turn on debug logging
+  :param list extra_args: Extra args from argparse to be passed to py.test
   :return: Dict of env to commands ran on success
   """
   repo_check()
@@ -79,14 +80,14 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
         envs.append(ef)
 
   pytest_args = ''
-  if show_output or match_test or num_processes or files:
+  if match_test or num_processes or files or extra_args:
     pytest_args = []
-    if show_output:
-      pytest_args.append('-s')
     if match_test:
       pytest_args.append('-k ' + match_test)
     if num_processes:
       pytest_args.append('-n ' + num_processes)
+    if extra_args:
+      pytest_args.extend(extra_args)
     if files:
       pytest_args.extend(files)
     pytest_args = ' '.join(pytest_args)
@@ -139,8 +140,8 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
 
       if not os.path.exists(envdir) or requirements_updated():
         env_commands.update(test([env], redevelop=True, tox_cmd=tox_cmd, tox_ini=tox_ini, tox_commands=tox_commands,
-                                 show_output=show_output, match_test=match_test, num_processes=num_processes, silent=silent,
-                                 debug=debug))
+                                 match_test=match_test, num_processes=num_processes, silent=silent,
+                                 debug=debug, extra_args=extra_args))
         continue
 
       if len(envs) > 1 and not silent:
