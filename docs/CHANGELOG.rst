@@ -1,5 +1,15 @@
-Version 0.6.7
+Version 0.6.8
 ================================================================================
+
+* Allow arbitrary boolean optional args to be passed to py.test from test command
+
+* Update readme
+
+* Update README
+
+
+Version 0.6.7
+--------------------------------------------------------------------------------
 
 * Support which command in tv alias
 
