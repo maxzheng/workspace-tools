@@ -91,7 +91,7 @@ def setup_parsers(package_name=None):
   return parser, subparsers, parsers
 
 
-def ws_entry_point(parser, commands_with_extra_args=['test']):
+def ws_entry_point(parser, commands_with_extra_args=['show_log', 'test']):
   """
   Main entry point for 'wst' that parses args, sets up config, and executes command.
 

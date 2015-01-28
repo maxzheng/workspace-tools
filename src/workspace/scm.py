@@ -82,28 +82,37 @@ def workspace_path():
     return os.getcwd()
 
 
-def commit_logs(limit=None, repo=None, show=False, patch=False, file=None):
+def commit_logs(limit=None, repo=None, diff=False, show_revision=None, extra_args=None, to_pager=False):
+  if show_revision:
+    diff = True
+    if not limit:
+      limit = 1
+
   if is_git_repo(repo):
     cmd = ['git', 'log']
+    if show_revision:
+      cmd.extend(['-U', show_revision])
     if limit:
       cmd.append('-%d' % limit)
-    if patch:
+    if diff:
       cmd.append('-p')
-    if file:
-      cmd.append(file)
+    if extra_args:
+      cmd.extend(extra_args)
 
   else:
     cmd = ['svn', 'log']
+    if show_revision:
+      cmd.extend(['-r', show_revision])
     if limit:
       cmd.extend(['-l', str(limit)])
-    if patch:
+    if diff:
       cmd.append('--diff')
-    if file:
-      cmd.append(file)
-    if show and (not limit or limit > 3):
+    if extra_args:
+      cmd.extend(extra_args)
+    if to_pager and (show_revision or not limit or limit > 3):
       cmd.extend(['|', os.environ.get('PAGER') or 'less'])
 
-  return run(cmd, return_output=not show, shell=show, cwd=repo)
+  return run(cmd, return_output=not to_pager, shell=to_pager, cwd=repo)
 
 
 def add_files(repo=None):
