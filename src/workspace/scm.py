@@ -108,6 +108,10 @@ def commit_logs(limit=None, repo=None, diff=False, show_revision=None, extra_arg
     if diff:
       cmd.append('--diff')
     if extra_args:
+      limit_re = re.compile('-\d')
+      for i, arg in enumerate(extra_args):
+        if limit_re.match(arg):
+          extra_args[i] = '-l %s' % arg.lstrip('-')
       cmd.extend(extra_args)
     if to_pager and (show_revision or not limit or limit > 3):
       cmd.extend(['|', os.environ.get('PAGER') or 'less'])
