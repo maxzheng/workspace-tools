@@ -1,5 +1,13 @@
-Version 0.6.8
+Version 0.6.9
 ================================================================================
+
+* Make -1, -2, etc limit work for svn log
+
+* Pass unknown args for log to underlying SCM / better args
+
+
+Version 0.6.8
+--------------------------------------------------------------------------------
 
 * Allow arbitrary boolean optional args to be passed to py.test from test command
 
