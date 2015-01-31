@@ -12,7 +12,7 @@ from workspace.utils import run, silent_run, parent_path_with_dir
 
 log = logging.getLogger(__name__)
 
-
+USER_REPO_REFERENCE_RE = re.compile('^[\w-]+/[\w-]+$')
 SVN_COMMIT_HEADER_RE = re.compile('^(-+|r\d+\s.*\slines?|\s+)$')
 GITIGNORE_FILE = '.gitignore'
 GITIGNORE = """\
@@ -421,7 +421,7 @@ def checkout_product(product_url, checkout_path):
       log.error('Could not find repo for %s using %s due to error: ', product_url, config.checkout.search_api_url, e)
       sys.exit(1)
 
-  elif re.match('[\w-]+/[\w-]+$', product_url):
+  elif USER_REPO_REFERENCE_RE.match(product_url):
     product_url = config.checkout.user_repo_url % product_url
 
   if clone_svn_commits and not product_url.endswith('.git'):
