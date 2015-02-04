@@ -3,7 +3,10 @@ import pytest
 
 from mock import patch
 
-from workspace.commands.bump import bump, _latest_module_version
+from bumper import BumpAccident
+from bumper.utils import PyPI
+
+from workspace.commands.bump import bump
 from workspace.commands.checkout import checkout
 from workspace.commands.clean import clean
 from workspace.commands.commit import commit
@@ -41,7 +44,7 @@ def test_bump():
     # No requirements.txt
     if os.path.exists('requirements.txt'):
       os.unlink('requirements.txt')
-    with pytest.raises(SystemExit):
+    with pytest.raises(BumpAccident):
       bump()
 
     # All requirements are up to date
@@ -53,7 +56,7 @@ def test_bump():
     with open('requirements.txt', 'w') as fp:
       fp.write('# Comment for localconfig\nlocalconfig==0.0.1\n# Comment for requests\nrequests<0.1')
     file, msg = bump().items()[0]
-    versions = (_latest_module_version('localconfig'), _latest_module_version('requests'))
+    versions = (PyPI.latest_module_version('localconfig'), PyPI.latest_module_version('requests'))
     assert 'requirements.txt' == file
     assert 'Update requirements.txt: localconfig==%s requests<=%s' % versions == msg
 

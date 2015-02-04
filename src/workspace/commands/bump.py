@@ -1,11 +1,7 @@
 import logging
-import os
-import pkg_resources
-import re
 import sys
 
-import requests
-import simplejson
+from bumper import BumperDriver
 
 from workspace.commands.commit import commit
 from workspace.commands.update import update
@@ -23,16 +19,18 @@ def setup_bump_parser(subparsers):
 
   bump_parser = subparsers.add_parser('bump', description=doc, help=doc)
   bump_parser.add_argument('names', nargs='*', help=docs['names'])
+  bump_parser.add_argument('--add', '--require', action='store_true', help=docs['add'])
   bump_parser.add_argument('-a', '--append', action='store_true', help=docs['append'])
-  bump_parser.add_argument('-f', '--file', help=docs['file'])
   bump_parser.add_argument('-m', '--msg', help=docs['msg'])
+  bump_parser.add_argument('--file', help=docs['file'])
+  bump_parser.add_argument('--force', action='store_true', help=docs['force'])
   bump_parser.add_argument('-n', '--dry-run', action='store_true', help=docs['dry_run'])
   bump_parser.set_defaults(command=bump)
 
   return bump_parser
 
 
-def bump(names=None, append=False, msg=None, file=None, file_updaters=None, dry_run=False, **kwargs):
+def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models=None, force=False, dry_run=False, **kwargs):
   """
     Bump dependency versions in requirements.txt, pinned.txt, or any specified file.
 
@@ -40,14 +38,14 @@ def bump(names=None, append=False, msg=None, file=None, file_updaters=None, dry_
                       Name can be a product group name defined in workspace.cfg.
                       To bump to a specific version instead of latest, append version to name
                       (i.e. requests==1.2.3 or 'requests>=1.2.3'). When > or < is used, be sure to quote.
+    :param bool add: Add the `names` to the requirements file if they don't exist.
     :param bool append: Append bump changes to current branch and update existing rb if any (from .git/config)
     :param str msg: Summary commit message
     :param str/list file: Requirement file to bump. Defaults to requirements.txt or pinned.txt
                           that are set by bump.requirement_files in workspace.cfg.
-    :param dict file_updaters: Optionally provide a mapping from file to custom updater callable.
-                                 Defaults to :meth:`update_requirements`.
-                                 When this is used, 'file' can be a list and should be the comprehensive list.
-                                 See :meth:`update_requirements` doc for more info on writing your own.
+    :param dict bumper_models: List of classes that implements :class:`bumper.cars.AbstractBumper`
+                               Defaults to :class:`bumper.cars.RequirementsBumper`
+    :param bool force: Force a bump even when certain bump requirements are not met.
     :param bool dry_run: Performs a dry run by printing out the changes instead of committing/creating an rb
     :param dict kwargs: Additional args from argparse
     :return: A map of file to commit message
@@ -57,7 +55,10 @@ def bump(names=None, append=False, msg=None, file=None, file_updaters=None, dry_
   if not names:
     names = []
 
-  filter_names = expand_product_groups(names)
+  filter_requirements = expand_product_groups(names)
+
+  if filter_requirements:
+    log.info('Only bumping: %s', ' '.join(filter_requirements))
 
   if isinstance(file, list):
     requirement_files = file
@@ -72,167 +73,18 @@ def bump(names=None, append=False, msg=None, file=None, file_updaters=None, dry_
       sys.exit(1)
     checkout_branch('master')
 
-  requirement_filters = {}
-  if filter_names:
-    log.info('Only bumping: %s', ' '.join(filter_names))
-    requirements = _parse_requirements(filter_names)
-    requirement_filters = dict([(r.project_name, r) for r in requirements])
-
   update(raises=True)
 
-  updated_requirement_files = {}
-  found_requirement_files = []
-  filter_matched = False
-  commit_msgs = {}
+  bumper = BumperDriver(requirement_files, bumper_models=bumper_models, full_throttle=force, test_drive=dry_run)
+  messages = bumper.bump(filter_requirements, required=add, show_summary=not is_git_repo(), **kwargs)
 
-  for file in requirement_files:
-    if not os.path.exists(file):
-      continue
-
-    found_requirement_files.append(file)
-
-    update_file = file_updaters and file_updaters.get(file) or update_requirements
-    commit_msg, matched = update_file(file, requirement_filters, append, dry_run, **kwargs)
-
-    if commit_msg:
-      commit_msgs[file] = commit_msg
-    filter_matched |= matched or len(commit_msg)
-
-  if not found_requirement_files:
-    log.error('None of the requirement file(s) were found: %s', ', '.join(requirement_files))
-    sys.exit(1)
-
-  if not filter_matched:
-    log.error('None of the specified dependencies were found in %s', ', '.join(found_requirement_files))
-    sys.exit(1)
-
-  if commit_msgs:
-    commit_msg = '\n\n'.join(sorted(commit_msgs.values()))
+  if messages:
+    commit_msg = '\n\n'.join(sorted(messages.values()))
     if msg:
       commit_msg = msg + '\n\n' + commit_msg
 
-    if dry_run:
-      log.info("Changes that would be made:\n\n%s\n", commit_msg)
-    elif is_git_repo():
+    if not dry_run and is_git_repo():
       branch = None if append else 'bump'
       commit(msg=commit_msg, branch=branch)
-    else:
-      log.info(commit_msg.split('\n')[0].replace('\n', '').replace('Update', 'Updated').replace('Bump', 'Bumped'))
 
-  else:
-    log.info('No need to bump. Everything is up to date!')
-
-  return commit_msgs
-
-
-def update_requirements(file, requirement_filters, append=False, dry_run=False, **kwargs):
-  """
-  Update dependencies in requirements file.
-
-  :param str file: Requirements file to update
-  :param dict requirement_filters: Dict of dependency name to its :class:`pkg_resources.Requirement` instance.
-  :param bool append: Append changes instead of creating a new branch
-  :param bool dry_run: Perform a dry run
-  :param dict kwargs: Additional args from argparse
-  :return: Tuple of (commit_msg, filter_matched) where filter_matched is True if there is no filter or filter matched.
-  :rtype: tuple
-  """
-  # Represents all requirements in the file that will be written out later (contains updated)
-  requirements = []
-
-  # Comments for requirements
-  requirement_comments = {}
-
-  # Represents only the updated requirements that will be used to generate commit msg.
-  updated_requirements = []
-
-  # The full commit msg for any changes made
-  commit_msg = ''
-
-  # Was any of the requirement_filters matched (should be True if there are no filters)
-  filter_matched = False
-
-  with open(file) as fp:
-    requirements_str = fp.read()
-
-  comments = []
-
-  for req in requirements_str.strip().split('\n'):
-    if not req or req.startswith('#'):
-      comments.append(req)
-      continue
-
-    req = _parse_requirements(req, file)[0]
-
-    if comments:
-      requirement_comments[req.project_name] = '\n'.join(comments)
-      comments = []
-
-    if not requirement_filters or req.project_name in requirement_filters and not requirement_filters[req.project_name].specs:
-      filter_matched = True
-      if req.specs:
-        latest_version = _latest_module_version(req.project_name)
-        if latest_version not in req:
-          op = req.specs[0][0]
-          if op == '<':
-            op = '<='
-          elif op == '>':
-            op = '>='
-          elif op == '!=':
-            log.warn('%s will not be bumped as it explicitly excludes latest version')
-            op = None
-          if op:
-            req = pkg_resources.Requirement.parse(req.project_name + op + latest_version)
-            updated_requirements.append(str(req))
-
-    elif req.project_name in requirement_filters and requirement_filters[req.project_name].specs:
-      filter_matched = True
-      if str(req) != str(requirement_filters[req.project_name]):
-        req = requirement_filters[req.project_name]
-        all_module_versions = _all_module_versions(req.project_name)
-        if req.specs and not any(version in req for version in all_module_versions):
-          log.error('There are no published versions that satisfies %s', req)
-          log.info('Please change to match at least one of these: %s', ', '.join(all_module_versions[:10]))
-          sys.exit(1)
-        updated_requirements.append(str(req))
-
-    requirements.append(req)
-
-  if updated_requirements:
-    updated_requirements = (' ').join(updated_requirements)
-    commit_msg += 'Update %s: %s' % (os.path.basename(file), updated_requirements)
-
-    if not dry_run:
-      with open(file, 'w') as fp:
-        for req in requirements:
-          if req.project_name in requirement_comments:
-            fp.write(requirement_comments[req.project_name] + '\n')
-          fp.write(str(req) + '\n')
-
-  return commit_msg, filter_matched
-
-def _module_info(module):
-  module_json_url = 'https://pypi.python.org/pypi/%s/json' % module
-
-  try:
-    logging.getLogger('requests').setLevel(logging.WARN)
-    response = requests.get(module_json_url)
-    response.raise_for_status()
-
-    return simplejson.loads(response.text)
-  except Exception as e:
-    raise Exception('Could not get module info from %s: %s', module_json_url, e)
-
-def _latest_module_version(module):
-  return _module_info(module)['info']['version']
-
-def _all_module_versions(module):
-  return sorted(_module_info(module)['releases'].keys(), key=lambda x: x.split(), reverse=True)
-
-def _parse_requirements(names, in_file=None):
-  try:
-    return list(pkg_resources.parse_requirements(names))
-  except Exception as e:
-    in_file = ' in %s' % in_file if in_file else ''
-    log.error(' '.join(e) + in_file)
-    sys.exit(1)
+  return messages

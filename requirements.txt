@@ -1,3 +1,4 @@
+bumper-lib
 localconfig
 remoteconfig
 requests
