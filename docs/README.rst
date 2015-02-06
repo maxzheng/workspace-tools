@@ -1,7 +1,7 @@
 workspace-tools
 ===============
 
-Tools to simplify workspace / scm management when working with multiple repositories.
+Tools to simplify working with multiple product repositories with SCM / development tools abstraction.
 
 It helps you do more with less work by seamlessly integrating all workspace tooling into one where
 you can simply run one command instead of many native commands individually to do common tasks.
