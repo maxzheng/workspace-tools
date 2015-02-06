@@ -1,12 +1,6 @@
 Version 0.7.10
 ================================================================================
 
-* Update changelog
-
-
-Version 0.7.9
---------------------------------------------------------------------------------
-
 * Ignore "Update changelog" commits when publishing
 * Update setup.py template
 * Add url and summary info
