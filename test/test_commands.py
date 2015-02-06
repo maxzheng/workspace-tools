@@ -98,7 +98,7 @@ def test_bump():
     with open('requirements.txt', 'w') as fp:
       fp.write('localconfig==0.0.1\nrequests>0.1')
     req = 'requests>=100'
-    with pytest.raises(SystemExit):
+    with pytest.raises(BumpAccident):
       bump([req])
 
 
