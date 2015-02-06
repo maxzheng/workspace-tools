@@ -2,54 +2,11 @@ Version 0.7.9
 ================================================================================
 
 * Ignore "Update changelog" commits when publishing
-
-
-Version 0.7.8
---------------------------------------------------------------------------------
-
 * Update setup.py template
-
-
-Version 0.7.7
---------------------------------------------------------------------------------
-
-* Fix classifier
-
-
-Version 0.7.6
---------------------------------------------------------------------------------
-
-* Use long_description
-
-
-Version 0.7.5
---------------------------------------------------------------------------------
-
-* Update keywords
-
-
-Version 0.7.4
---------------------------------------------------------------------------------
-
-* Use url instead of home_page
-
-
-Version 0.7.3
---------------------------------------------------------------------------------
-
-* Add home_page and summary info
-
-
-Version 0.7.2
---------------------------------------------------------------------------------
-
-* Add changes_url
-
+* Add url and summary info
 
 Version 0.7.1
 --------------------------------------------------------------------------------
-
-* Fix test
 
 * Add -D alias for --discard in commit
 
@@ -65,12 +22,10 @@ Version 0.6.10
 
 * Add re constant for user repo reference
 
-
 Version 0.6.9
 --------------------------------------------------------------------------------
 
 * Make -1, -2, etc limit work for svn log
-
 * Pass unknown args for log to underlying SCM / better args
 
 
@@ -78,11 +33,6 @@ Version 0.6.8
 --------------------------------------------------------------------------------
 
 * Allow arbitrary boolean optional args to be passed to py.test from test command
-
-* Update readme
-
-* Update README
-
 
 Version 0.6.7
 --------------------------------------------------------------------------------
@@ -133,7 +83,6 @@ Version 0.6.0
 --------------------------------------------------------------------------------
 
 * Commit multiple file bumps as a single commit and use --msg as the summary (prepended)
-
 * Improved tv alias
 
 
@@ -194,7 +143,6 @@ Version 0.5.3
 --------------------------------------------------------------------------------
 
 * Skip install dependencies in editable mode if already in editable mode
-
 * Add test for status
 
 * Add test.editable_product_dependencies option to auto install dependencies in editable mode
