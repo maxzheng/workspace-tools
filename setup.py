@@ -15,9 +15,9 @@ setuptools.setup(
   author='Max Zheng',
   author_email='maxzheng.os @t gmail.com',
 
-  home_page='https://github.com/maxzheng/workspace-tools',
-
   summary='Tools to simplify working with multiple product repositories with SCM / development tools abstraction.',
+
+  url='https://github.com/maxzheng/workspace-tools',
 
   description=open('README.rst').read(),
 
