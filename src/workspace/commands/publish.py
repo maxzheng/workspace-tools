@@ -86,7 +86,7 @@ def update_changelog(new_version, changes, skip_title_change=False):
     fp.write(major_title + '\n\n')
 
     for change in changes:
-      fp.write('* %s\n\n' % (change.replace('\n', '\n  ')))
+      fp.write('* %s\n' % (change.replace('\n', '\n  ')))
 
     if existing_changes:
       fp.write('\n')
