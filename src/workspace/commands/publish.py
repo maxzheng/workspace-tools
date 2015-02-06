@@ -6,12 +6,13 @@ import sys
 from workspace.commands.update import update
 from workspace.commands.commit import commit
 from workspace.scm import repo_check, repo_path, commit_logs, extract_commit_msgs, is_git_repo
-from workspace.utils import log_exception, silent_run, split_doc
+from workspace.utils import silent_run, split_doc
 
 
 log = logging.getLogger(__name__)
 new_version = None  # Doesn't work if it is in bump_version
 PUBLISH_VERSION_PREFIX = 'Publish version '
+UPDATE_CHANGELOG_PREFIX = 'Update changelog'
 
 
 def setup_publish_parser(subparsers):
@@ -63,9 +64,12 @@ def changes_since_last_publish():
   for msg in commit_msgs:
     if msg.startswith(PUBLISH_VERSION_PREFIX):
       break
+    if msg.startswith(UPDATE_CHANGELOG_PREFIX):
+      continue
     changes.append(msg)
 
   return changes
+
 
 def update_changelog(new_version, changes, skip_title_change=False):
   docs_dir = os.path.join(repo_path(), 'docs')
@@ -89,6 +93,7 @@ def update_changelog(new_version, changes, skip_title_change=False):
       if not skip_title_change:
         existing_changes = existing_changes.replace(major_title, minor_title, 1)
       fp.write(existing_changes)
+
 
 def bump_version(minor=False, major=False):
   """
