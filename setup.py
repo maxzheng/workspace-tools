@@ -50,5 +50,5 @@ setuptools.setup(
     'Programming Language :: Python :: 2.7',
   ],
 
-  keywords='git svn scm development tools',
+  keywords='workspace multiple repositories git svn scm abstraction development tools',
 )
