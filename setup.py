@@ -18,6 +18,7 @@ setuptools.setup(
   description='Tools to simplify working with multiple product repositories with SCM / development tools abstraction.',
   long_description=open('README.rst').read(),
 
+  changes_url='https://raw.githubusercontent.com/maxzheng/workspace-tools/master/docs/CHANGELOG.rst',
   url='https://github.com/maxzheng/workspace-tools',
 
   entry_points={

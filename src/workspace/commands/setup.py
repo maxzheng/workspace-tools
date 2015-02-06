@@ -202,7 +202,10 @@ setuptools.setup(
   author='<PLACEHOLDER>',
   author_email='<PLACEHOLDER>',
 
-  description=open('%s').read(),
+  description='<PLACEHOLDER>',
+  long_description=open('%s').read(),
+
+  url='<PLACEHOLDER>',
 
 #  entry_points={
 #    'console_scripts': [
