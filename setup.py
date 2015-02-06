@@ -15,6 +15,8 @@ setuptools.setup(
   author='Max Zheng',
   author_email='maxzheng.os @t gmail.com',
 
+  changes_url='https://raw.githubusercontent.com/maxzheng/workspace-tools/master/docs/CHANGELOG.rst',
+
   description=open('README.rst').read(),
 
   entry_points={
