@@ -131,7 +131,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
 
       def requirements_updated():
         req_mtime = 0
-        requirements_files = ['requirements.txt', 'pinned.txt']
+        requirements_files = ['requirements.txt', 'pinned.txt', 'tox.ini']
         for req_file in requirements_files:
           req_path = os.path.join(repo, req_file)
           if os.path.exists(req_path):
