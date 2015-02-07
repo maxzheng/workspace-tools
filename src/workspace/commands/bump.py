@@ -52,6 +52,12 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
   """
   repo_check()
 
+  if not append and is_git_repo():
+    if not dry_run and 'bump' in all_branches():
+      log.error('There is already a "bump" branch. Please commit or delete it first before doing another bump.')
+      sys.exit(1)
+    checkout_branch('master')
+
   if not names:
     names = []
 
@@ -67,24 +73,32 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
   else:
     requirement_files = config.bump.requirement_files.strip().split()
 
-  if not append and is_git_repo():
-    if not dry_run and 'bump' in all_branches():
-      log.error('There is already a "bump" branch. Please commit or delete it first before doing another bump.')
-      sys.exit(1)
-    checkout_branch('master')
-
   update(raises=True)
 
   bumper = BumperDriver(requirement_files, bumper_models=bumper_models, full_throttle=force, detail=True, test_drive=dry_run)
   messages = bumper.bump(filter_requirements, required=add, show_summary=not is_git_repo(), **kwargs)
+  commit_msg = None
 
-  if messages:
-    commit_msg = '\n\n'.join(sorted(messages.values()))
-    if msg:
-      commit_msg = msg + '\n\n' + commit_msg
+  try:
+    if messages:
+      summary_msgs = []
+      detail_msgs = []
+      for m in sorted(messages.values()):
+        splits = m.split('\n', 1)
+        summary_msgs.append(splits[0])
+        if len(splits) == 2:
+          detail_msgs.append(splits[1])
 
-    if not dry_run and is_git_repo():
-      branch = None if append else 'bump'
-      commit(msg=commit_msg, branch=branch)
+      commit_msg = '\n\n'.join(summary_msgs + detail_msgs)
 
-  return messages
+      if msg:
+        commit_msg = msg + '\n\n' + commit_msg
+
+      if not dry_run and is_git_repo():
+        branch = None if append else 'bump'
+        commit(msg=commit_msg, branch=branch)
+  except Exception:
+    bumper.reverse()
+    raise
+
+  return messages, commit_msg
