@@ -56,7 +56,7 @@ def test_bump():
     with open('requirements.txt', 'w') as fp:
       fp.write('# Comment for localconfig\nlocalconfig==0.0.1\n# Comment for requests\nrequests<0.1')
     file, msg = bump().items()[0]
-    versions = (PyPI.latest_module_version('localconfig'), PyPI.latest_module_version('requests'))
+    versions = (PyPI.latest_package_version('localconfig'), PyPI.latest_package_version('requests'))
     assert 'requirements.txt' == file
     assert 'Update requirements.txt: localconfig==%s requests<=%s' % versions == msg
 

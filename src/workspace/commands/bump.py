@@ -75,7 +75,7 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
 
   update(raises=True)
 
-  bumper = BumperDriver(requirement_files, bumper_models=bumper_models, full_throttle=force, test_drive=dry_run)
+  bumper = BumperDriver(requirement_files, bumper_models=bumper_models, full_throttle=force, detail=True, test_drive=dry_run)
   messages = bumper.bump(filter_requirements, required=add, show_summary=not is_git_repo(), **kwargs)
 
   if messages:

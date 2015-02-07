@@ -12,7 +12,7 @@ from workspace.utils import silent_run, split_doc
 log = logging.getLogger(__name__)
 new_version = None  # Doesn't work if it is in bump_version
 PUBLISH_VERSION_PREFIX = 'Publish version '
-UPDATE_CHANGELOG_PREFIX = 'Update changelog'
+UPDATE_CHANGELOG_RE = re.compile('^Update changelog\s*$', flags=re.IGNORECASE)
 
 
 def setup_publish_parser(subparsers):
@@ -64,7 +64,7 @@ def changes_since_last_publish():
   for msg in commit_msgs:
     if msg.startswith(PUBLISH_VERSION_PREFIX):
       break
-    if msg.startswith(UPDATE_CHANGELOG_PREFIX):
+    if len(msg) < 7 or UPDATE_CHANGELOG_RE.match(msg):
       continue
     changes.append(msg)
 
