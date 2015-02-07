@@ -50,15 +50,19 @@ def test_bump():
     # All requirements are up to date
     with open('requirements.txt', 'w') as fp:
       fp.write('localconfig\nrequests')
-    assert {} == bump()
+    assert ({}, None) == bump()
 
     # All requirements are outdated
     with open('requirements.txt', 'w') as fp:
       fp.write('# Comment for localconfig\nlocalconfig==0.0.1\n# Comment for requests\nrequests<0.1')
-    file, msg = bump().items()[0]
+    msgs, commit_msg = bump()
+    file, msg = msgs.items()[0]
     versions = (PyPI.latest_package_version('localconfig'), PyPI.latest_package_version('requests'))
     assert 'requirements.txt' == file
-    assert 'Update requirements.txt: localconfig==%s requests<=%s' % versions == msg
+
+    expected_msg = 'Require localconfig==%s, requests<=%s' % versions
+    assert expected_msg == msg[:len(expected_msg)]
+    assert expected_msg == commit_msg[:len(expected_msg)]
 
     with open('requirements.txt') as fp:
       requirements = fp.read()
@@ -74,10 +78,13 @@ def test_bump():
     # Only one is outdated
     with open('requirements.txt', 'w') as fp:
       fp.write('localconfig==0.0.1\nrequests>0.1')
-    file, msg = bump().items()[0]
+    msgs, commit_msg = bump()
+    file, msg = msgs.items()[0]
     assert 'requirements.txt' == file
     assert 'localconfig==' in msg
     assert 'requests' not in msg
+    assert 'localconfig==' in commit_msg
+    assert 'requests' not in commit_msg
 
     checkout_branch('master')
     remove_branch('bump')
@@ -86,10 +93,13 @@ def test_bump():
     with open('requirements.txt', 'w') as fp:
       fp.write('localconfig==0.0.1\nrequests>0.1')
     req = 'requests>=1'
-    file, msg = bump([req]).items()[0]
+    msgs, commit_msg = bump([req])
+    file, msg = msgs.items()[0]
     assert 'requirements.txt' == file
     assert req in msg
     assert 'localconfig' not in msg
+    assert req in commit_msg
+    assert 'localconfig' not in commit_msg
 
     checkout_branch('master')
     remove_branch('bump')
