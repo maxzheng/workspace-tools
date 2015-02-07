@@ -3,8 +3,6 @@ Version 0.7.11
 
 * Better composed commit message / revert on failed commit
 
-* update
-
 * Remove extra line between changes when generating changelog
 
 
