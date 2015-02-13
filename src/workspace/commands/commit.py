@@ -19,7 +19,7 @@ def setup_commit_parser(subparsers):
   commit_parser.add_argument('-a', '--amend', action='store_true', help=docs['amend'])
   commit_parser.add_argument('-p', '--push', action='store_true', help=docs['push'])
   commit_parser.add_argument('-d', '--dummy', action='store_true', help=docs['dummy'])
-  commit_parser.add_argument('-D', '--discard', metavar='branch', nargs='?', const=True, help=docs['discard'])
+  commit_parser.add_argument('-D', '--discard', action='count', help=docs['discard'])
   commit_parser.add_argument('--move', metavar='branch', nargs=1, help=docs['move'])
   commit_parser.set_defaults(command=commit)
 
@@ -36,8 +36,8 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
   :param bool push: Push the current branch after commit
   :param bool dummy: Perform a dummy commit without any changes on master branch. This implies --push.
                      Other options are ignored.
-  :param bool discard: Discard last commit and branch if no more commits left. Defaults to existing branch.
-                       Other options are ignored.
+  :param int discard: Discard last commit, or branch if there are no more commits. Use multiple times to discard multiple commits.
+                      Other options are ignored.
   :param str move: Move last commit to branch. Other options are ignored.
   :param bool skip_auto_branch: Skip automatic branch creation from commit msg
   """
@@ -53,21 +53,17 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
   elif discard or move:
     if not branch:
       if discard:
-        branch = discard if isinstance(discard, str) else current_branch()
+        branch = current_branch()
       else:
         branch = move[0]
 
-    if discard and branch == 'master':
-      log.error('Discard can not be used on master branch')
-      return
-
     if discard:
-      changes = diff_branch(branch)
+      changes = commit_logs(discard) if branch == 'master' else diff_branch(branch)
     else:
       changes = commit_logs(1)
     changes = filter(None, changes.split('commit '))
 
-    if discard and len(changes) <= 1:
+    if discard and len(changes) <= discard and branch != 'master':
       checkout_branch('master')
       remove_branch(branch, raises=True)
       log.info('Deleted branch %s', branch)
@@ -83,10 +79,11 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
           create_branch(branch)
           checkout_branch(cur_branch)
           log.info('Moved %s to %s', last_commit[:7], branch)
+          hard_reset(last_commit + '~1')
+
         else:
           checkout_branch(branch)
-
-        hard_reset(last_commit + '~1')
+          hard_reset(last_commit + '~' + str(discard))
 
       else:
         log.error('Odd. No commit hash found in: %s', changes[0])
@@ -121,6 +118,9 @@ def branch_for_msg(msg, words=3, branches=None):
   word_count = 0
 
   for word in re.split('[\W\_]+', msg):
+    if not word:
+      continue
+
     branch_name.append(word.lower())
 
     if word not in ignored_words and not ignored_num_re.match(word):
