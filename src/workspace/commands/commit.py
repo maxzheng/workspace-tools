@@ -1,6 +1,8 @@
 import logging
 import re
 
+from workspace.config import config
+
 from workspace.scm import local_commit, add_files, git_repo_check, checkout_branch,\
     create_branch, update_repo, all_branches, diff_branch, current_branch, remove_branch, hard_reset, commit_logs
 from workspace.commands.push import push as push_branch
@@ -89,14 +91,53 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
         log.error('Odd. No commit hash found in: %s', changes[0])
 
   else:
+    branches = None
+    if not (push or amend) and not branch and msg and config.commit.auto_branch_from_commit_words:
+      branches = all_branches()
+      branch = branch_for_msg(msg, config.commit.auto_branch_from_commit_words, branches)
+
     if branch:
-      if branch in all_branches():
-        checkout_branch(branch)
-      else:
-        create_branch(branch, 'master')
+      branches = branches or all_branches()
+      if branches:
+        if branch in branches:
+          checkout_branch(branch)
+        else:
+          create_branch(branch, 'master')
+      else:  # Empty repo without a commit has no branches
+        create_branch(branch)
 
     add_files()
     local_commit(msg, amend)
 
     if push:
       push_branch()
+
+
+def branch_for_msg(msg, words=3, branches=None):
+  ignored_num_re = re.compile('^\d+$')
+  ignored_words = ['a', 'and', 'as', 'at', 'but', 'by', 'for', 'if', 'in', 'of', 'on', 'or', 'to']
+  branch_name = []
+  word_count = 0
+
+  for word in re.split('[\W\_]+', msg):
+    branch_name.append(word.lower())
+
+    if word not in ignored_words and not ignored_num_re.match(word):
+      word_count += 1
+
+    if word_count >= words and (not branches or '-'.join(branch_name) not in branches):
+      break
+
+  if not branch_name:
+    raise Exception('No words found in commit msg to create branch name')
+
+  if branch_name[-1] in ignored_words and (not branches or '-'.join(branch_name[:-1]) not in branches):
+    branch_name = branch_name[:-1]
+
+  branch_name = '-'.join(branch_name)
+
+  if branches and branch_name in branches:
+    raise Exception('Branch "%s" already exist.\n\tPlease use a more unique commit message or specify branch with -b. Or '
+                    'to amend an existing commit, use -a' % branch_name)
+
+  return branch_name

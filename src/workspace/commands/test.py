@@ -18,7 +18,7 @@ def setup_test_parser(subparsers):
   test_parser = subparsers.add_parser('test', description=doc, help=doc.split('\n')[1])
   test_parser.add_argument('env_or_file', nargs='*', help=docs['env_or_file'])
   test_parser.add_argument('-k', metavar='NAME_PATTERN', dest='match_test', help=docs['match_test'])
-  test_parser.add_argument('-n', metavar='NUM_PROCESSES', dest='num_processes', help=docs['num_processes'])
+  test_parser.add_argument('-n', metavar='NUM_PROCESSES', type=int, dest='num_processes', help=docs['num_processes'])
   group = test_parser.add_mutually_exclusive_group()
   group.add_argument('-d', '--show-dependencies', action='store_true', help=docs['show_dependencies'])
   group.add_argument('-r', '--redevelop', action='store_true', help=docs['redevelop'])
@@ -47,7 +47,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
                          pinned.txt is modified after the environment was last updated.
   :param bool recreate: Completely recreate the test environment by removing the existing one first.
   :param bool match_test: Only run tests with method name that matches pattern
-  :param int num_processes: Number of processes to use when running tests in parallel
+  :param str num_processes: Number of processes to use when running tests in parallel
   :param list tox_cmd: Alternative tox command to run.
                        If recreate is True, '-r' will be appended.
                        If env is passed in (from env_or_file), '-e env' will be appended as well.
@@ -85,7 +85,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
     if match_test:
       pytest_args.append('-k ' + match_test)
     if num_processes:
-      pytest_args.append('-n ' + num_processes)
+      pytest_args.append('-n ' + str(num_processes))
     if extra_args:
       pytest_args.extend(extra_args)
     if files:

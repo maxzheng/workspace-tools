@@ -156,7 +156,7 @@ def test_commit():
       fp.write('Hello World')
     assert 'new_file' in stat_repo(return_output=True)
 
-    commit('Add new file')
+    commit('Add new file', branch='master')
 
     assert 'working directory clean' in stat_repo(return_output=True)
     assert 'Hello World' == open('new_file').read()
