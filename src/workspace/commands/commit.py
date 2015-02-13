@@ -26,7 +26,7 @@ def setup_commit_parser(subparsers):
   return commit_parser
 
 
-def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=False, move=None, **kwargs):
+def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=False, move=None, skip_auto_branch=False, **kwargs):
   """
   Commit all changes locally, including new files.
 
@@ -39,6 +39,7 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
   :param bool discard: Discard last commit and branch if no more commits left. Defaults to existing branch.
                        Other options are ignored.
   :param str move: Move last commit to branch. Other options are ignored.
+  :param bool skip_auto_branch: Skip automatic branch creation from commit msg
   """
 
   git_repo_check()
@@ -92,7 +93,7 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
 
   else:
     branches = None
-    if not (push or amend) and not branch and msg and config.commit.auto_branch_from_commit_words:
+    if not (skip_auto_branch or push or amend) and not branch and msg and config.commit.auto_branch_from_commit_words:
       branches = all_branches()
       branch = branch_for_msg(msg, config.commit.auto_branch_from_commit_words, branches)
 
