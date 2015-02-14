@@ -45,7 +45,7 @@
   [commit]
 
   # Automatically create branch based on the first number of commit words. Set to 0 to turn off.
-  auto_branch_from_commit_words = 3
+  auto_branch_from_commit_words = 2
 
   ###########################################################################################################
   # Settings for test command

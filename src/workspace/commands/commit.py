@@ -113,7 +113,7 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
 
 def branch_for_msg(msg, words=3, branches=None):
   ignored_num_re = re.compile('^\d+$')
-  ignored_words = ['a', 'and', 'as', 'at', 'but', 'by', 'for', 'if', 'in', 'of', 'on', 'or', 'to']
+  ignored_words = ['a', 'and', 'as', 'at', 'but', 'by', 'for', 'from', 'if', 'in', 'of', 'on', 'or', 'to']
   branch_name = []
   word_count = 0
 
