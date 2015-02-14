@@ -1,5 +1,15 @@
-Version 0.7.11
+Version 0.7.12
 ================================================================================
+
+* Change auto branch commit words to 2 and add more ignored words
+* Change --discard to count to allow deleting of multiple commits
+* Add skip auto branch option for commit
+* Automatically create a branch from commit msg
+* Redevelop if tox.ini has been modified
+* Fix tests
+
+Version 0.7.11
+--------------------------------------------------------------------------------
 
 * Better composed commit message / revert on failed commit
 
