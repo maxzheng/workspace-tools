@@ -1,5 +1,10 @@
-Version 0.7.12
+Version 0.7.13
 ================================================================================
+
+* Add links to bumper
+
+Version 0.7.12
+--------------------------------------------------------------------------------
 
 * Change auto branch commit words to 2 and add more ignored words
 * Change --discard to count to allow deleting of multiple commits
