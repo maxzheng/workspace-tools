@@ -65,8 +65,11 @@ Want More Docs?
 
 Most commands have help info, so run the command with '-h'.
 
+Bump is based on bumper_, so read its doc to learn more.
+
 TBD for more docs as I am not sure if anyone actually read this since there probably
 aren't that many users of workspace-tools. So If you would like to read the rest of the docs,
 let me know (maxzheng.os @t gmail.com), and I will take the time to finish this.
 
 .. _Configuration: http://workspace-tools.readthedocs.org/en/latest/api/config.html
+.. _bumper: https://pypi.python.org/pypi/bumper

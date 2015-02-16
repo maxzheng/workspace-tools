@@ -149,6 +149,7 @@ Now you are ready to try out the other commands yourself::
 Links & Contact Info
 ====================
 
+| bumper: https://pypi.python.org/pypi/bumper
 | Documentation: http://workspace-tools.readthedocs.org
 |
 | PyPI Package: https://pypi.python.org/pypi/workspace-tools
