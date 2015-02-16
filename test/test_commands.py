@@ -57,16 +57,16 @@ def test_bump():
       fp.write('# Comment for localconfig\nlocalconfig==0.0.1\n# Comment for requests\nrequests<0.1')
     msgs, commit_msg = bump()
     file, msg = msgs.items()[0]
-    versions = (PyPI.latest_package_version('localconfig'), PyPI.latest_package_version('requests'))
+    version = PyPI.latest_package_version('localconfig')
     assert 'requirements.txt' == file
 
-    expected_msg = 'Require localconfig==%s, requests<=%s' % versions
+    expected_msg = 'Require localconfig==%s' % version
     assert expected_msg == msg[:len(expected_msg)]
     assert expected_msg == commit_msg[:len(expected_msg)]
 
     with open('requirements.txt') as fp:
       requirements = fp.read()
-      assert '# Comment for localconfig\nlocalconfig==%s\n# Comment for requests\nrequests<=%s\n' % versions == requirements
+      assert '# Comment for localconfig\nlocalconfig==%s\n# Comment for requests\nrequests<0.1\n' % version == requirements
 
     # Exisitng bump branch
     with pytest.raises(SystemExit):
