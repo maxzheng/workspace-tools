@@ -117,6 +117,9 @@ def branch_for_msg(msg, words=3, branches=None):
   branch_name = []
   word_count = 0
 
+  if msg.startswith('DRAFT: '):
+    msg = msg.replace('DRAFT: ', '', 1)
+
   for word in re.split('[\W\_]+', msg):
     if not word:
       continue
