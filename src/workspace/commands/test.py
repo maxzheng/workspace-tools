@@ -29,7 +29,7 @@ def setup_test_parser(subparsers):
   return test_parser
 
 
-def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, match_test=None,
+def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, match_test=None, return_output=False,
          num_processes=None, tox_cmd=None, tox_ini=None, tox_commands={}, silent=False, debug=False, extra_args=None, **kwargs):
   """
   Run tests and manage test environments for product.
@@ -47,6 +47,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
                          pinned.txt is modified after the environment was last updated.
   :param bool recreate: Completely recreate the test environment by removing the existing one first.
   :param bool match_test: Only run tests with method name that matches pattern
+  :param bool return_output: Return test output instead of printing to stdout
   :param str num_processes: Number of processes to use when running tests in parallel
   :param list tox_cmd: Alternative tox command to run.
                        If recreate is True, '-r' will be appended.
@@ -58,7 +59,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
   :param bool silent: Run tox/py.test silently. Only errors are printed and followed by exit.
   :param bool debug: Turn on debug logging
   :param list extra_args: Extra args from argparse to be passed to py.test
-  :return: Dict of env to commands ran on success
+  :return: Dict of env to commands ran on success or test output if return_outut is True
   """
   repo_check()
   repo = repo_path()
@@ -161,7 +162,9 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
             else:
               full_command += ' ' + pytest_args
           activate = '. ' + os.path.join(envdir, 'bin', 'activate')
-          if not run(activate + '; ' + full_command, shell=True, cwd=repo, raises=False, silent=silent):
+          if return_output:
+            return run(activate + '; ' + full_command, shell=True, cwd=repo, return_output=return_output)
+          elif not run(activate + '; ' + full_command, shell=True, cwd=repo, raises=False, silent=silent):
             sys.exit(1)
           if env != envs[-1] and not silent:
             print

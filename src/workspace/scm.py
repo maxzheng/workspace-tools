@@ -450,13 +450,17 @@ def hard_reset(to_commit):
   run(['git', 'reset', '--hard', to_commit])
 
 
-def product_name(product_url):
+def product_name(product_url=None):
+  if not product_url:
+    product_url = repo_path()
+
   if product_url.endswith('.git'):
     name = product_url[:-4]
   elif product_url.endswith('_trunk') or product_url.endswith('/trunk'):
     name = product_url[:-6]
   else:
     name = product_url
+
   return os.path.basename(name)
 
 
