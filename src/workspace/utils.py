@@ -85,7 +85,7 @@ def run(cmd, cwd=None, silent=False, return_output=False, raises=True, **subproc
   if 'shell' in subprocess_args and subprocess_args['shell']:
     cmd = cmd_str
 
-  log.debug('Running: %s', cmd_str)
+  log.debug('Running: %s %s', cmd_str, '[%s]' % cwd if cwd else '')
 
   try:
     if silent or return_output:

@@ -1,5 +1,6 @@
 import logging
 import os
+import pkg_resources
 import re
 import sys
 
@@ -7,7 +8,7 @@ import simplejson as json
 
 from workspace.commands.helpers import expand_product_groups, ToxIni
 from workspace.config import config
-from workspace.scm import repo_check, product_name, repo_path, product_repos, product_path
+from workspace.scm import repo_check, product_name, repo_path, product_repos, product_path, repos, workspace_path
 from workspace.utils import run, split_doc, log_exception
 
 log = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ def setup_test_parser(subparsers):
   test_parser.add_argument('-n', metavar='NUM_PROCESSES', type=int, dest='num_processes', help=docs['num_processes'])
   group = test_parser.add_mutually_exclusive_group()
   group.add_argument('-d', '--show-dependencies', action='store_true', help=docs['show_dependencies'])
+  group.add_argument('-t', '--test-dependents', action='store_true', help=docs['test_dependents'])
   group.add_argument('-r', '--redevelop', action='store_true', help=docs['redevelop'])
   group.add_argument('-R', '--recreate', action='store_true', help=docs['recreate'])
 
@@ -29,8 +31,9 @@ def setup_test_parser(subparsers):
   return test_parser
 
 
-def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=False, match_test=None, return_output=False,
-         num_processes=None, tox_cmd=None, tox_ini=None, tox_commands={}, silent=False, debug=False, extra_args=None, **kwargs):
+def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=False, is_dependent=None, run_test=None, redevelop=False,
+         recreate=False, match_test=None, return_output=False, num_processes=None, tox_cmd=None, tox_ini=None,
+         tox_commands={}, silent=False, debug=False, extra_args=None, **kwargs):
   """
   Run tests and manage test environments for product.
 
@@ -39,9 +42,18 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
   :param list env_or_file: The tox environment to act upon, or a file to pass to py.test (only used
                            if file exists, we don't need to redevelop, and py.test is used as a command
                            for the default environements). Defaults to the envlist in tox.
+  :param str repo: Repo path to test instead of current repo
   :param bool show_dependencies: Show where product dependencies are installed from and their versions.
                             Dependencies can be configured to be installed in editable mode in workspace.cfg
                             with [test] editable_product_dependencies setting.
+  :param bool test_dependents: Run tests in this product and in checked out products that depends on this product.
+                               This product must be listed in [test] editable_product_dependencies for this to run.
+                               Test results might not be as expected if this product is installed as editable
+                               for the first time since that is done after the test. Most args are ignored
+                               when this is used.
+  :param bool is_dependent: An optional callable to test if a product repo path is a dependent of this product.
+                            It should accept a product path to test and this product's name.
+  :param bool run_test: An optional callable to run tests instead of :meth:`test`
   :param bool redevelop: Redevelop the test environment by installing on top of existing one.
                          This is implied if test environment does not exist, or whenever requirements.txt or
                          pinned.txt is modified after the environment was last updated.
@@ -59,10 +71,46 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
   :param bool silent: Run tox/py.test silently. Only errors are printed and followed by exit.
   :param bool debug: Turn on debug logging
   :param list extra_args: Extra args from argparse to be passed to py.test
-  :return: Dict of env to commands ran on success or test output if return_outut is True
+  :return: Dict of env to commands ran on success. If return_output is True, return a string output.
+           If test_dependents is True, return a mapping of product name to the mentioned results.
   """
   repo_check()
-  repo = repo_path()
+
+  if test_dependents:
+    name = product_name()
+
+    if not is_dependent:
+      is_dependent = product_depends_on
+    if not run_test:
+      run_test = test
+
+    test_args = {
+      'env_or_file': env_or_file,
+      'return_output': return_output,
+      'num_processes': num_processes,
+      'silent': silent,
+      'debug': debug,
+      'extra_args': extra_args
+    }
+
+    test_repos = [repo_path()]
+    test_repos.extend(r for r in repos(workspace_path()) if is_dependent(r, name) and r not in test_repos)
+    results = {}
+
+    for i, repo in enumerate(test_repos):
+      if not return_output:
+        print '[ %s ]' % product_name(repo)
+
+      output = run_test(repo=repo, **test_args)
+      results[product_name(repo)] = output
+
+      if not return_output and i + 1 < len(test_repos):
+        print
+
+    return results
+
+  if not repo:
+    repo = repo_path()
 
   # Strip out venv bin path to python to avoid issues with it being removed when running tox
   if 'VIRTUAL_ENV' in os.environ:
@@ -117,7 +165,11 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
     if recreate:
       cmd.append('-r')
 
-    if not run(cmd, cwd=repo, raises=False, silent=silent):
+    output = None
+    if return_output:
+      # For editable dependency case, this output might not be acurate.
+      output = run(cmd, cwd=repo, return_output=return_output)
+    elif not run(cmd, cwd=repo, raises=False, silent=silent):
       sys.exit(1)
 
     for env in envs:
@@ -125,6 +177,9 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
       strip_version_from_entry_scripts(tox, env)
       if env in tox.envlist:
         install_editable_dependencies(tox, env, silent, debug)
+
+    if return_output:
+      return output
 
   else:
     for env in envs:
@@ -140,7 +195,7 @@ def test(env_or_file=None, show_dependencies=False, redevelop=False, recreate=Fa
         return req_mtime > os.stat(envdir).st_mtime
 
       if not os.path.exists(envdir) or requirements_updated():
-        env_commands.update(test([env], redevelop=True, tox_cmd=tox_cmd, tox_ini=tox_ini, tox_commands=tox_commands,
+        env_commands.update(test([env], repo=repo, redevelop=True, tox_cmd=tox_cmd, tox_ini=tox_ini, tox_commands=tox_commands,
                                  match_test=match_test, num_processes=num_processes, silent=silent,
                                  debug=debug, extra_args=extra_args))
         continue
@@ -300,3 +355,17 @@ def install_editable_dependencies(tox, env, silent, debug):
 
       lib_path = product_path(lib)
       run([pip, 'install', '--editable', lib_path], silent=not debug)
+
+
+def product_depends_on(path, name):
+  for req_file in config.bump.requirement_files.split():
+    req_path = os.path.join(path, req_file)
+    if os.path.exists(req_path):
+      with open(req_path) as fp:
+        try:
+          reqs = pkg_resources.parse_requirements(fp.read())
+          if name in [r.project_name for r in reqs]:
+            return True
+        except:
+          pass
+  return False
