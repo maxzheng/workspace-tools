@@ -30,7 +30,8 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
   """
   Commit all changes locally, including new files.
 
-  :param str msg: Commit message
+  :param str msg: Commit message. The first few words are used to create the branch name if branch isn't provided.
+                  That behavior can be configured with [commit] auto_branch_from_commit_words
   :param str branch: Create or use existing branch for commit. When creating, it always creates from master branch.
   :param bool amend: Amend last commit with any new changes made
   :param bool push: Push the current branch after commit
