@@ -1,5 +1,12 @@
-Version 0.7.14
+Version 0.7.15
 ================================================================================
+
+* Update usage for commit
+* Add --test-dependent option to run tests in dependent products
+* Add option to return test output
+
+Version 0.7.14
+--------------------------------------------------------------------------------
 
 * Ignore DRAFT: prefix when creating branch from commit msg
 
