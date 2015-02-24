@@ -50,12 +50,12 @@ def test_bump():
     # All requirements are up to date
     with open('requirements.txt', 'w') as fp:
       fp.write('localconfig\nrequests')
-    assert ({}, None) == bump()
+    assert ({}, None, []) == bump()
 
     # All requirements are outdated
     with open('requirements.txt', 'w') as fp:
       fp.write('# Comment for localconfig\nlocalconfig==0.0.1\n# Comment for requests\nrequests<0.1')
-    msgs, commit_msg = bump()
+    msgs, commit_msg, bumps = bump()
     file, msg = msgs.items()[0]
     version = PyPI.latest_package_version('localconfig')
     assert 'requirements.txt' == file
@@ -78,7 +78,7 @@ def test_bump():
     # Only one is outdated
     with open('requirements.txt', 'w') as fp:
       fp.write('localconfig==0.0.1\nrequests>0.1')
-    msgs, commit_msg = bump()
+    msgs, commit_msg, bumps = bump()
     file, msg = msgs.items()[0]
     assert 'requirements.txt' == file
     assert 'localconfig==' in msg
@@ -93,7 +93,7 @@ def test_bump():
     with open('requirements.txt', 'w') as fp:
       fp.write('localconfig==0.0.1\nrequests>0.1')
     req = 'requests>=1'
-    msgs, commit_msg = bump([req])
+    msgs, commit_msg, bumps = bump([req])
     file, msg = msgs.items()[0]
     assert 'requirements.txt' == file
     assert req in msg

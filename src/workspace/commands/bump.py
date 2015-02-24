@@ -48,7 +48,7 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
     :param bool force: Force a bump even when certain bump requirements are not met.
     :param bool dry_run: Performs a dry run by printing out the changes instead of committing/creating an rb
     :param dict kwargs: Additional args from argparse
-    :return: A map of file to commit message
+    :return: Tuple with 3 elements: A map of file to bump message, commit message, and list of :class:`Bump`
   """
   repo_check()
 
@@ -76,7 +76,7 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
   update(raises=True)
 
   bumper = BumperDriver(requirement_files, bumper_models=bumper_models, full_throttle=force, detail=True, test_drive=dry_run)
-  messages = bumper.bump(filter_requirements, required=add, show_summary=not is_git_repo(), **kwargs)
+  messages, bumps = bumper.bump(filter_requirements, required=add, show_summary=not is_git_repo(), **kwargs)
   commit_msg = None
 
   try:
@@ -101,4 +101,4 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
     bumper.reverse()
     raise
 
-  return messages, commit_msg
+  return messages, commit_msg, bumps
