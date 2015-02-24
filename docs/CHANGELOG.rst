@@ -1,5 +1,10 @@
-Version 0.7.15
+Version 0.7.16
 ================================================================================
+
+* Return bumps made for bump()
+
+Version 0.7.15
+--------------------------------------------------------------------------------
 
 * Update usage for commit
 * Add --test-dependent option to run tests in dependent products
