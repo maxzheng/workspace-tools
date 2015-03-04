@@ -1,5 +1,10 @@
-Version 0.7.17
+Version 0.7.18
 ================================================================================
+
+* Append error from subprocess to output
+
+Version 0.7.17
+--------------------------------------------------------------------------------
 
 * Stream test output when returning output
 
