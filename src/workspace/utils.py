@@ -96,7 +96,8 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
       exit_code = -1
 
       if silent:
-        output, _ = p.communicate()
+        output, error = p.communicate()
+        output += error
         exit_code = p.returncode
       else:
         output = ''
