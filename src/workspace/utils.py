@@ -63,14 +63,14 @@ def silent_run(*args, **kwargs):
   return run(*args, silent=True, **kwargs)
 
 
-def run(cmd, cwd=None, silent=False, return_output=False, raises=True, **subprocess_args):
+def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subprocess_args):
   """
   Runs a CLI command.
 
   :param list/str cmd: Command with args to run.
   :param str cwd: Change directory to cwd before running
   :param bool/int silent: Suppress stdout/stderr. If True/1, completely silent. If 2, print cmd output on error.
-  :param bool return_output: Return the command output
+  :param bool return_output: Return the command output. When True, silent defaults to True. Set silent=False to see output.
   :param bool raises: Raise an exception if command exits with an error code.
   :param dict subprocess_args: Additional args to pass to subprocess
   :return: Output or None depending on option selected
@@ -87,11 +87,26 @@ def run(cmd, cwd=None, silent=False, return_output=False, raises=True, **subproc
 
   log.debug('Running: %s %s', cmd_str, '[%s]' % cwd if cwd else '')
 
+  if return_output and silent is None:
+      silent = True
+
   try:
     if silent or return_output:
-      p = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **subprocess_args)
-      output, errors = p.communicate()
-      exit_code = p.returncode
+      p = subprocess.Popen(cmd, cwd=cwd, bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **subprocess_args)
+      exit_code = -1
+
+      if silent:
+        output, _ = p.communicate()
+        exit_code = p.returncode
+      else:
+        output = ''
+        ch = True
+        while ch:
+          ch = p.stdout.read(1)
+          sys.stdout.write(ch)
+          output += ch
+          if p.poll() is not None and exit_code == -1:
+            exit_code = p.returncode
 
       if exit_code == 0:
         if return_output:
@@ -100,10 +115,8 @@ def run(cmd, cwd=None, silent=False, return_output=False, raises=True, **subproc
           return True
 
       elif raises or silent == 2:
-        if output:
+        if output and silent:
           print output.strip()
-        if errors:
-          print errors.strip()
 
     else:
       exit_code = subprocess.call(cmd, cwd=cwd, **subprocess_args)

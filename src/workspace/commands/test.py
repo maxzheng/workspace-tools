@@ -98,13 +98,12 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
     results = {}
 
     for i, repo in enumerate(test_repos):
-      if not return_output:
-        print '[ %s ]' % product_name(repo)
+      print '[ %s ]' % product_name(repo)
 
       output = run_test(repo=repo, **test_args)
       results[product_name(repo)] = output
 
-      if not return_output and i + 1 < len(test_repos):
+      if i + 1 < len(test_repos):
         print
 
     return results
@@ -165,11 +164,9 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
     if recreate:
       cmd.append('-r')
 
-    output = None
-    if return_output:
-      # For editable dependency case, this output might not be acurate.
-      output = run(cmd, cwd=repo, return_output=return_output)
-    elif not run(cmd, cwd=repo, raises=False, silent=silent):
+    output = run(cmd, cwd=repo, raises=False, silent=silent, return_output=return_output)
+
+    if not output:
       sys.exit(1)
 
     for env in envs:
@@ -217,12 +214,15 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
             else:
               full_command += ' ' + pytest_args
           activate = '. ' + os.path.join(envdir, 'bin', 'activate')
-          if return_output:
-            return run(activate + '; ' + full_command, shell=True, cwd=repo, return_output=return_output)
-          elif not run(activate + '; ' + full_command, shell=True, cwd=repo, raises=False, silent=silent):
+          output = run(activate + '; ' + full_command, shell=True, cwd=repo, raises=False, silent=silent, return_output=return_output)
+          if not output:
             sys.exit(1)
+
           if env != envs[-1] and not silent:
             print
+
+          if return_output:
+            return output
         else:
           log.error('%s does not exist', command_path)
           sys.exit(1)
