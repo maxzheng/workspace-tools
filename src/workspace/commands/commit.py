@@ -114,7 +114,8 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
 
 def branch_for_msg(msg, words=3, branches=None):
   ignored_num_re = re.compile('^\d+$')
-  ignored_words = ['a', 'and', 'as', 'at', 'but', 'by', 'for', 'from', 'if', 'in', 'of', 'on', 'or', 'to']
+  ignored_words = ['and', 'but', 'for', 'from']
+  ignored_word_length = 2
   branch_name = []
   word_count = 0
 
@@ -127,7 +128,7 @@ def branch_for_msg(msg, words=3, branches=None):
 
     branch_name.append(word.lower())
 
-    if word not in ignored_words and not ignored_num_re.match(word):
+    if word not in ignored_words and not ignored_num_re.match(word) and len(word) > ignored_word_length:
       word_count += 1
 
     if word_count >= words and (not branches or '-'.join(branch_name) not in branches):
@@ -136,7 +137,8 @@ def branch_for_msg(msg, words=3, branches=None):
   if not branch_name:
     raise Exception('No words found in commit msg to create branch name')
 
-  if branch_name[-1] in ignored_words and (not branches or '-'.join(branch_name[:-1]) not in branches):
+  if ((branch_name[-1] in ignored_words or not ignored_num_re.match(word) and len(branch_name[-1]) <= ignored_word_length)
+     and (not branches or '-'.join(branch_name[:-1]) not in branches)):
     branch_name = branch_name[:-1]
 
   branch_name = '-'.join(branch_name)
