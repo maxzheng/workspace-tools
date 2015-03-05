@@ -1,5 +1,10 @@
-Version 0.7.18
+Version 0.7.19
 ================================================================================
+
+* Do not count one/two letter words when creating branch from commit msg
+
+Version 0.7.18
+--------------------------------------------------------------------------------
 
 * Append error from subprocess to output
 
