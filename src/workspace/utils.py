@@ -105,6 +105,7 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
         while ch:
           ch = p.stdout.read(1)
           sys.stdout.write(ch)
+          sys.stdout.flush()
           output += ch
           if p.poll() is not None and exit_code == -1:
             exit_code = p.returncode
