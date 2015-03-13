@@ -1,5 +1,10 @@
-Version 0.7.19
+Version 0.7.20
 ================================================================================
+
+* Flush streamed test output
+
+Version 0.7.19
+--------------------------------------------------------------------------------
 
 * Do not count one/two letter words when creating branch from commit msg
 
