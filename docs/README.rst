@@ -70,7 +70,10 @@ Make a commit and create a new branch for it::
     cd workspace-tools
     # vi README.rst and make some changes
 
-    ci -b test "Updated README.rst"
+    ci "Updated README.rst"
+
+    # The commit will create a branch 'updated-readme', add all files, and commit
+    # To specify a different branch, use -b option.
 
 To install your test environment and test your change (with tox/py.test)::
 
@@ -86,8 +89,9 @@ To install your test environment and test your change (with tox/py.test)::
 See status/diff for all of your repos::
 
     ws
-    st
-    di
+    st  # Alias for 'wst status'
+    di  # Alias for 'wst diff'
+
     # More interesting if you do have changes in your other repos
 
 And finally amend the change and push::
@@ -95,13 +99,17 @@ And finally amend the change and push::
     cd workspace-tools
     # vi README.rst and make more changes
 
-    ci -a -p
+    ci -ap
+
     # It will fail at push as you are not a committer, but the change was committed to branch, and then merged into master.
+    # -a = --amend, -p = --push
 
 Or simply push the change in your current branch::
 
     push
+
     # Again, it will fail at push as you are not a committer, but the change was merged into master.
+    # Upon success, it would remove the local branch.
 
 If you have pinned your dependency requirements and want to update to latest version::
 
@@ -150,6 +158,7 @@ Links & Contact Info
 ====================
 
 | bumper: https://pypi.python.org/pypi/bumper
+|
 | Documentation: http://workspace-tools.readthedocs.org
 |
 | PyPI Package: https://pypi.python.org/pypi/workspace-tools

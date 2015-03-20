@@ -8,7 +8,7 @@ import simplejson as json
 
 from workspace.commands.helpers import expand_product_groups, ToxIni
 from workspace.config import config
-from workspace.scm import repo_check, product_name, repo_path, product_repos, product_path, repos, workspace_path
+from workspace.scm import repo_check, product_name, repo_path, product_repos, product_path, repos, workspace_path, current_branch
 from workspace.utils import run, split_doc, log_exception
 
 log = logging.getLogger(__name__)
@@ -96,12 +96,25 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
     test_repos = [repo_path()]
     test_repos.extend(r for r in repos(workspace_path()) if is_dependent(r, name) and r not in test_repos)
     results = {}
+    scoped_products = config.test.scope_transitive_test_products and config.test.scope_transitive_test_products.split() or []
+
+    if scoped_products:
+      scoped_products.append(name)
 
     for i, repo in enumerate(test_repos):
-      print '[ %s ]' % product_name(repo)
+      name = product_name(repo)
+
+      if scoped_products and name not in scoped_products:
+        continue
+
+      print '[ %s ]' % name
+
+      branch = current_branch(repo)
+      if branch != 'master':
+        print '# On branch', branch
 
       output = run_test(repo=repo, **test_args)
-      results[product_name(repo)] = output
+      results[name] = output
 
       if i + 1 < len(test_repos):
         print

@@ -55,6 +55,9 @@
   # Always install these product dependencies in editable mode (can use product group)
   # for the environments in [tox] envlist setting if they are checked out in workspace.
   editable_product_dependencies =
+
+  # Scope transitive tests to these products/groups. By default, it tests all transitive products in workspace.
+  scope_transitive_test_products =
 """
 
 import logging
