@@ -35,7 +35,9 @@ def checkout(target, **kwargs):
   product_urls = expand_product_groups(target)
 
   for product_url in product_urls:
-      log.info('Checking out %s', product_url)
-      product_path = product_checkout_path(product_url)
+    product_url = product_url.strip('/')
 
-      checkout_product(product_url, product_path)
+    log.info('Checking out %s', product_url)
+
+    product_path = product_checkout_path(product_url)
+    checkout_product(product_url, product_path)

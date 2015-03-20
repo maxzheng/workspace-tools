@@ -397,6 +397,8 @@ def clone_svn_repo(product_url, checkout_path, clone_svn_commits):
 
 def checkout_product(product_url, checkout_path):
   """ Checks out the product from url. Raises on error """
+  product_url = product_url.strip('/')
+
   clone_svn_commits = config.checkout.use_gitsvn_to_clone_svn_commits
   prod_name = product_name(product_url)
 
@@ -453,6 +455,8 @@ def hard_reset(to_commit):
 def product_name(product_url=None):
   if not product_url:
     product_url = repo_path()
+
+  product_url = product_url.strip('/')
 
   if product_url.endswith('.git'):
     name = product_url[:-4]
