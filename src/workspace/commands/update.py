@@ -3,7 +3,7 @@ import logging
 from workspace.commands.helpers import expand_product_groups
 from workspace.scm import is_git_repo, checkout_branch, update_repo, repos, product_name, current_branch,\
     update_branch
-from workspace.utils import split_doc
+from workspace.utils import split_doc, parallel_call
 
 log = logging.getLogger(__name__)
 
@@ -27,29 +27,38 @@ def update(products=None, raises=False, **kwargs):
   if products:
     products = expand_product_groups(products)
 
-  for repo in repos():
-    name = product_name(repo)
+  select_repos = [repo for repo in repos() if not products or products and product_name(repo) in products]
 
-    if products and name not in products:
-      continue
+  if not select_repos:
+    log.info('No product found')
 
-    log.info('Updating %s', name)
+  elif len(select_repos) == 1:
+    _update_repo(select_repos[0], raises)
 
-    try:
-      branch = None
-      if is_git_repo(repo):
-        branch = current_branch(repo)
-        if branch != 'master':
-          checkout_branch('master', repo)
+  else:
+    parallel_call(_update_repo, select_repos)
 
-      update_repo(repo)
 
-      if branch and branch != 'master':
-        log.info('Rebasing %s', branch)
-        checkout_branch(branch, repo)
-        update_branch(repo)
-    except Exception as e:
-      if raises:
-        raise
-      else:
-        log.error(e)
+def _update_repo(repo, raises=False):
+  name = product_name(repo)
+
+  log.info('Updating %s', name)
+
+  try:
+    branch = None
+    if is_git_repo(repo):
+      branch = current_branch(repo)
+      if branch != 'master':
+        checkout_branch('master', repo)
+
+    update_repo(repo)
+
+    if branch and branch != 'master':
+      log.info('Rebasing %s', branch)
+      checkout_branch(branch, repo)
+      update_branch(repo)
+  except Exception as e:
+    if raises:
+      raise
+    else:
+      log.error('%s for %s', e, name)
