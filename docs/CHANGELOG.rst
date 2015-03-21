@@ -1,5 +1,12 @@
-Version 0.7.20
+Version 0.7.21
 ================================================================================
+
+* Perform product update in parallel
+* Add remove_products_older_than_days option for clean command
+* Add scope_transitive_test_products config option to scope transitive products to test
+
+Version 0.7.20
+--------------------------------------------------------------------------------
 
 * Flush streamed test output
 
