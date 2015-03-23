@@ -38,7 +38,7 @@ def clean(**kwargs):
       modified_time = os.stat(repo).st_mtime
       if modified_time < (time() - config.clean.remove_products_older_than_days * 86400):
         status = stat_repo(repo, return_output=True)
-        if not status or 'nothing to commit, working directory clean' in status:
+        if not status or 'nothing to commit' in status and 'working directory clean' in status:
           shutil.rmtree(repo)
           removed_products.append(product_name(repo))
         else:
