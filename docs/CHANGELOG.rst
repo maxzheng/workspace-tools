@@ -1,5 +1,10 @@
-Version 0.7.21
+Version 0.7.22
 ================================================================================
+
+* Better checking for clean repo that works for older git
+
+Version 0.7.21
+--------------------------------------------------------------------------------
 
 * Perform product update in parallel
 * Add remove_products_older_than_days option for clean command
