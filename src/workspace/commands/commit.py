@@ -90,18 +90,21 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
         log.error('Odd. No commit hash found in: %s', changes[0])
 
   else:
-    branches = None
-    if not (skip_auto_branch or push or amend) and not branch and msg and config.commit.auto_branch_from_commit_words:
-      branches = all_branches()
+    branches = all_branches()
+    cur_branch = branches and branches[0]
+
+    if not (skip_auto_branch or push or amend) and cur_branch == 'master' and not branch and msg and config.commit.auto_branch_from_commit_words:
       branch = branch_for_msg(msg, config.commit.auto_branch_from_commit_words, branches)
 
     if branch:
-      branches = branches or all_branches()
       if branches:
         if branch in branches:
-          checkout_branch(branch)
+          if branch != cur_branch:
+            checkout_branch(branch)
+
         else:
           create_branch(branch, 'master')
+
       else:  # Empty repo without a commit has no branches
         create_branch(branch)
 
