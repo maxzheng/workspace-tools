@@ -180,11 +180,13 @@ def is_repo(path=None):
 
 
 def repo_path(path=None):
-  return git_repo_path(path) or svn_repo_path(path)
+  # Last element is longest path, which is the current repo in a nested repo situation.
+  return sorted([git_repo_path(path), svn_repo_path(path)])[-1]
 
 
 def is_svn_repo(path=None):
-  return svn_repo_path(path)
+  svn_repo = svn_repo_path(path)
+  return svn_repo and svn_repo == repo_path(path)
 
 
 def svn_repo_path(path=None):
@@ -193,7 +195,8 @@ def svn_repo_path(path=None):
 
 
 def is_git_repo(path=None):
-  return git_repo_path(path)
+  git_repo = git_repo_path(path)
+  return git_repo and git_repo == repo_path(path)
 
 
 def git_repo_path(path=None):
