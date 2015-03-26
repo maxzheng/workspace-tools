@@ -1,5 +1,11 @@
-Version 0.7.22
+Version 0.7.23
 ================================================================================
+
+* Fix repo detection in nested repos
+* Skip auto branch for commit when already on a branch
+
+Version 0.7.22
+--------------------------------------------------------------------------------
 
 * Better checking for clean repo that works for older git
 
