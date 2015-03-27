@@ -141,11 +141,11 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
         envs.append(ef)
 
   pytest_args = ''
-  if match_test or num_processes or files or extra_args:
+  if match_test or num_processes is not None or files or extra_args:
     pytest_args = []
     if match_test:
       pytest_args.append('-k ' + match_test)
-    if num_processes:
+    if num_processes is not None:
       pytest_args.append('-n ' + str(num_processes))
     if extra_args:
       pytest_args.extend(extra_args)
