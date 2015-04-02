@@ -96,7 +96,7 @@ To install your test environment and test your change (with tox/py.test)::
     # test style
     # test coverage
 
-See status/diff for all of your repos::
+See status for all of your repos::
 
     $ cd ~/workspace
 
@@ -118,6 +118,8 @@ See status/diff for all of your repos::
 
     [ workspace-tools ]
     # Branches: updated-readme master
+
+See diff for all of your repos::
 
     $ wst diff
 
@@ -144,7 +146,6 @@ And finally amend the change and push::
     $ wst commit --amend --push
 
     [updated-readme 738f659] Updated README.rst
-    Date: Wed Apr 1 23:55:49 2015 -0700
     1 file changed, 2 insertions(+), 1 deletion(-)
     Pushing updated-readme
 
@@ -165,7 +166,7 @@ If you have pinned your dependency requirements and want to update to latest ver
     [INFO] Checking bumper-lib
     ...
     [INFO] Checking requests
-    [test ac06160] Require remoteconfig==0.2.4, requests==2.6.0
+    [bump ac06160] Require remoteconfig==0.2.4, requests==2.6.0
      1 file changed, 2 insertions(+), 2 deletions(-)
 
     # Or bump a defined group of products as defined in workspace.cfg
