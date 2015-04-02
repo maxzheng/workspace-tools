@@ -1,5 +1,10 @@
-Version 0.8.0
+Version 0.8.1
 ================================================================================
+
+* Update README
+
+Version 0.8.0
+--------------------------------------------------------------------------------
 
 * Add skip_editable_install internal arg for test command
 * Deprecate [test] scope_transitive_test_products with editable_products
