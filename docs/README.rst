@@ -21,6 +21,7 @@ Feature Summary
 * Command execution is also smart / optimized - i.e. test command auto detects requirement changes to redevelop.
 * Path aware context commands that run across all checkouts - i.e. see status / diff for all repos.
 * Get the most out of other products by easily update your dependencies to the latest
+* Automatically install dependencies in editable mode for testing
 * Templates included to setup new product quickly
 * Extensible by adding your own custom commands or modify existing by wrapping them.
 * Trunk based development - one branch per one change that is merged into master when pushed.
@@ -31,95 +32,147 @@ Quick Start Tutorial
 
 First, install it with::
 
-    pip install workspace-tools
+    $ pip install workspace-tools
 
-Second, setup environment with all bash functions/aliases (the remaining tutorial assumes this is run)::
+Second, optionally setup environment with bash functions/aliases::
 
-    cd ~/workspace
+    $ cd ~/workspace
 
-    wst setup -a  # This creates a "ws" bash function that goes to the workspace
-                  # directory and act as an alias for wst
-    source ~/.wstrc
+    $ wst setup --commands-with-aliases
 
-To go to your workspace directory, run::
+    [INFO] Added "ws" bash function with workspace directory set to ~/workspace
+    [INFO] Added bash functions: bump, checkout, clean, commit, log, publish, push, status, test, update
+    [INFO] Added aliases: co=checkout, ci=commit, di=diff, st=status, up=update
+    [INFO] Added special aliases: a='source .tox/${PWD##*/}/bin/activate', d='deactivate', tv='open_files_from_last_command'  # from ag/find/which [t]o [v]im
+    [INFO] To use, run "source ~/.wstrc" or open a new shell.
+
+    $ source ~/.wstrc
+
+To go to your workspace directory (if setup was run), run::
 
     ws
 
 To checkout a repo::
 
-    co https://github.com/maxzheng/workspace-tools.git
+    wst checkout https://github.com/maxzheng/workspace-tools.git
 
-    # This would be stuck forever if there is an input prompt as output is hidden.
-    # So, ensure that you are able to checkout repos using 'git clone' without prompt.
+    # Or checkout a group of repos as defined in workspace.cfg (using 'ws' alias from setup)
+    # ws checkout mzheng-repos
 
-    # Or checkout a group of repos as defined in workspace.cfg
-    # co mzheng-repos
-
-    # Or checkout a repo from GitHub:
+    # Or checkout a repo from GitHub (using 'co' alias from setup, or use 'wst checkout'):
     # co workspace-tools                # Best match
     # co maxzheng/workspace-tools       # Exact match
 
 For more info about workspace.cfg, refer to Configuration_ doc.
 
-To update all repos in your workspace::
+The remaining tutorial will assume 'wst setup' was not run for the sake of clarity, though setup is
+recommended as there are many useful aliases provided.
 
-    up
+To update all repos in your workspace concurrently::
+
+    wst update
 
 Make a commit and create a new branch for it::
 
-    cd workspace-tools
+    $ cd workspace-tools
     # vi README.rst and make some changes
 
-    ci "Updated README.rst"
+    $ wst commit "Updated README.rst"
 
-    # The commit will create a branch 'updated-readme', add all files, and commit
-    # To specify a different branch, use -b option.
+    [updated-readme 0af8850] Updated README.rst
+     1 file changed, 1 deletion(-)
+
+    # The commit created the branch 'updated-readme', added all files, and then committed
+    # To specify a different branch, use --branch option.
 
 To install your test environment and test your change (with tox/py.test)::
 
-    test
+    wst test
 
     # To setup tox with test, style, and coverage environments, run:
-    # ws setup --product
+    # wst setup --product
     #
-    # To check style or generate coverage report, run:
+    # To check style or generate coverage report, run (using 'test' alias from setup):
     # test style
     # test coverage
 
 See status/diff for all of your repos::
 
-    ws
-    st  # Alias for 'wst status'
-    di  # Alias for 'wst diff'
+    $ cd ~/workspace
 
-    # More interesting if you do have changes in your other repos
+    $ wst status
+
+    [ bumper-lib ]
+    On branch master
+    Your branch is up-to-date with 'origin/master'.
+    Changes not staged for commit:
+      (use "git add <file>..." to update what will be committed)
+      (use "git checkout -- <file>..." to discard changes in working directory)
+
+            modified:   src/bumper/cars.py
+
+    no changes added to commit (use "git add" and/or "git commit -a")
+
+    [ clicast ]
+    # Branches: master display-changes fix-download
+
+    [ workspace-tools ]
+    # Branches: updated-readme master
+
+    $ wst diff
+
+    [ bumper-lib ]
+    diff --git a/src/bumper/cars.py b/src/bumper/cars.py
+    index d552c2c..2d7bd12 100644
+    --- a/src/bumper/cars.py
+    +++ b/src/bumper/cars.py
+    @@ -281,7 +281,7 @@ class AbstractBumper(object):
+       @classmethod
+        def requirements_for_changes(self, changes):
+           """
+      -      Parse changes for requirements
+      +      Parse changes for requirements.
+
+             :param list changes:
+           """
 
 And finally amend the change and push::
 
-    cd workspace-tools
+    $ cd workspace-tools
     # vi README.rst and make more changes
 
-    ci -ap
+    $ wst commit --amend --push
+
+    [updated-readme 738f659] Updated README.rst
+    Date: Wed Apr 1 23:55:49 2015 -0700
+    1 file changed, 2 insertions(+), 1 deletion(-)
+    Pushing updated-readme
 
     # It will fail at push as you are not a committer, but the change was committed to branch, and then merged into master.
-    # -a = --amend, -p = --push
 
 Or simply push the change in your current branch::
 
-    push
+    wst push
 
-    # Again, it will fail at push as you are not a committer, but the change was merged into master.
-    # Upon success, it would remove the local branch.
+    # This will update master, rebase branch with master and merge into master if on branch, and then push.
+    # Upon success, it will remove the branch if pushing from branch.
 
 If you have pinned your dependency requirements and want to update to latest version::
 
-    bump
+    $ wst bump
+
+    [INFO] Updating workspace-tools
+    [INFO] Checking bumper-lib
+    ...
+    [INFO] Checking requests
+    [test ac06160] Require remoteconfig==0.2.4, requests==2.6.0
+     1 file changed, 2 insertions(+), 2 deletions(-)
 
     # Or bump a defined group of products as defined in workspace.cfg
-    # bump mzheng
+    # wst bump mzheng
     #
-    # Or to a specific version (why not just vi? This validates the version for you)
-    # bump requests==2.5.1
+    # Or to a specific version (why not just vi? This validates the version for you and pulls in the changelog)
+    # wst bump requests==2.5.1
 
 Now you are ready to try out the other commands yourself::
 
@@ -149,9 +202,9 @@ Now you are ready to try out the other commands yourself::
         push                Push changes for branch
         setup               Optional (refer to setup --help). Setup workspace
                             environment. Run from primary workspace directory.
-        test                Runs tests and manages test environments for product.
         status (st)         Show status on current product or all products in
                             workspace
+        test                Run tests and manage test environments for product.
         update (up)         Update current product or all products in workspace
 
 Links & Contact Info
