@@ -65,11 +65,8 @@
   # List of products or product groups that will:
   # * Be installed as editable for the environments in [tox] envlist if they are checked out in workspace.
   # * Install editable product dependencies.
-  # So, it is used for both purposes - indicate editables to install and the products that will install them.
+  # * Be used for transitive testing.
   editable_products =
-
-  # Scope transitive tests to these products/groups. By default, it tests all transitive products in workspace.
-  scope_transitive_test_products =
 """
 
 import logging

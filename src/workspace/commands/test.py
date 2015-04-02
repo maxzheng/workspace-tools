@@ -94,7 +94,7 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
     test_repos = [repo_path()]
     test_repos.extend(r for r in repos(workspace_path()) if is_dependent(r, name) and r not in test_repos)
     results = {}
-    scoped_products = config.test.scope_transitive_test_products and expand_product_groups(config.test.scope_transitive_test_products.split()) or []
+    scoped_products = config.test.editable_products and expand_product_groups(config.test.editable_products.split()) or []
 
     if scoped_products:
       scoped_products.append(name)
