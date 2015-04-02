@@ -62,9 +62,11 @@
   ###########################################################################################################
   [test]
 
-  # Always install these product dependencies in editable mode (can use product group)
-  # for the environments in [tox] envlist setting if they are checked out in workspace.
-  editable_product_dependencies =
+  # List of products or product groups that will:
+  # * Be installed as editable for the environments in [tox] envlist if they are checked out in workspace.
+  # * Install editable product dependencies.
+  # So, it is used for both purposes - indicate editables to install and the products that will install them.
+  editable_products =
 
   # Scope transitive tests to these products/groups. By default, it tests all transitive products in workspace.
   scope_transitive_test_products =

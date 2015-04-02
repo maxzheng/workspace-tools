@@ -45,12 +45,10 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
   :param str repo: Repo path to test instead of current repo
   :param bool show_dependencies: Show where product dependencies are installed from and their versions.
                             Dependencies can be configured to be installed in editable mode in workspace.cfg
-                            with [test] editable_product_dependencies setting.
+                            with [test] editable_products setting.
   :param bool test_dependents: Run tests in this product and in checked out products that depends on this product.
-                               This product must be listed in [test] editable_product_dependencies for this to run.
-                               Test results might not be as expected if this product is installed as editable
-                               for the first time since that is done after the test. Most args are ignored
-                               when this is used.
+                               The product must be listed in [test] editable_products for this to run.
+                               Most args are ignored when this is used.
   :param bool is_dependent: An optional callable to test if a product repo path is a dependent of this product.
                             It should accept a product path to test and this product's name.
   :param bool run_test: An optional callable to run tests instead of :meth:`test`
@@ -338,10 +336,14 @@ else:
 
 
 def install_editable_dependencies(tox, env, silent, debug):
-  if not config.test.editable_product_dependencies:
+  if not config.test.editable_products:
     return
 
   name = product_name(tox.repo)
+  editable_products = expand_product_groups(config.test.editable_products.split())
+
+  if name not in editable_products:
+    return
 
   dependencies_output = show_installed_dependencies(tox, env, return_output=True)
   if not dependencies_output:
@@ -353,9 +355,8 @@ def install_editable_dependencies(tox, env, silent, debug):
   for dep, _, path in product_dependencies_list:
     product_dependencies[dep] = path
 
-  editable_dependencies = expand_product_groups(config.test.editable_product_dependencies.split())
   available_products = [os.path.basename(r) for r in product_repos()]
-  libs = [d for d in editable_dependencies if d in available_products and d in product_dependencies and tox.workdir in product_dependencies[d]]
+  libs = [d for d in editable_products if d in available_products and d in product_dependencies and tox.workdir in product_dependencies[d]]
 
   pip = tox.bindir(env, 'pip')
 
