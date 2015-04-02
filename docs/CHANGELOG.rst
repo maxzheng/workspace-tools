@@ -1,5 +1,10 @@
-Version 0.7.23
+Version 0.7.24
 ================================================================================
+
+* Fix "-n 0" option for test command
+
+Version 0.7.23
+--------------------------------------------------------------------------------
 
 * Fix repo detection in nested repos
 * Skip auto branch for commit when already on a branch
