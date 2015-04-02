@@ -1,3 +1,10 @@
+Version 0.8.0
+================================================================================
+
+* Add skip_editable_install internal arg for test command
+* Deprecate [test] scope_transitive_test_products with editable_products
+* Deprecate [test] editable_product_dependencies with editable_products that is also used for scoping products that will install editables
+
 Version 0.7.24
 ================================================================================
 
