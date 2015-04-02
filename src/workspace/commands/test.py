@@ -33,7 +33,7 @@ def setup_test_parser(subparsers):
 
 def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=False, is_dependent=None, run_test=None, redevelop=False,
          recreate=False, match_test=None, return_output=False, num_processes=None, tox_cmd=None, tox_ini=None,
-         tox_commands={}, silent=False, debug=False, extra_args=None, **kwargs):
+         tox_commands={}, skip_editable_install=False, silent=False, debug=False, extra_args=None, **kwargs):
   """
   Run tests and manage test environments for product.
 
@@ -66,6 +66,7 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
   :param dict tox_commands: Map of env to list of commands to override "[testenv:env] commands" setting for env.
                             Only used when not developing.
   :param list args: Additional args to pass to py.test
+  :param bool skip_editable_install: Skip installing editable dependencies
   :param bool silent: Run tox/py.test silently. Only errors are printed and followed by exit.
   :param bool debug: Turn on debug logging
   :param list extra_args: Extra args from argparse to be passed to py.test
@@ -183,7 +184,7 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
     for env in envs:
       env_commands[env] = ' '.join(cmd)
       strip_version_from_entry_scripts(tox, env)
-      if env in tox.envlist:
+      if not skip_editable_install and env in tox.envlist:
         install_editable_dependencies(tox, env, silent, debug)
 
     if return_output:
@@ -205,7 +206,7 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
       if not os.path.exists(envdir) or requirements_updated():
         env_commands.update(test([env], repo=repo, redevelop=True, tox_cmd=tox_cmd, tox_ini=tox_ini, tox_commands=tox_commands,
                                  match_test=match_test, num_processes=num_processes, silent=silent,
-                                 debug=debug, extra_args=extra_args))
+                                 skip_editable_install=skip_editable_install, debug=debug, extra_args=extra_args))
         continue
 
       if len(envs) > 1 and not silent:
