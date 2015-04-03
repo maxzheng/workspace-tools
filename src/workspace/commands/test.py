@@ -47,8 +47,8 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
                             Dependencies can be configured to be installed in editable mode in workspace.cfg
                             with [test] editable_products setting.
   :param bool test_dependents: Run tests in this product and in checked out products that depends on this product.
-                               The product must be listed in [test] editable_products for this to run.
-                               Most args are ignored when this is used.
+                               This product and its dependents must be listed in [test] editable_products in workspace.cfg
+                               for this to run.  Most args are ignored when this is used.
   :param bool is_dependent: An optional callable to test if a product repo path is a dependent of this product.
                             It should accept a product path to test and this product's name.
   :param bool run_test: An optional callable to run tests instead of :meth:`test`
@@ -97,8 +97,9 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
     results = {}
     scoped_products = config.test.editable_products and expand_product_groups(config.test.editable_products.split()) or []
 
-    if scoped_products:
-      scoped_products.append(name)
+    if name not in scoped_products:
+      log.error('To run transitive tests, please add this product and its dependents to [test] editable_products in your ~/config/workspace.cfg')
+      sys.exit(1)
 
     for i, repo in enumerate(test_repos):
       name = product_name(repo)
