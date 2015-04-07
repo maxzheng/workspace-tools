@@ -26,7 +26,7 @@ def setup_commit_parser(subparsers):
   return commit_parser
 
 
-def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=False, move=None, skip_auto_branch=False, **kwargs):
+def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=False, move=None, skip_auto_branch=False, files=None, **kwargs):
   """
   Commit all changes locally, including new files.
 
@@ -41,6 +41,7 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
                       Other options are ignored.
   :param str move: Move last commit to branch. Other options are ignored.
   :param bool skip_auto_branch: Skip automatic branch creation from commit msg
+  :param list files: List of files to add instead of all files.
   """
 
   git_repo_check()
@@ -108,7 +109,7 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
       else:  # Empty repo without a commit has no branches
         create_branch(branch)
 
-    add_files()
+    add_files(files=files)
     local_commit(msg, amend)
 
     if push:

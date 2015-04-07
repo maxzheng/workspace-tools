@@ -96,7 +96,7 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
 
       if not dry_run and is_git_repo():
         branch = None if append else 'bump'
-        commit(msg=commit_msg, branch=branch, skip_auto_branch=True)
+        commit(msg=commit_msg, branch=branch, files=messages.keys(), skip_auto_branch=True)
   except Exception:
     bumper.reverse()
     raise

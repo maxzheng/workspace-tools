@@ -119,10 +119,16 @@ def commit_logs(limit=None, repo=None, diff=False, show_revision=None, extra_arg
   return run(cmd, return_output=not to_pager, shell=to_pager, cwd=repo)
 
 
-def add_files(repo=None):
+def add_files(repo=None, files=None):
   if not repo:
     repo = git_repo_path()
-  silent_run('git add .', cwd=repo)
+
+  if files:
+    files = ' '.join(files)
+  else:
+    files = '.'
+
+  silent_run('git add ' + files, cwd=repo)
 
 
 def repo_check():
