@@ -1,5 +1,11 @@
-Version 0.8.1
+Version 0.8.2
 ================================================================================
+
+* When bumping, only add/commit files updated by bump
+* Only run transitive tests if current product is in editable_products list
+
+Version 0.8.1
+--------------------------------------------------------------------------------
 
 * Update README
 
