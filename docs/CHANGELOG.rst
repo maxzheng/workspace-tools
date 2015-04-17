@@ -1,5 +1,10 @@
-Version 0.8.4
+Version 0.8.5
 ================================================================================
+
+* Simplify product group bootstrap with setup command
+
+Version 0.8.4
+--------------------------------------------------------------------------------
 
 * Show progress for dependent tests
 
