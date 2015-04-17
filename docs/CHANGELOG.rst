@@ -1,5 +1,10 @@
-Version 0.8.2
+Version 0.8.3
 ================================================================================
+
+* Run dependent tests in parallel
+
+Version 0.8.2
+--------------------------------------------------------------------------------
 
 * When bumping, only add/commit files updated by bump
 * Only run transitive tests if current product is in editable_products list
