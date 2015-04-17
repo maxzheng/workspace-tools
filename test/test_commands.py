@@ -7,7 +7,6 @@ from bumper import BumpAccident
 from bumper.utils import PyPI
 
 from workspace.commands.bump import bump
-from workspace.commands.checkout import checkout
 from workspace.commands.clean import clean
 from workspace.commands.commit import commit
 from workspace.commands.diff import diff
@@ -16,7 +15,7 @@ from workspace.commands.push import push
 from workspace.commands.setup import setup as wst_setup
 from workspace.commands.test import test as wst_test
 from workspace.commands.status import status
-from workspace.scm import remove_branch, checkout_branch, stat_repo, all_branches, commit_logs
+from workspace.scm import stat_repo, all_branches, commit_logs
 from workspace.utils import RunError
 
 from test_stubs import temp_dir, temp_git_repo, temp_remote_git_repo
@@ -71,71 +70,6 @@ def test_bump():
     # Exisitng bump branch
     with pytest.raises(SystemExit):
       bump()
-
-    checkout_branch('master')
-    remove_branch('bump')
-
-    # Only one is outdated
-    with open('requirements.txt', 'w') as fp:
-      fp.write('localconfig==0.0.1\nrequests>0.1')
-    msgs, commit_msg, bumps = bump()
-    file, msg = msgs.items()[0]
-    assert 'requirements.txt' == file
-    assert 'localconfig==' in msg
-    assert 'requests' not in msg
-    assert 'localconfig==' in commit_msg
-    assert 'requests' not in commit_msg
-
-    checkout_branch('master')
-    remove_branch('bump')
-
-    # Bump to a specific version
-    with open('requirements.txt', 'w') as fp:
-      fp.write('localconfig==0.0.1\nrequests>0.1')
-    req = 'requests>=1'
-    msgs, commit_msg, bumps = bump([req])
-    file, msg = msgs.items()[0]
-    assert 'requirements.txt' == file
-    assert req in msg
-    assert 'localconfig' not in msg
-    assert req in commit_msg
-    assert 'localconfig' not in commit_msg
-
-    checkout_branch('master')
-    remove_branch('bump')
-
-    # Bump to a bad version
-    with open('requirements.txt', 'w') as fp:
-      fp.write('localconfig==0.0.1\nrequests>0.1')
-    req = 'requests>=100'
-    with pytest.raises(BumpAccident):
-      bump([req])
-
-
-def test_checkout():
-  with temp_dir():
-    with pytest.raises(SystemExit):
-      checkout(['foobazbar-no-such-repo'])
-
-    checkout(['mzheng-repos'])
-    checkout(['clicast'])
-
-  with temp_dir():
-    checkout(['https://github.com/maxzheng/clicast.git'])
-    assert os.path.exists('clicast/README.rst')
-
-  with temp_dir():
-    checkout(['git@github.com:maxzheng/clicast.git'])
-    assert os.path.exists('clicast/README.rst')
-
-  with temp_dir():
-    checkout(['https://github.com/maxzheng/localconfig/trunk'])
-    assert os.path.exists('localconfig/README.rst')
-
-  with temp_dir():
-    checkout(['https://github.com/maxzheng/localconfig.git', 'https://github.com/maxzheng/remoteconfig.git'])
-    assert os.path.exists('localconfig/README.rst')
-    assert os.path.exists('remoteconfig/README.rst')
 
 
 def test_clean():

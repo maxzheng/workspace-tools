@@ -79,7 +79,7 @@ CONFIG_FILE = 'workspace.cfg'
 USER_CONFIG_FILE = os.path.join('~', '.config', CONFIG_FILE)
 
 log = logging.getLogger()
-config = RemoteConfig(USER_CONFIG_FILE)
+config = RemoteConfig(USER_CONFIG_FILE, cache_duration=60)
 config.read(__doc__.replace('\n  ', '\n'))
 
 

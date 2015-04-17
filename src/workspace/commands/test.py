@@ -9,9 +9,11 @@ import simplejson as json
 from workspace.commands.helpers import expand_product_groups, ToxIni
 from workspace.config import config
 from workspace.scm import repo_check, product_name, repo_path, product_repos, product_path, repos, workspace_path, current_branch
-from workspace.utils import run, split_doc, log_exception
+from workspace.utils import run, split_doc, log_exception, parallel_call
 
 log = logging.getLogger(__name__)
+
+TEST_RE = re.compile('(?:\d+ failed, )?\d+ passed.* in [\d\.]+ seconds')
 
 
 def setup_test_parser(subparsers):
@@ -83,43 +85,42 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
     if not run_test:
       run_test = test
 
-    test_args = {
-      'env_or_file': env_or_file,
-      'return_output': return_output,
-      'num_processes': num_processes,
-      'silent': silent,
-      'debug': debug,
-      'extra_args': extra_args
-    }
+    # Convert None to list for tuple([])
+    if not env_or_file:
+      env_or_file = []
+    if not extra_args:
+      extra_args = []
+
+    test_args = (
+      ('env_or_file', tuple(env_or_file)),
+      ('return_output', 2),
+      ('num_processes', num_processes),
+      ('silent', True),
+      ('debug', debug),
+      ('extra_args', tuple(extra_args))
+    )
 
     test_repos = [repo_path()]
     test_repos.extend(r for r in repos(workspace_path()) if is_dependent(r, name) and r not in test_repos)
-    results = {}
     scoped_products = config.test.editable_products and expand_product_groups(config.test.editable_products.split()) or []
 
     if name not in scoped_products:
       log.error('To run transitive tests, please add this product and its dependents to [test] editable_products in your ~/config/workspace.cfg')
       sys.exit(1)
 
-    for i, repo in enumerate(test_repos):
-      name = product_name(repo)
+    test_args = [(r, run_test, test_args) for r in test_repos if not scoped_products or product_name(repo) in scoped_products]
 
-      if scoped_products and name not in scoped_products:
-        continue
+    def test_done(result):
+      name, output = result
+      if 'failed' in output:
+        log.error('%s tests failed:\n%s', name, output)
+      else:
+        match = TEST_RE.search(output)
+        output = match.group(0) if match else '\n' + output
+        log.info('%s: %s', name, output)
 
-      print '[ %s ]' % name
-
-      branch = current_branch(repo)
-      if branch != 'master':
-        print '# On branch', branch
-
-      output = run_test(repo=repo, **test_args)
-      results[name] = output
-
-      if i + 1 < len(test_repos):
-        print
-
-    return results
+    repo_results = parallel_call(test_repo, test_args, callback=test_done, workers=5)
+    return dict(repo_results.values())
 
   if not repo:
     repo = repo_path()
@@ -241,6 +242,16 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
           sys.exit(1)
 
   return env_commands
+
+
+def test_repo(repo, run_test, test_args):
+  name = product_name(repo)
+
+  branch = current_branch(repo)
+  on_branch = '#' + branch if branch != 'master' else ''
+  log.info('Testing %s %s', name, on_branch)
+
+  return name, run_test(repo=repo, **dict(test_args))
 
 
 def strip_version_from_entry_scripts(tox, env):

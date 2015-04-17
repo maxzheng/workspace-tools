@@ -57,8 +57,10 @@ def _update_repo(repo, raises=False):
       log.info('Rebasing %s', branch)
       checkout_branch(branch, repo)
       update_branch(repo)
+
+    return True
   except Exception as e:
     if raises:
       raise
     else:
-      log.error('%s for %s', e, name)
+      log.error('%s: %s', name, e)

@@ -71,6 +71,7 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
   :param str cwd: Change directory to cwd before running
   :param bool/int silent: Suppress stdout/stderr. If True/1, completely silent. If 2, print cmd output on error.
   :param bool return_output: Return the command output. When True, silent defaults to True. Set silent=False to see output.
+                             If 2, always return output regardless of error.
   :param bool raises: Raise an exception if command exits with an error code.
   :param dict subprocess_args: Additional args to pass to subprocess
   :return: Output or None depending on option selected
@@ -109,6 +110,9 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
           output += ch
           if p.poll() is not None and exit_code == -1:
             exit_code = p.returncode
+
+      if return_output == 2:
+        return output
 
       if exit_code == 0:
         if return_output:
@@ -156,21 +160,37 @@ def split_doc(docstring):
   return doc, params
 
 
-def parallel_call(call, args, workers=10):
+def parallel_call(call, args, callback=None, workers=10):
   """
   Call a callable in parallel for each arg
 
   :param callable call: Callable to call
-  :param list(tuple) args: List of tuple args to call. Each tuple represents the full args list per call.
+  :param list(iterable|non-iterable) args: List of args to call. One call per args.
+  :param callable callback: Callable to call for each result.
   :param int workers: Number of workers to use.
+  :return dict: Map of args to their results on completion
   """
 
   from multiprocessing import Pool
   import signal
 
+  signal.signal(signal.SIGTERM, lambda *args: sys.exit(1))
   pool = Pool(workers, lambda: signal.signal(signal.SIGINT, signal.SIG_IGN))
+
   try:
-    pool.map_async(call, args).get(9999999)
+    to_tuple = lambda a: a if isinstance(a, (list, tuple, set)) else [a]
+    async_results = [(arg, pool.apply_async(call, to_tuple(arg), callback=callback)) for arg in args]
+
+    # This allows processes to be interrupted by CTRL+C
+    results = dict((arg, result.get(9999999)) for arg, result in async_results)
+
+    pool.close()
+    pool.join()
+
+    return results
+
   except KeyboardInterrupt:
+    os.killpg(os.getpid(), signal.SIGTERM)  # Kills any child processes from subprocesses.
     pool.terminate()
     pool.join()
+    sys.exit()
