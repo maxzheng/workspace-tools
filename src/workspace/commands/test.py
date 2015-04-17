@@ -3,6 +3,7 @@ import os
 import pkg_resources
 import re
 import sys
+import tempfile
 
 import simplejson as json
 
@@ -108,18 +109,42 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
       log.error('To run transitive tests, please add this product and its dependents to [test] editable_products in your ~/config/workspace.cfg')
       sys.exit(1)
 
-    test_args = [(r, run_test, test_args) for r in test_repos if not scoped_products or product_name(repo) in scoped_products]
+    test_repos = [r for r in test_repos if not scoped_products or product_name(r) in scoped_products]
+    test_args = [(r, run_test, test_args) for r in test_repos]
 
     def test_done(result):
       name, output = result
-      if 'failed' in output:
-        log.error('%s tests failed:\n%s', name, output)
+      if 'collected 0 items' in output:
+        log.info('%s: No tests', name)
+
       else:
         match = TEST_RE.search(output)
-        output = match.group(0) if match else '\n' + output
-        log.info('%s: %s', name, output)
+        summary = match.group(0) + '.' if match else None
 
-    repo_results = parallel_call(test_repo, test_args, callback=test_done, workers=5)
+        temp_output_file = None
+        log_msg = log.info
+
+        if not summary or 'failed' in output:
+          temp_output_file = os.path.join(tempfile.gettempdir(), '%s-test.out' % name)
+          with open(temp_output_file, 'w') as fp:
+            fp.write(output)
+          temp_output_file = 'See ' + temp_output_file
+          log_msg = log.error
+
+        log_msg('%s: %s', name, '\n\t'.join(filter(None, [summary, temp_output_file])))
+
+    def show_remaining(completed, all_args):
+      completed_repos = set(product_name(r) for r, _, _ in completed)
+      all_repos = set(product_name(r) for r, _, _ in all_args)
+      remaining_repos = sorted(list(all_repos - completed_repos))
+      if len(remaining_repos):
+        repo = remaining_repos.pop()
+        more = '& %d more' % len(remaining_repos) if remaining_repos else ''
+        return '%s %s' % (repo, more)
+      else:
+        return 'None'
+
+    repo_results = parallel_call(test_repo, test_args, callback=test_done, show_progress=show_remaining, progress_title='Remaining:')
     return dict(repo_results.values())
 
   if not repo:

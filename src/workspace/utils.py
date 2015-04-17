@@ -1,8 +1,11 @@
 from contextlib import contextmanager
 import logging
 import os
+import re
+import signal
 import subprocess
 import sys
+import time
 
 
 log = logging.getLogger(__name__)
@@ -160,7 +163,7 @@ def split_doc(docstring):
   return doc, params
 
 
-def parallel_call(call, args, callback=None, workers=10):
+def parallel_call(call, args, callback=None, workers=10, show_progress=None, progress_title='Progress:'):
   """
   Call a callable in parallel for each arg
 
@@ -168,11 +171,12 @@ def parallel_call(call, args, callback=None, workers=10):
   :param list(iterable|non-iterable) args: List of args to call. One call per args.
   :param callable callback: Callable to call for each result.
   :param int workers: Number of workers to use.
+  :param bool/str/callable: Show progress.
+                            If callable, it should accept two lists: completed args and all args and return progress string.
   :return dict: Map of args to their results on completion
   """
 
-  from multiprocessing import Pool
-  import signal
+  from multiprocessing import Pool, TimeoutError
 
   signal.signal(signal.SIGTERM, lambda *args: sys.exit(1))
   pool = Pool(workers, lambda: signal.signal(signal.SIGINT, signal.SIG_IGN))
@@ -181,8 +185,25 @@ def parallel_call(call, args, callback=None, workers=10):
     to_tuple = lambda a: a if isinstance(a, (list, tuple, set)) else [a]
     async_results = [(arg, pool.apply_async(call, to_tuple(arg), callback=callback)) for arg in args]
 
-    # This allows processes to be interrupted by CTRL+C
-    results = dict((arg, result.get(9999999)) for arg, result in async_results)
+    results = {}
+    with ProgressLogger(progress_title):
+      while len(results) != len(async_results):
+        for arg, result in async_results:
+          if arg not in results:
+            try:
+              # This allows processes to be interrupted by CTRL+C
+              results[arg] = result.get(1)
+            except TimeoutError:
+              pass
+            except Exception as e:
+              results[arg] = str(e)
+
+        if show_progress:
+          if callable(show_progress):
+            progress = show_progress(results.keys(), args)
+          else:
+            progress = '%.2f%% completed' % (len(results) * 100.0 / len(async_results))
+          ProgressLogger.progress(progress)
 
     pool.close()
     pool.join()
@@ -194,3 +215,205 @@ def parallel_call(call, args, callback=None, workers=10):
     pool.terminate()
     pool.join()
     sys.exit()
+
+
+class ProgressLogger(object):
+  """
+    Everything is wrapped up in one class, so you simply import this one class rather than several functions
+    Creator returns
+  """
+
+  #: Set to False to disable any progress output, by default will only show progress when ran interactively or in debugger
+  enabled = (sys.stdout.isatty() and 'TERM' in os.environ) or os.environ.get('PYCHARM_HOSTED')
+
+  #: Should timing of progress be shown? Set this to True before you start any progress logging
+  benchmark = False
+
+  #: Should we try and detect terminal resizing?
+  detect_terminal_resize = True
+
+  _prefix = ''
+  _sections = []
+  _terminal_width = None
+  _message_format = None
+  _last_output_time = None
+  _last_message = None
+  _minimum_time = 0.0005
+
+  DEFAULT_WIDTH = 80
+
+  def __new__(cls, message, *args):
+    """
+      Returns a context manager starting/stopping a section of progress output prefixed with 'message' (and formatted with 'args')
+      Handier than a call to push() + pop()
+      All functions are classmethod, this is a pure singleton
+      Allows to state a simple 'with' section:
+
+      with ProgressLogger('my section'):
+        ...
+
+      :param str message: Message to show
+      :param list args: Optional args to format 'message' with
+      :return ProgressLogger: Context manager
+    """
+    cls.push(message, *args)
+    return cls
+
+  @classmethod
+  def __enter__(cls):
+    pass
+
+  @classmethod
+  def __exit__(cls, *args, **kwargs):
+    cls.pop()
+
+  @classmethod
+  def push(cls, message, *args):
+    """
+      :param str message: Start a long lasting section of progress with 'message' (lasts until pop()-ed, formatted with 'args')
+      :param list args: Optional args to format 'message' with
+    """
+    if not cls.enabled and not cls.benchmark:
+      return
+
+    if cls.benchmark and not cls._last_output_time:
+      cls._last_output_time = time.time()
+
+    if args:
+      message = message % args
+
+    cls._sections.append(message)
+    cls._prefix = message
+    cls._output(cls._prefix)
+
+  @classmethod
+  def _show_elapsed_time(cls, message):
+    """
+      :param str message: Start a long lasting section of progress with 'message' (lasts until pop()-ed, formatted with 'args')
+    """
+    # Remove any percentages (as those are more interesting to just aggregate)
+    clean_message = re.sub(r'[0-9]+%', '--', message)
+
+    if not cls._last_message:
+      cls._last_message = clean_message
+
+    elif clean_message != cls._last_message:
+      elapsed = time.time() - cls._last_output_time
+
+      if elapsed > cls._minimum_time and cls._last_message:
+        # Only show non trivial progresses
+        cls._ensure_width()
+        print '%.3fs %s' % (elapsed, cls.formatted(cls._last_message, width=cls._terminal_width - 6))
+
+      cls._last_message = clean_message
+      cls._last_output_time = time.time()
+
+  @classmethod
+  def progress(cls, message, *args):
+    """
+      :param str message: Small unit of progress, appears after last push()-ed section
+      :param list args: Optional args to format 'message' with
+    """
+    if not cls.enabled and not cls.benchmark:
+      return
+
+    if args:
+      message = message % args
+
+    message = '%s %s' % (cls._prefix, message)
+
+    if cls._last_output_time:
+      cls._show_elapsed_time(message)
+
+    cls._output(message)
+
+  @classmethod
+  def add(cls, message, *args):
+    """
+      :param str message: Extra info to add to current section
+      :param list args: Optional args to format 'message' with
+    """
+    if not cls.enabled and not cls.benchmark:
+      return
+
+    if args:
+      message = message % args
+
+    cls._prefix += ' %s' % message
+    cls._output(cls._prefix)
+
+  @classmethod
+  def pop(cls):
+    """
+      Pop last long lasting message
+    """
+    if not cls.enabled and not cls.benchmark:
+      return
+
+    cls._sections.pop()
+
+    if cls._sections:
+      cls._prefix = cls._sections[-1]
+
+    else:
+      cls._prefix = ''
+
+      if cls._last_output_time:
+        cls._show_elapsed_time('')
+
+    cls._output(cls._prefix)
+
+  @classmethod
+  def formatted(cls, message, width=None):
+    """
+      :param str message: Message formatted for current terminal
+      :param int, None width: Width to use (use None to pick internally determined width)
+      :return str: Formatted message
+    """
+    if width is None:
+      cls._ensure_width()
+      return cls._message_format % message[:cls._terminal_width]
+
+    else:
+      message_format = '%%-%ds\r' % width
+      return message_format % message[:width]
+
+  @classmethod
+  def clear(cls):
+    """
+      Clear current output
+    """
+    cls._output('')
+
+  @classmethod
+  def _output(cls, message):
+    """
+      :param str message: 'message' to output, make sure to clear rest of line on terminal
+    """
+    if not cls.enabled:
+      return
+
+    message = cls.formatted(message)
+
+    sys.stdout.write(message)
+    sys.stdout.flush()
+
+  @classmethod
+  def _ensure_width(cls):
+    """
+      Ensure cls._terminal_width is set
+    """
+    if not cls._terminal_width:
+      cls._handle_resize()
+
+      if cls.detect_terminal_resize:
+        # Respond to SIGWINCH event to detect resizing
+        signal.signal(signal.SIGWINCH, cls._handle_resize)
+
+  @classmethod
+  def _handle_resize(cls, signum=None, frame=None):
+    """
+      Catch resize signals from the terminal.
+    """
+    cls._terminal_width = int(os.environ.get('COLUMNS', cls.DEFAULT_WIDTH)) - 1
+    cls._message_format = '%%-%ds\r' % cls._terminal_width
