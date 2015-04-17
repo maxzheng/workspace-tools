@@ -5,7 +5,13 @@ import os
 import re
 import sys
 
-from workspace.scm import is_repo, repo_check, product_name, repo_path
+from localconfig import LocalConfig
+from workspace.config import config, product_groups, USER_CONFIG_FILE
+
+from workspace.commands.checkout import checkout
+from workspace.commands.helpers import expand_product_groups
+from workspace.commands.test import test
+from workspace.scm import is_repo, repo_check, product_name, repo_path, product_path
 from workspace.utils import split_doc
 
 
@@ -254,6 +260,7 @@ def setup_setup_parser(subparsers):
   setup_parser = subparsers.add_parser('setup', description=doc, formatter_class=argparse.RawDescriptionHelpFormatter,
                                        help='Setup workspace or product environment')
   group = setup_parser.add_mutually_exclusive_group(required=True)
+  group.add_argument('product_group', nargs='?', help=docs['product_group'])
   group.add_argument('--product', action='store_true', help=docs['product'])
   group.add_argument('--commands', action='store_true', help=docs['commands'])
   group.add_argument('-a', '--commands-with-aliases', action='store_true', help=docs['commands_with_aliases'])
@@ -263,10 +270,12 @@ def setup_setup_parser(subparsers):
   return setup_parser
 
 
-def setup(product=False, commands=None, commands_with_aliases=None, uninstall=False, additional_commands=None, **kwargs):
+def setup(product_group=None, product=False, commands=None, commands_with_aliases=None, uninstall=False, additional_commands=None, checkout_product=None, test_product=None, **kwargs):
   """
   Sets up workspace or product environment.
 
+  :param str product_group: Setup product group by checking them out and running any setup scripts as defined
+                            in [setup] section of workspace.cfg
   :param bool product: Initialize product by setting up tox with py27, style, and coverage test environments.
                        Also create setup.py, README.rst, and src / test directories if they don't exist.
   :param bool commands: Add convenience bash function for certain commands, such as checkout to run
@@ -275,12 +284,69 @@ def setup(product=False, commands=None, commands_with_aliases=None, uninstall=Fa
   :param bool commands_with_aliases: Same as --commands plus add shortcut aliases, like "co" for checkout.
                                      This is for those developers that want to get as much done with the least
                                      key strokes - true efficienist! ;)
+  :param callable checkout_product: Callable to checkout a list of product or product group
+  :param callable test_product: Callable to test a product
   :param bool uninstall: Uninstall all functions/aliases.
   """
-  if product:
+  if product_group:
+    setup_product_group(product_group, checkout_product, test_product)
+  elif product:
     setup_product()
   else:
     setup_workspace(commands, commands_with_aliases, uninstall, additional_commands)
+
+
+def setup_product_group(group, checkout_product=None, test_product=None):
+  if is_repo():
+    log.error('This should be run from your workspace directory and not within a product repo')
+    sys.exit(1)
+
+  if group not in product_groups():
+    log.error('Product group "%s" is not defined in workspace.cfg', group)
+    sys.exit(1)
+
+  if not checkout_product:
+    checkout_product = checkout
+
+  log.info('Setting up %s products', group)
+
+  # Checkout product
+  checkout_product([group])
+
+  # Add to editable_products
+  user_config = LocalConfig(USER_CONFIG_FILE, compact_form=True)
+  not_set = not user_config.get('test', 'editable_products', None)
+  if not_set or group not in user_config.test.editable_products:
+    if not_set:
+      if 'test' not in user_config:
+        user_config.add_section('test')
+      user_config.test.editable_products = group
+    else:
+      products = user_config.test.editable_products.split()
+      products.append(group)
+      user_config.test.editable_products = ' '.join(sorted(products))
+
+    user_config.save()
+    log.info('Added "%s" to editable_products in %s', group, USER_CONFIG_FILE)
+
+  # Develop the environment
+  if not test_product:
+    test_product = test
+  current_dir = os.getcwd()
+
+  for product in expand_product_groups([group]):
+    log.info('Developing environment for %s', product)
+    try:
+      repo = product_path(product)
+      os.chdir(repo)
+      test_product(redevelop=True, install_only=True)
+
+    except Exception as e:
+      log.error('Error occurred when developing %s: %s', product, e)
+
+    finally:
+      os.chdir(current_dir)
+
 
 
 def setup_product():
