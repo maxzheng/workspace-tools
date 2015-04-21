@@ -311,6 +311,43 @@ def setup_product_group(group, checkout_product=None, test_product=None):
 
   log.info('Setting up %s products', group)
 
+  # Checkout product
+  checkout_product([group])
+
+  # Add to editable_products
+  user_config = LocalConfig(USER_CONFIG_FILE, compact_form=True)
+  not_set = not user_config.get('test', 'editable_products', None)
+  if not_set or group not in user_config.test.editable_products:
+    if not_set:
+      if 'test' not in user_config:
+        user_config.add_section('test')
+      user_config.test.editable_products = group
+    else:
+      products = user_config.test.editable_products.split()
+      products.append(group)
+      user_config.test.editable_products = ' '.join(sorted(products))
+
+    user_config.save()
+    log.info('Added "%s" to editable_products in %s', group, USER_CONFIG_FILE)
+
+  # Develop the environment
+  if not test_product:
+    test_product = test
+  current_dir = os.getcwd()
+
+  for product in expand_product_groups([group]):
+    log.info('Developing environment for %s', product)
+    try:
+      repo = product_path(product)
+      os.chdir(repo)
+      test_product(redevelop=True, install_only=True)
+
+    except Exception as e:
+      log.error('Error occurred when developing %s: %s', product, e)
+
+    finally:
+      os.chdir(current_dir)
+
   # Run setup.ws
   exports = {}
   products = expand_product_groups([group])
@@ -357,45 +394,6 @@ def setup_product_group(group, checkout_product=None, test_product=None):
       fp.write('  unset deactivate_%s\n' % group)
       fp.write('}\n')
     log.info('Created ./%s. To activate, run: source %s. To deactivate, run: deactivate_%s', activate_group, activate_group, group)
-
-  exit('here')
-
-  # Checkout product
-  checkout_product([group])
-
-  # Add to editable_products
-  user_config = LocalConfig(USER_CONFIG_FILE, compact_form=True)
-  not_set = not user_config.get('test', 'editable_products', None)
-  if not_set or group not in user_config.test.editable_products:
-    if not_set:
-      if 'test' not in user_config:
-        user_config.add_section('test')
-      user_config.test.editable_products = group
-    else:
-      products = user_config.test.editable_products.split()
-      products.append(group)
-      user_config.test.editable_products = ' '.join(sorted(products))
-
-    user_config.save()
-    log.info('Added "%s" to editable_products in %s', group, USER_CONFIG_FILE)
-
-  # Develop the environment
-  if not test_product:
-    test_product = test
-  current_dir = os.getcwd()
-
-  for product in expand_product_groups([group]):
-    log.info('Developing environment for %s', product)
-    try:
-      repo = product_path(product)
-      os.chdir(repo)
-      test_product(redevelop=True, install_only=True)
-
-    except Exception as e:
-      log.error('Error occurred when developing %s: %s', product, e)
-
-    finally:
-      os.chdir(current_dir)
 
 
 def setup_product():
