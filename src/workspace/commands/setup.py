@@ -6,13 +6,13 @@ import re
 import sys
 
 from localconfig import LocalConfig
-from workspace.config import config, product_groups, USER_CONFIG_FILE
+from workspace.config import product_groups, USER_CONFIG_FILE
 
 from workspace.commands.checkout import checkout
 from workspace.commands.helpers import expand_product_groups
 from workspace.commands.test import test
 from workspace.scm import is_repo, repo_check, product_name, repo_path, product_path
-from workspace.utils import split_doc
+from workspace.utils import split_doc, run
 
 
 log = logging.getLogger(__name__)
@@ -270,12 +270,13 @@ def setup_setup_parser(subparsers):
   return setup_parser
 
 
-def setup(product_group=None, product=False, commands=None, commands_with_aliases=None, uninstall=False, additional_commands=None, checkout_product=None, test_product=None, **kwargs):
+def setup(product_group=None, product=False, commands=None, commands_with_aliases=None, uninstall=False,
+          additional_commands=None, checkout_product=None, test_product=None, **kwargs):
   """
   Sets up workspace or product environment.
 
-  :param str product_group: Setup product group by checking them out and running any setup scripts as defined
-                            in [setup] section of workspace.cfg
+  :param str product_group: Setup product group by checking them out, developing them, and running any setup scripts as
+                            defined by setup.ws in each product.
   :param bool product: Initialize product by setting up tox with py27, style, and coverage test environments.
                        Also create setup.py, README.rst, and src / test directories if they don't exist.
   :param bool commands: Add convenience bash function for certain commands, such as checkout to run
@@ -309,6 +310,55 @@ def setup_product_group(group, checkout_product=None, test_product=None):
     checkout_product = checkout
 
   log.info('Setting up %s products', group)
+
+  # Run setup.ws
+  exports = {}
+  products = expand_product_groups([group])
+  for product in products:
+    repo = product_path(product)
+    setup_ws = os.path.join(repo, 'setup.ws')
+    if os.path.exists(setup_ws):
+      log.info('Processing setup.ws for %s', product)
+      setup = LocalConfig(setup_ws)
+      setup._parser.optionxform = str
+
+      if 'scripts' in setup:
+        cwd = os.getcwd()
+        try:
+          os.chdir(repo)
+          for name, script in setup.scripts:
+            log.info('Running %s', name)
+            run(['bash', '-c', '; '.join(filter(None, script.split('\n')))])
+        except Exception as e:
+          log.error('Error occurred running script: %s', e)
+        finally:
+          os.chdir(cwd)
+
+      if 'exports' in setup:
+        for name, value in setup.exports:
+          exports[name] = value
+
+  if exports:
+    activate_group = 'activate_%s' % group
+    with open(activate_group, 'w') as fp:
+      for name in sorted(exports):
+        fp.write('export %s=%s\n' % (name, exports[name]))
+      fp.write('\n')
+
+      fp.write('if [[ $PS1 != *{%s}* ]]; then\n' % group)
+      fp.write('  export PS1="{%s}$PS1"\n' % group)
+      fp.write('fi\n\n')
+
+      fp.write('deactivate_%s() {\n' % group)
+      for name in sorted(exports):
+        fp.write('  unset %s\n' % name)
+      fp.write('\n')
+      fp.write('  export PS1=${PS1/{%s\}/}\n' % group)
+      fp.write('  unset deactivate_%s\n' % group)
+      fp.write('}\n')
+    log.info('Created ./%s. To activate, run: source %s. To deactivate, run: deactivate_%s', activate_group, activate_group, group)
+
+  exit('here')
 
   # Checkout product
   checkout_product([group])
@@ -346,7 +396,6 @@ def setup_product_group(group, checkout_product=None, test_product=None):
 
     finally:
       os.chdir(current_dir)
-
 
 
 def setup_product():
