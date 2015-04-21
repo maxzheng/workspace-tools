@@ -1,5 +1,10 @@
-Version 0.8.5
+Version 0.8.6
 ================================================================================
+
+* Support custom product setup with setup.ws
+
+Version 0.8.5
+--------------------------------------------------------------------------------
 
 * Simplify product group bootstrap with setup command
 
