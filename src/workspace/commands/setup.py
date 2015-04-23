@@ -275,8 +275,8 @@ def setup(product_group=None, product=False, commands=None, commands_with_aliase
   """
   Sets up workspace or product environment.
 
-  :param str product_group: Setup product group by checking them out, developing them, and running any setup scripts as
-                            defined by setup.ws in each product.
+  :param str product_group: Setup product group by checking them out, developing them, and running any setup scripts and
+                            exports as defined by setup.cfg in each product.
   :param bool product: Initialize product by setting up tox with py27, style, and coverage test environments.
                        Also create setup.py, README.rst, and src / test directories if they don't exist.
   :param bool commands: Add convenience bash function for certain commands, such as checkout to run
@@ -348,32 +348,33 @@ def setup_product_group(group, checkout_product=None, test_product=None):
     finally:
       os.chdir(current_dir)
 
-  # Run setup.ws
+  # Process setup.cfg
   exports = {}
   products = expand_product_groups([group])
   for product in products:
     repo = product_path(product)
-    setup_ws = os.path.join(repo, 'setup.ws')
-    if os.path.exists(setup_ws):
-      log.info('Processing setup.ws for %s', product)
-      setup = LocalConfig(setup_ws)
+    setup_cfg = os.path.join(repo, 'setup.cfg')
+    if os.path.exists(setup_cfg):
+      setup = LocalConfig(setup_cfg)
       setup._parser.optionxform = str
+      if 'scripts' in setup or 'exports' in setup:
+        log.info('Processing scripts/exports in setup.cfg for %s', product)
 
-      if 'scripts' in setup:
-        cwd = os.getcwd()
-        try:
-          os.chdir(repo)
-          for name, script in setup.scripts:
-            log.info('Running %s', name)
-            run(['bash', '-c', '; '.join(filter(None, script.split('\n')))])
-        except Exception as e:
-          log.error('Error occurred running script: %s', e)
-        finally:
-          os.chdir(cwd)
+        if 'scripts' in setup:
+          cwd = os.getcwd()
+          try:
+            os.chdir(repo)
+            for name, script in setup.scripts:
+              log.info('Running %s', name)
+              run(['bash', '-c', '; '.join(filter(None, script.split('\n')))])
+          except Exception as e:
+            log.error('Error occurred running script: %s', e)
+          finally:
+            os.chdir(cwd)
 
-      if 'exports' in setup:
-        for name, value in setup.exports:
-          exports[name] = value
+        if 'exports' in setup:
+          for name, value in setup.exports:
+            exports[name] = value
 
   if exports:
     activate_group = 'activate_%s' % group
