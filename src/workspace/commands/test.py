@@ -24,7 +24,7 @@ def setup_test_parser(subparsers):
   test_parser.add_argument('-k', metavar='NAME_PATTERN', dest='match_test', help=docs['match_test'])
   test_parser.add_argument('-n', metavar='NUM_PROCESSES', type=int, dest='num_processes', help=docs['num_processes'])
   group = test_parser.add_mutually_exclusive_group()
-  group.add_argument('-d', '--show-dependencies', action='store_true', help=docs['show_dependencies'])
+  group.add_argument('-d', '--show-dependencies', metavar='FILTER', action='store', nargs='?', help=docs['show_dependencies'], const=True)
   group.add_argument('-t', '--test-dependents', action='store_true', help=docs['test_dependents'])
   group.add_argument('-r', '--redevelop', action='store_true', help=docs['redevelop'])
   group.add_argument('-R', '--recreate', action='store_true', help=docs['recreate'])
@@ -189,7 +189,7 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
 
   if show_dependencies:
     for env in envs:
-      show_installed_dependencies(tox, env)
+      show_installed_dependencies(tox, env, filter_name=show_dependencies)
 
   elif redevelop or recreate:
     if tox_cmd:
@@ -303,7 +303,7 @@ def strip_version_from_entry_scripts(tox, env):
       log.debug('Removed version spec from entry script(s): %s', ', '.join(removed_from))
 
 
-def show_installed_dependencies(tox, env, return_output=False):
+def show_installed_dependencies(tox, env, return_output=False, filter_name=None):
   script_template = """
 import json
 import os
@@ -314,6 +314,7 @@ import sys
 package = '%s'
 json_output = %s
 env = '%s'
+filter_name = '%s'
 
 cwd = os.getcwd()
 workspace_dir = os.path.dirname(cwd)
@@ -340,6 +341,8 @@ def strip_cwd(dir):
   return dir
 
 for lib in sorted(libs):
+  if filter_name and filter_name not in lib:
+    continue
   try:
     dist = pkg_resources.get_distribution(lib)
     if json_output:
@@ -362,7 +365,8 @@ else:
 """
 
   name = product_name(tox.repo)
-  script = script_template % (name, return_output, env)
+  filter_name = isinstance(filter_name, str) and filter_name or ''
+  script = script_template % (name, return_output, env, filter_name)
 
   python = tox.bindir(env, 'python')
 
@@ -406,6 +410,8 @@ def install_editable_dependencies(tox, env, silent, debug):
       run([pip, 'uninstall', lib, '-y'], raises=False, silent=not debug)
 
       lib_path = product_path(lib)
+      if os.path.exists(os.path.join(lib_path, lib)):
+        lib_path = os.path.join(lib_path, lib)
       run([pip, 'install', '--editable', lib_path], silent=not debug)
 
 
