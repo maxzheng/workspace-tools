@@ -1,5 +1,10 @@
-Version 0.8.8
+Version 0.8.9
 ================================================================================
+
+* Add filter option for showing installed dependencies
+
+Version 0.8.8
+--------------------------------------------------------------------------------
 
 * Use setup.cfg instead of setup.ws
 
