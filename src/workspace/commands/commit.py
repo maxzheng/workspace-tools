@@ -26,7 +26,7 @@ def setup_commit_parser(subparsers):
   return commit_parser
 
 
-def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=False, move=None, skip_auto_branch=False, files=None, **kwargs):
+def commit(msg=None, branch=None, amend=False, push=False, dummy=False, dummy_msg='Empty commit to trigger build', discard=False, move=None, skip_auto_branch=False, files=None, **kwargs):
   """
   Commit all changes locally, including new files.
 
@@ -37,6 +37,7 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
   :param bool push: Push the current branch after commit
   :param bool dummy: Perform a dummy commit without any changes on master branch. This implies --push.
                      Other options are ignored.
+  :param str dummy_msg: Message to use for dummy commit.
   :param int discard: Discard last commit, or branch if there are no more commits. Use multiple times to discard multiple commits.
                       Other options are ignored.
   :param str move: Move last commit to branch. Other options are ignored.
@@ -49,7 +50,7 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
   if dummy:
     checkout_branch('master')
     update_repo()  # Needs to be updated otherwise empty commit below gets erased in push_branch when update is called
-    local_commit('Empty commit to trigger build', empty=True)
+    local_commit(dummy_msg, empty=True)
     push_branch(skip_precommit=True)
 
   elif discard or move:
