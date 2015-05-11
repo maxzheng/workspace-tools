@@ -1,5 +1,10 @@
-Version 0.8.9
+Version 0.8.10
 ================================================================================
+
+* Allow dummy commit msg to be changed
+
+Version 0.8.9
+--------------------------------------------------------------------------------
 
 * Add filter option for showing installed dependencies
 
