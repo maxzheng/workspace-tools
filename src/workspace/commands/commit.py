@@ -51,6 +51,8 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
     update_repo()  # Needs to be updated otherwise empty commit below gets erased in push_branch when update is called
     if not msg:
       msg = 'Empty commit to trigger build'
+    elif not msg.startswith('Empty commit'):
+      msg = 'Empty commit. %s' % msg
     local_commit(msg, empty=True)
     push_branch(skip_precommit=True)
 
