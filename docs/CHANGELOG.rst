@@ -1,5 +1,10 @@
-Version 0.8.11
+Version 0.8.12
 ================================================================================
+
+* Use pip to list installed dependencies instead of pkg_resources
+
+Version 0.8.11
+--------------------------------------------------------------------------------
 
 * Use existing msg field for dummy msg
 
