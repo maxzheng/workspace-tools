@@ -307,7 +307,7 @@ def show_installed_dependencies(tox, env, return_output=False, filter_name=None)
   script_template = """
 import json
 import os
-import pkg_resources
+import pip
 import sys
 
 # Required params to run this script
@@ -320,10 +320,7 @@ cwd = os.getcwd()
 workspace_dir = os.path.dirname(cwd)
 
 try:
-  libs = [r.key for r in pkg_resources.get_distribution(package).requires()]
-except pkg_resources.DistributionNotFound as e:
-  print "%%s: %%s is not installed" %% (env, e)
-  sys.exit(1)
+  libs = [(p.key, p.version, p.location) for p in pip.get_installed_distributions()]
 except Exception as e:
   print e
   sys.exit(1)
@@ -340,23 +337,13 @@ def strip_cwd(dir):
     dir = os.path.join('..', dir[len(workspace_dir):].lstrip('/'))
   return dir
 
-for lib in sorted(libs):
+for lib, version, location in sorted(libs):
   if filter_name and filter_name not in lib:
     continue
-  try:
-    dist = pkg_resources.get_distribution(lib)
-    if json_output:
-      output.append((lib, dist.version, dist.location))
-    else:
-      output.append('  %%-25s %%-10s  %%s' %% (lib, dist.version, strip_cwd(dist.location)))
-  except pkg_resources.DistributionNotFound:
-    if json_output:
-      output.append((lib, None, None))
-    else:
-      print '  %%s is not installed' %% lib
-  except Exception as e:
-    if not json_output:
-      print '  %%s' %% e
+  if json_output:
+    output.append((lib, version, location))
+  else:
+    output.append('  %%-25s %%-10s  %%s' %% (lib, version, strip_cwd(location)))
 
 if json_output:
   print json.dumps(output)
