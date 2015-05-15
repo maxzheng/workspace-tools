@@ -1,5 +1,4 @@
 import logging
-import sys
 
 from bumper import BumperDriver
 
@@ -7,7 +6,7 @@ from workspace.commands.commit import commit
 from workspace.commands.update import update
 from workspace.commands.helpers import expand_product_groups
 from workspace.config import config
-from workspace.scm import checkout_branch, all_branches, repo_check, is_git_repo
+from workspace.scm import checkout_branch, repo_check, is_git_repo
 from workspace.utils import split_doc
 
 
@@ -30,7 +29,7 @@ def setup_bump_parser(subparsers):
   return bump_parser
 
 
-def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models=None, force=False, dry_run=False, **kwargs):
+def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models=None, force=False, show_filter=True, dry_run=False, **kwargs):
   """
     Bump dependency versions in requirements.txt, pinned.txt, or any specified file.
 
@@ -52,10 +51,9 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
   """
   repo_check()
 
+  config.commit.auto_branch_from_commit_words = 1
+
   if not append and is_git_repo():
-    if not dry_run and 'bump' in all_branches():
-      log.error('There is already a "bump" branch. Please commit or delete it first before doing another bump.')
-      sys.exit(1)
     checkout_branch('master')
 
   if not names:
@@ -63,7 +61,7 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
 
   filter_requirements = expand_product_groups(names)
 
-  if filter_requirements:
+  if show_filter and filter_requirements:
     log.info('Only bumping: %s', ' '.join(filter_requirements))
 
   if isinstance(file, list):
@@ -95,8 +93,8 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
         commit_msg = msg + '\n\n' + commit_msg
 
       if not dry_run and is_git_repo():
-        branch = None if append else 'bump'
-        commit(msg=commit_msg, branch=branch, files=messages.keys(), skip_auto_branch=True)
+        commit(msg=commit_msg, files=messages.keys())
+
   except Exception:
     bumper.reverse()
     raise
