@@ -47,6 +47,8 @@
   # Remove products that have not been modified since given days ago
   remove_products_older_than_days =
 
+  # Remove all products except for these ones (product or group)
+  remove_all_products_except =
 
   ###########################################################################################################
   # Settings for commit command
