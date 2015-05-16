@@ -25,7 +25,7 @@ def clean(**kwargs):
   log.info('Cleaning %s', path)
 
   log.info('Removing build/dist folders')
-  silent_run("rm -rf */build */dist */docs/_build */*/build", cwd=path, shell=True)
+  silent_run("rm -rf */build */dist */docs/_build", cwd=path, shell=True)
 
   log.info('Removing *.pyc files')
   silent_run("find . -type d \( -path '*/.tox' -o -path '*/mppy-*' \) -prune -o -name *.pyc -exec rm {} \;", cwd=path, shell=True)
