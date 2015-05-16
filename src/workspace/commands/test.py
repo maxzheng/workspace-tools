@@ -145,6 +145,11 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
         return 'None'
 
     repo_results = parallel_call(test_repo, test_args, callback=test_done, show_progress=show_remaining, progress_title='Remaining:')
+
+    for _, result in repo_results.values():
+      if 'failed' in result:
+        sys.exit(1)
+
     return dict(repo_results.values())
 
   if not repo:

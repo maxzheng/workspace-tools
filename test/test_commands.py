@@ -67,10 +67,6 @@ def test_bump():
       requirements = fp.read()
       assert '# Comment for localconfig\nlocalconfig==%s\n# Comment for requests\nrequests<0.1\n' % version == requirements
 
-    # Exisitng bump branch
-    with pytest.raises(SystemExit):
-      bump()
-
 
 def test_clean():
   with temp_dir():

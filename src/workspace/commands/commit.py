@@ -6,6 +6,7 @@ from workspace.config import config
 from workspace.scm import local_commit, add_files, git_repo_check, checkout_branch,\
     create_branch, update_repo, all_branches, diff_branch, current_branch, remove_branch, hard_reset, commit_logs
 from workspace.commands.push import push as push_branch
+from workspace.commands.test import test as run_test
 from workspace.utils import split_doc
 
 log = logging.getLogger(__name__)
@@ -17,6 +18,7 @@ def setup_commit_parser(subparsers):
   commit_parser.add_argument('msg', nargs='?', help=docs['msg'])
   commit_parser.add_argument('-b', '--branch', help=docs['branch'])
   commit_parser.add_argument('-a', '--amend', action='store_true', help=docs['amend'])
+  commit_parser.add_argument('-t', '--test', action='count', help=docs['test'])
   commit_parser.add_argument('-p', '--push', action='store_true', help=docs['push'])
   commit_parser.add_argument('-d', '--dummy', action='store_true', help=docs['dummy'])
   commit_parser.add_argument('-D', '--discard', action='count', help=docs['discard'])
@@ -26,7 +28,7 @@ def setup_commit_parser(subparsers):
   return commit_parser
 
 
-def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=False, move=None, skip_auto_branch=False, files=None, **kwargs):
+def commit(msg=None, branch=None, amend=False, test=None, push=False, dummy=False, discard=False, move=None, skip_auto_branch=False, files=None, test_command=None, return_test_output=False, **kwargs):
   """
   Commit all changes locally, including new files.
 
@@ -34,12 +36,15 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
                   That behavior can be configured with [commit] auto_branch_from_commit_words
   :param str branch: Create or use existing branch for commit. When creating, it always creates from master branch.
   :param bool amend: Amend last commit with any new changes made
+  :param bool test: Run tests. Repeat twice (-tt) to test dependents too.
   :param bool push: Push the current branch after commit
   :param bool dummy: Perform a dummy commit without any changes on master branch. This implies --push.
                      Other options are ignored.
   :param int discard: Discard last commit, or branch if there are no more commits. Use multiple times to discard multiple commits.
                       Other options are ignored.
   :param str move: Move last commit to branch. Other options are ignored.
+  :param callable test_command: Alternative test command to run
+  :param bool return_test_output: Return test output
   :param bool skip_auto_branch: Skip automatic branch creation from commit msg
   :param list files: List of files to add instead of all files.
   """
@@ -95,6 +100,14 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
         log.error('Odd. No commit hash found in: %s', changes[0])
 
   else:
+    test_output = None
+
+    if test:
+      log.info('Running tests')
+      if not test_command:
+        test_command = run_test
+      test_output = test_command(return_output=return_test_output, test_dependents=test > 1)
+
     branches = all_branches()
     cur_branch = branches and branches[0]
 
@@ -118,6 +131,8 @@ def commit(msg=None, branch=None, amend=False, push=False, dummy=False, discard=
 
     if push:
       push_branch()
+
+    return test_output
 
 
 def branch_for_msg(msg, words=3, branches=None):
