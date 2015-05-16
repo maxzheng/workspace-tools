@@ -1,5 +1,14 @@
-Version 0.8.12
+Version 0.8.13
 ================================================================================
+
+* Revert removing */*/build dir during clean
+* Add --test option to run tests before committing
+* Use auto branch when bumping to support multiple bumps
+* Add remove_all_products_except option for clean command
+* Ensure dummy commit msg starts with "Empty commit"
+
+Version 0.8.12
+--------------------------------------------------------------------------------
 
 * Use pip to list installed dependencies instead of pkg_resources
 
