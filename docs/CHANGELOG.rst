@@ -1,5 +1,11 @@
-Version 0.8.13
+Version 0.8.14
 ================================================================================
+
+* Add install-only modifier for redevelop/recreate
+* Update activate alias to work in different situations
+
+Version 0.8.13
+--------------------------------------------------------------------------------
 
 * Revert removing */*/build dir during clean
 * Add --test option to run tests before committing
