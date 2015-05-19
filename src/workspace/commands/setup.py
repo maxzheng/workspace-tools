@@ -26,13 +26,22 @@ WS_SETUP_END = "# workspace setup - end"
 WS_FUNCTION_TEMPLATE = """\
 alias _wst=%s
 
-function ws ()
-{
+function ws() {
   if [ $# -gt 0 ]; then
     _wst "$@";
   else
     cd %s
     ls
+  fi
+}
+
+function activate() {
+  if [ -e activate ]; then
+    source activate
+  elif [ -e ${PWD##*/}/activate ]; then
+    source ${PWD##*/}/activate
+  else
+    source .tox/${PWD##*/}/bin/activate
   fi
 }
 
@@ -87,7 +96,7 @@ function open_files_from_last_command() {
 COMMAND_FUNCTION_TEMPLATE = 'function %s() { _wst %s "$@"; }\n'
 COMMAND_ALIAS_TEMPLATE = 'alias %s=%s\n'
 COMMANDS = {
-  'a': " 'source .tox/${PWD##*/}/bin/activate'",  # Must use single quote for $PWD##* to work properly
+  'a': "'activate'",
   'd': "'deactivate'",
   'tv': "'open_files_from_last_command'  # from ag/find/which [t]o [v]im",
 
