@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import pkg_resources
@@ -28,6 +29,7 @@ def setup_test_parser(subparsers):
   group.add_argument('-t', '--test-dependents', action='store_true', help=docs['test_dependents'])
   group.add_argument('-r', '--redevelop', action='store_true', help=docs['redevelop'])
   group.add_argument('-R', '--recreate', action='store_true', help=docs['recreate'])
+  test_parser.add_argument('-o', action='store_true', dest='install_only', help=argparse.SUPPRESS)
 
   test_parser.set_defaults(command=test)
 
@@ -36,7 +38,8 @@ def setup_test_parser(subparsers):
 
 def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=False, is_dependent=None, run_test=None, redevelop=False,
          recreate=False, match_test=None, return_output=False, num_processes=None, tox_cmd=None, tox_ini=None,
-         tox_commands={}, skip_editable_install=False, silent=False, debug=False, extra_args=None, **kwargs):
+         tox_commands={}, skip_editable_install=False, silent=False, debug=False, extra_args=None,
+         install_only=False, **kwargs):
   """
   Run tests and manage test environments for product.
 
@@ -58,7 +61,10 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
   :param bool redevelop: Redevelop the test environment by installing on top of existing one.
                          This is implied if test environment does not exist, or whenever requirements.txt or
                          pinned.txt is modified after the environment was last updated.
+                         Use -ro to do redevelop only without running tests.
   :param bool recreate: Completely recreate the test environment by removing the existing one first.
+                        Use -Ro to do recreate only without running tests.
+  :param bool install_only: Modifier for redevelop/recreate. Perform install only without running test.
   :param bool match_test: Only run tests with method name that matches pattern
   :param bool return_output: Return test output instead of printing to stdout
   :param str num_processes: Number of processes to use when running tests in parallel
@@ -207,6 +213,9 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
 
     if recreate:
       cmd.append('-r')
+
+    if install_only:
+      cmd.append('--notest')
 
     output = run(cmd, cwd=repo, raises=False, silent=silent, return_output=return_output)
 
