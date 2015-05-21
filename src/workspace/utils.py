@@ -74,7 +74,7 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
   :param str cwd: Change directory to cwd before running
   :param bool/int silent: Suppress stdout/stderr. If True/1, completely silent. If 2, print cmd output on error.
   :param bool return_output: Return the command output. When True, silent defaults to True. Set silent=False to see output.
-                             If 2, always return output regardless of error.
+                             If set to 2, always return output regardless of error, otherwise returns False on error
   :param bool raises: Raise an exception if command exits with an error code.
   :param dict subprocess_args: Additional args to pass to subprocess
   :return: Output or None depending on option selected
