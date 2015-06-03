@@ -217,7 +217,7 @@ def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=F
     if install_only:
       cmd.append('--notest')
 
-    output = run(cmd, cwd=repo, raises=False, silent=silent, return_output=return_output)
+    output = run(cmd, cwd=repo, raises=not return_output, silent=silent, return_output=return_output)
 
     if not output:
       sys.exit(1)

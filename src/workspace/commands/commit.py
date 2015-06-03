@@ -1,5 +1,6 @@
 import logging
 import re
+import sys
 
 from workspace.config import config
 
@@ -107,6 +108,9 @@ def commit(msg=None, branch=None, amend=False, test=None, push=False, dummy=Fals
       if not test_command:
         test_command = run_test
       test_output = test_command(return_output=return_test_output, test_dependents=test > 1)
+
+      if not test_output:
+        sys.exit(1)
 
     branches = all_branches()
     cur_branch = branches and branches[0]
