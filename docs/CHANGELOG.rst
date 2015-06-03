@@ -1,5 +1,11 @@
-Version 0.8.14
+Version 0.8.15
 ================================================================================
+
+* Exit early if test failed before commit
+* Update doc
+
+Version 0.8.14
+--------------------------------------------------------------------------------
 
 * Add install-only modifier for redevelop/recreate
 * Update activate alias to work in different situations
