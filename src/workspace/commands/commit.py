@@ -103,7 +103,7 @@ def commit(msg=None, branch=None, amend=False, test=None, push=False, dummy=Fals
   else:
     test_output = None
 
-    if test:
+    if not amend and test:
       log.info('Running tests')
       if not test_command:
         test_command = run_test
@@ -132,6 +132,15 @@ def commit(msg=None, branch=None, amend=False, test=None, push=False, dummy=Fals
 
     add_files(files=files)
     local_commit(msg, amend)
+
+    if amend and test:
+      log.info('Running tests')
+      if not test_command:
+        test_command = run_test
+      test_output = test_command(return_output=return_test_output, test_dependents=test > 1)
+
+      if not test_output:
+        sys.exit(1)
 
     if push:
       push_branch()
