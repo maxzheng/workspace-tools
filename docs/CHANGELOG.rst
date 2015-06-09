@@ -1,5 +1,10 @@
-Version 0.8.15
+Version 0.8.16
 ================================================================================
+
+* Amend commit before running tests as tests might run long
+
+Version 0.8.15
+--------------------------------------------------------------------------------
 
 * Exit early if test failed before commit
 * Update doc
