@@ -96,12 +96,11 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
 
   try:
     if silent or return_output:
-      p = subprocess.Popen(cmd, cwd=cwd, bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **subprocess_args)
+      p = subprocess.Popen(cmd, cwd=cwd, bufsize=0, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **subprocess_args)
       exit_code = -1
 
       if silent:
-        output, error = p.communicate()
-        output += error
+        output, _ = p.communicate()
         exit_code = p.returncode
       else:
         output = ''
@@ -134,6 +133,7 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
 
   except Exception as e:
     if raises:
+      log.debug(e, exc_info=True)
       raise RunError('Command "%s" could not be run because %s' % (cmd_str, e))
 
   # We only get here if exit code != 0
