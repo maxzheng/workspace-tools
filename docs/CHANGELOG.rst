@@ -1,5 +1,11 @@
-Version 0.8.16
+Version 0.8.17
 ================================================================================
+
+* Add repo_url method to get remote repo url
+* Redirect STDERR to STDOUT when running command with silent/return_output option
+
+Version 0.8.16
+--------------------------------------------------------------------------------
 
 * Amend commit before running tests as tests might run long
 
