@@ -1,5 +1,10 @@
-Version 0.8.17
+Version 0.8.18
 ================================================================================
+
+* Check another directory for setup.cfg
+
+Version 0.8.17
+--------------------------------------------------------------------------------
 
 * Add repo_url method to get remote repo url
 * Redirect STDERR to STDOUT when running command with silent/return_output option
