@@ -362,7 +362,12 @@ def setup_product_group(group, checkout_product=None, test_product=None):
   products = expand_product_groups([group])
   for product in products:
     repo = product_path(product)
-    setup_cfg = os.path.join(repo, 'setup.cfg')
+
+    if os.path.join(repo, product, 'setup.cfg'):
+      setup_cfg = os.path.join(repo, product, 'setup.cfg')
+    else:
+      setup_cfg = os.path.join(repo, 'setup.cfg')
+
     if os.path.exists(setup_cfg):
       setup = LocalConfig(setup_cfg)
       setup._parser.optionxform = str
