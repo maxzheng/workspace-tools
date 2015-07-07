@@ -324,6 +324,9 @@ def setup_product_group(group, checkout_product=None, test_product=None):
   checkout_product([group])
 
   # Add to editable_products
+  config_dir = os.path.expanduser(os.path.dirname(USER_CONFIG_FILE))
+  if not os.path.exists(config_dir):
+    os.makedirs(config_dir)
   user_config = LocalConfig(USER_CONFIG_FILE, compact_form=True)
   not_set = not user_config.get('test', 'editable_products', None)
   if not_set or group not in user_config.test.editable_products:
