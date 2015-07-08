@@ -1,5 +1,11 @@
-Version 0.8.18
+Version 0.8.19
 ================================================================================
+
+* Check for branches before removing repo when cleaning
+* Create config dir if not exists
+
+Version 0.8.18
+--------------------------------------------------------------------------------
 
 * Check another directory for setup.cfg
 
