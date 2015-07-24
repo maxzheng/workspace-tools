@@ -1,41 +1,41 @@
 import os
 import pytest
 
-from workspace.commands.checkout import checkout
 from test_stubs import temp_dir
 
 
-def test_checkout_with_alias():
+def test_checkout_with_alias(run):
   with temp_dir():
     with pytest.raises(SystemExit):
-      checkout(['foobazbar-no-such-repo'])
+      run('checkout foobazbar-no-such-repo')
 
-    checkout(['mzheng-repos'])
-    checkout(['clicast'])
+    run('checkout mzheng-repos')
+    assert os.path.exists('workspace-tools')
+
+    run('checkout clicast')
+    assert os.path.exists('clicast')
 
 
-def test_checkout_with_http_git():
+def test_checkout_with_http_git(run):
   with temp_dir():
-    checkout(['https://github.com/maxzheng/clicast.git'])
+    run('checkout https://github.com/maxzheng/clicast.git')
     assert os.path.exists('clicast/README.rst')
 
 
-def test_checkout_with_git():
+def test_checkout_with_git(run):
   with temp_dir():
-    checkout(['git@github.com:maxzheng/clicast.git'])
+    run('checkout git@github.com:maxzheng/clicast.git')
     assert os.path.exists('clicast/README.rst')
 
 
-def test_checkout_with_svn():
+def test_checkout_with_svn(run):
   with temp_dir():
-    checkout(['https://github.com/maxzheng/localconfig/trunk'])
+    run('checkout https://github.com/maxzheng/localconfig/trunk')
     assert os.path.exists('localconfig/README.rst')
 
 
-def test_checkout_with_multiple_repos():
+def test_checkout_with_multiple_repos(run):
   with temp_dir():
-    checkout(['https://github.com/maxzheng/localconfig.git', 'https://github.com/maxzheng/remoteconfig.git'])
+    run('checkout https://github.com/maxzheng/localconfig.git https://github.com/maxzheng/remoteconfig.git')
     assert os.path.exists('localconfig/README.rst')
     assert os.path.exists('remoteconfig/README.rst')
-
-

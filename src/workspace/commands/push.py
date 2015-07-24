@@ -1,48 +1,45 @@
 import logging
 
-from workspace.scm import checkout_branch, remove_branch, git_repo_check, current_branch, update_repo,\
-    push_repo, merge_branch, diff_branch, extract_commit_msgs, update_branch
-from workspace.utils import split_doc
+from workspace.commands import AbstractCommand
+from workspace.scm import (checkout_branch, remove_branch, git_repo_check, current_branch, update_repo,
+                           push_repo, merge_branch, update_branch)
 
 
 log = logging.getLogger(__name__)
 
 
-def setup_push_parser(subparsers):
-  doc, docs = split_doc(push.__doc__)
-  push_parser = subparsers.add_parser('push', description=doc, help=doc)
-  push_parser.add_argument('branch', nargs='?', help=docs['push'])
-  push_parser.set_defaults(command=push)
-
-  return push_parser
-
-
-def push(branch=None, **kwargs):
+class Push(AbstractCommand):
   """
-  Push changes for branch
+    Push changes for branch
 
-  :param bool push: The branch to push. Defaults to current branch.
+    :param bool push: The branch to push. Defaults to current branch.
   """
+  @classmethod
+  def arguments(cls):
+    _, docs = cls.docs()
+    return [cls.make_args('branch', nargs='?', help=docs['push'])]
 
-  git_repo_check()
+  def run(self):
 
-  if not branch:
-    branch = current_branch()
+    git_repo_check()
 
-  log.info('Pushing %s', branch)
+    if not self.branch:
+      self.branch = current_branch()
 
-  checkout_branch('master')
-
-  update_repo()
-
-  if branch != 'master':
-    checkout_branch(branch)
-    update_branch()  # Failed rebase can be continued easily than failed merge
+    log.info('Pushing %s', self.branch)
 
     checkout_branch('master')
-    merge_branch(branch)
 
-  push_repo()
+    update_repo()
 
-  if branch != 'master':
-    remove_branch(branch)
+    if self.branch != 'master':
+      checkout_branch(self.branch)
+      update_branch()  # Failed rebase can be continued easily than failed merge
+
+      checkout_branch('master')
+      merge_branch(self.branch)
+
+    push_repo()
+
+    if self.branch != 'master':
+      remove_branch(self.branch)

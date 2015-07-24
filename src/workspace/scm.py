@@ -497,7 +497,7 @@ def repo_url(path=None, name='origin', action='push'):
   """
   cmd = 'git remote -v'
 
-  output = run(cmd, cwd=path, return_output=2)
+  output = run(cmd, cwd=path, return_output=True)
 
   for line in output.split('\n'):
     remote_name, remote_url, remote_action = line.split()

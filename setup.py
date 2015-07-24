@@ -23,7 +23,7 @@ setuptools.setup(
 
   entry_points={
     'console_scripts': [
-      'wst = workspace.controller:main',
+      'wst = workspace.controller:Commander.main',
     ],
   },
 

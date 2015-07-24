@@ -3,10 +3,9 @@ import os
 import re
 import sys
 
-from workspace.commands.update import update
-from workspace.commands.commit import commit
+from workspace.commands import AbstractCommand
 from workspace.scm import repo_check, repo_path, commit_logs, extract_commit_msgs, is_git_repo
-from workspace.utils import silent_run, split_doc
+from workspace.utils import silent_run
 
 
 log = logging.getLogger(__name__)
@@ -15,123 +14,119 @@ PUBLISH_VERSION_PREFIX = 'Publish version '
 IGNORE_CHANGE_RE = re.compile('^(?:Update changelog|Fix tests?)\s*$', flags=re.IGNORECASE)
 
 
-def setup_publish_parser(subparsers):
-  doc, docs = split_doc(publish.__doc__)
-  parser = subparsers.add_parser('publish', description=doc, help=doc)
-  group = parser.add_mutually_exclusive_group()
-  group.add_argument('--minor', action='store_true', help=docs['minor'])
-  group.add_argument('--major', action='store_true', help=docs['major'])
-  parser.set_defaults(command=publish)
-
-  return parser
-
-
-def publish(minor=False, major=False, **kwargs):
+class Publish(AbstractCommand):
   """
-  Bumps version in setup.py (defaults to patch), writes out changelog, builds a source distribution, and uploads with twine.
+    Bumps version in setup.py (defaults to patch), writes out changelog, builds a source distribution, and uploads with twine.
 
-  :param bool minor: Perform a minor publish by bumping the minor version
-  :param bool major: Perform a major publish by bumping the major version
+    :param bool minor: Perform a minor publish by bumping the minor version
+    :param bool major: Perform a major publish by bumping the major version
   """
-  repo_check()
+  @classmethod
+  def arguments(cls):
+    _, docs = cls.docs()
+    return [
+      cls.make_args('--minor', action='store_true', help=docs['minor']),
+      cls.make_args('--major', action='store_true', help=docs['major'])
+    ]
 
-  update(raises=True)
+  def publish(self):
+    if self.minor and self.major:
+      log.error('--minor and --major are mutually exclusive, please use only one.')
+      return
 
-  changes = changes_since_last_publish()
+    repo_check()
 
-  if not changes:
-    log.info('There are no changes since last publish')
-    sys.exit(0)
+    self.commander.run('update', raises=True)
 
-  silent_run('rm -rf dist/*', shell=True, cwd=repo_path())
+    changes = self.changes_since_last_publish()
 
-  new_version = bump_version(minor, major)
-  update_changelog(new_version, changes, minor or major)
+    if not changes:
+      log.info('There are no changes since last publish')
+      sys.exit(0)
 
-  commit(msg=PUBLISH_VERSION_PREFIX + new_version, push=True)
+    silent_run('rm -rf dist/*', shell=True, cwd=repo_path())
 
-  log.info('Building source distribution')
-  silent_run('python setup.py sdist', cwd=repo_path())
+    new_version = self.bump_version()
+    self.update_changelog(new_version, changes, self.minor or self.major)
 
-  log.info('Uploading')
-  silent_run('twine upload dist/*', shell=True, cwd=repo_path())
+    self.commander.run('commit', msg=PUBLISH_VERSION_PREFIX + new_version, push=True)
 
+    log.info('Building source distribution')
+    silent_run('python setup.py sdist', cwd=repo_path())
 
-def changes_since_last_publish():
-  commit_msgs = extract_commit_msgs(commit_logs(limit=100, repo=repo_path()), is_git_repo())
-  changes = []
+    log.info('Uploading')
+    silent_run('twine upload dist/*', shell=True, cwd=repo_path())
 
-  for msg in commit_msgs:
-    if msg.startswith(PUBLISH_VERSION_PREFIX):
-      break
-    if len(msg) < 7 or IGNORE_CHANGE_RE.match(msg):
-      continue
-    changes.append(msg)
+  def changes_since_last_publish(self):
+    commit_msgs = extract_commit_msgs(commit_logs(limit=100, repo=repo_path()), is_git_repo())
+    changes = []
 
-  return changes
+    for msg in commit_msgs:
+      if msg.startswith(PUBLISH_VERSION_PREFIX):
+        break
+      if len(msg) < 7 or IGNORE_CHANGE_RE.match(msg):
+        continue
+      changes.append(msg)
 
+    return changes
 
-def update_changelog(new_version, changes, skip_title_change=False):
-  docs_dir = os.path.join(repo_path(), 'docs')
-  if not os.path.isdir(docs_dir):
-    os.makedirs(docs_dir)
+  def update_changelog(self, new_version, changes, skip_title_change=False):
+    docs_dir = os.path.join(repo_path(), 'docs')
+    if not os.path.isdir(docs_dir):
+      os.makedirs(docs_dir)
 
-  changelog_file = os.path.join(docs_dir, 'CHANGELOG.rst')
-  existing_changes = os.path.exists(changelog_file) and open(changelog_file).read()
-  major_title = '=' * 80
-  minor_title = '-' * 80
+    changelog_file = os.path.join(docs_dir, 'CHANGELOG.rst')
+    existing_changes = os.path.exists(changelog_file) and open(changelog_file).read()
+    major_title = '=' * 80
+    minor_title = '-' * 80
 
-  with open(changelog_file, 'w') as fp:
-    fp.write('Version %s' % new_version + '\n')
-    fp.write(major_title + '\n\n')
+    with open(changelog_file, 'w') as fp:
+      fp.write('Version %s' % new_version + '\n')
+      fp.write(major_title + '\n\n')
 
-    for change in changes:
-      fp.write('* %s\n' % (change.replace('\n', '\n  ')))
+      for change in changes:
+        fp.write('* %s\n' % (change.replace('\n', '\n  ')))
 
-    if existing_changes:
-      fp.write('\n')
-      if not skip_title_change:
-        existing_changes = existing_changes.replace(major_title, minor_title, 1)
-      fp.write(existing_changes)
+      if existing_changes:
+        fp.write('\n')
+        if not skip_title_change:
+          existing_changes = existing_changes.replace(major_title, minor_title, 1)
+        fp.write(existing_changes)
 
+  def bump_version(self):
+    """
+      Bump the version (defaults to patch) in setup.py
+    """
+    setup_file = os.path.join(repo_path(), 'setup.py')
 
-def bump_version(minor=False, major=False):
-  """
-  Bump the version (defaults to patch) in setup.py
+    if not os.path.exists(setup_file):
+      log.error(setup_file + ' does not exist.')
+      sys.exit(1)
 
-  :param bool minor: Bump the minor version instead of patch.
-  :param bool major: Bump the major version instead of patch.
-  """
-  setup_file = os.path.join(repo_path(), 'setup.py')
+    def replace_version(match):
+      global new_version
 
-  if not os.path.exists(setup_file):
-    log.error(setup_file + ' does not exist.')
-    sys.exit(1)
+      version_parts = match.group(2).split('.')
+      i = 0 if self.major else (1 if self.minor else 2)
 
-  def replace_version(match):
-    global new_version
+      while len(version_parts) < i + 1:
+        version_parts.append(0)
 
-    version_parts = match.group(2).split('.')
-    i = 0 if major else (1 if minor else 2)
+      for j in range(i+1, len(version_parts)):
+        version_parts[j] = '0'
 
-    while len(version_parts) < i + 1:
-      version_parts.append(0)
+      version_parts[i] = str(int(version_parts[i]) + 1)
+      new_version = '.'.join(version_parts)
 
-    for j in range(i+1, len(version_parts)):
-      version_parts[j] = '0'
+      return 'version=' + match.group(1) + new_version + match.group(1)
 
-    version_parts[i] = str(int(version_parts[i]) + 1)
-    new_version = '.'.join(version_parts)
+    content = re.sub('version\s*=\s*([\'"])(.*)[\'"]', replace_version, open(setup_file).read())
 
-    return 'version=' + match.group(1) + new_version + match.group(1)
+    with open(setup_file, 'w') as fp:
+      fp.write(content)
 
-  content = re.sub('version\s*=\s*([\'"])(.*)[\'"]', replace_version, open(setup_file).read())
+    if not new_version:
+      log.error('Failed to find "version=" in setup.py to bump version')
+      sys.exit(1)
 
-  with open(setup_file, 'w') as fp:
-    fp.write(content)
-
-  if not new_version:
-    log.error('Failed to find "version=" in setup.py to bump version')
-    sys.exit(1)
-
-  return new_version
+    return new_version

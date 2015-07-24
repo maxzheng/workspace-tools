@@ -2,34 +2,17 @@ import logging
 
 from bumper import BumperDriver
 
-from workspace.commands.commit import commit
-from workspace.commands.update import update
+from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
+from workspace.commands.review import Review
 from workspace.config import config
-from workspace.scm import checkout_branch, repo_check, is_git_repo
-from workspace.utils import split_doc
+from workspace.scm import repo_check, is_git_repo, product_name, current_branch
 
 
 log = logging.getLogger(__name__)
 
 
-def setup_bump_parser(subparsers):
-  doc, docs = split_doc(bump.__doc__)
-
-  bump_parser = subparsers.add_parser('bump', description=doc, help=doc)
-  bump_parser.add_argument('names', nargs='*', help=docs['names'])
-  bump_parser.add_argument('--add', '--require', action='store_true', help=docs['add'])
-  bump_parser.add_argument('-a', '--append', action='store_true', help=docs['append'])
-  bump_parser.add_argument('-m', '--msg', help=docs['msg'])
-  bump_parser.add_argument('--file', help=docs['file'])
-  bump_parser.add_argument('--force', action='store_true', help=docs['force'])
-  bump_parser.add_argument('-n', '--dry-run', action='store_true', help=docs['dry_run'])
-  bump_parser.set_defaults(command=bump)
-
-  return bump_parser
-
-
-def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models=None, force=False, show_filter=True, dry_run=False, **kwargs):
+class Bump(AbstractCommand):
   """
     Bump dependency versions in requirements.txt, pinned.txt, or any specified file.
 
@@ -37,8 +20,10 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
                       Name can be a product group name defined in workspace.cfg.
                       To bump to a specific version instead of latest, append version to name
                       (i.e. requests==1.2.3 or 'requests>=1.2.3'). When > or < is used, be sure to quote.
+    :param int test: Run tests and include results in RB.
+    :param bool push: Wait for 'Ship It' from RB (unless --skip-rb is used) and push the bump (git only)
+    :param bool skip_rb: Skip creating or updating RB
     :param bool add: Add the `names` to the requirements file if they don't exist.
-    :param bool append: Append bump changes to current branch and update existing rb if any (from .git/config)
     :param str msg: Summary commit message
     :param str/list file: Requirement file to bump. Defaults to requirements.txt or pinned.txt
                           that are set by bump.requirement_files in workspace.cfg.
@@ -47,56 +32,105 @@ def bump(names=None, add=False, append=False, msg=None, file=None, bumper_models
     :param bool force: Force a bump even when certain bump requirements are not met.
     :param bool dry_run: Performs a dry run by printing out the changes instead of committing/creating an rb
     :param dict kwargs: Additional args from argparse
-    :return: Tuple with 3 elements: A map of file to bump message, commit message, and list of :class:`Bump`
   """
-  repo_check()
 
-  config.commit.auto_branch_from_commit_words = 1
+  def __init__(self, *args, **kwargs):
+    kwargs.setdefault('show_filter', True)
+    super(Bump, self).__init__(*args, **kwargs)
 
-  if not append and is_git_repo():
-    checkout_branch('master')
+  @classmethod
+  def arguments(cls):
+    _, docs = cls.docs()
+    return [
+      cls.make_args('names', nargs='*', help=docs['names']),
+      cls.make_args('-t', '--test', action='count', help=docs['test']),  # Experimental feature when invoked multiple times
+      cls.make_args('-p', '--push', action='store_true', help=docs['push']),
+      cls.make_args('-s', '--skip-rb', action='store_true', help=docs['skip_rb']),
+      cls.make_args('--add', action='store_true', help=docs['add']),
+      cls.make_args('--force', action='store_true', help=docs['force']),
+      cls.make_args('-m', '--msg', help=docs['msg']),
+      cls.make_args('--file', help=docs['file']),
+      cls.make_args('-n', '--dry-run', action='store_true', help=docs['dry_run'])
+    ]
 
-  if not names:
-    names = []
+  def run(self):
+    """
+      :return: Tuple with 3 elements: A map of file to bump message, commit message, and list of :class:`Bump`
+    """
+    repo_check()
 
-  filter_requirements = expand_product_groups(names)
+    self.commander.run('update', raises=True)
 
-  if show_filter and filter_requirements:
-    log.info('Only bumping: %s', ' '.join(filter_requirements))
+    config.commit.auto_branch_from_commit_words = 1
 
-  if isinstance(file, list):
-    requirement_files = file
-  elif file:
-    requirement_files = [file]
-  else:
-    requirement_files = config.bump.requirement_files.strip().split()
+    if not self.names:
+      self.names = []
 
-  update(raises=True)
+    filter_requirements = expand_product_groups(self.names)
 
-  bumper = BumperDriver(requirement_files, bumper_models=bumper_models, full_throttle=force, detail=True, test_drive=dry_run)
-  messages, bumps = bumper.bump(filter_requirements, required=add, show_summary=not is_git_repo(), **kwargs)
-  commit_msg = None
+    if self.show_filter and filter_requirements:
+      log.info('Only bumping: %s', ' '.join(filter_requirements))
 
-  try:
-    if messages:
-      summary_msgs = []
-      detail_msgs = []
-      for m in sorted(messages.values()):
-        splits = m.split('\n', 1)
-        summary_msgs.append(splits[0])
-        if len(splits) == 2:
-          detail_msgs.append(splits[1])
+    if isinstance(self.file, list):
+      requirement_files = self.file
+    elif self.file:
+      requirement_files = [self.file]
+    else:
+      requirement_files = config.bump.requirement_files.strip().split()
 
-      commit_msg = '\n\n'.join(summary_msgs + detail_msgs)
+    bumper = BumperDriver(requirement_files, bumper_models=self.bumper_models, full_throttle=self.force, detail=True, test_drive=self.dry_run)
+    messages, bumps = bumper.bump(filter_requirements, required=self.add, show_summary=not is_git_repo())
+    commit_msg = None
 
-      if msg:
-        commit_msg = msg + '\n\n' + commit_msg
+    try:
+      if messages:
+        summary_msgs = []
+        detail_msgs = []
+        for m in sorted(messages.values()):
+          splits = m.split('\n', 1)
+          summary_msgs.append(splits[0])
+          if len(splits) == 2:
+            detail_msgs.append(splits[1])
 
-      if not dry_run and is_git_repo():
-        commit(msg=commit_msg, files=messages.keys())
+        commit_msg = '\n\n'.join(summary_msgs + detail_msgs)
 
-  except Exception:
-    bumper.reverse()
-    raise
+        if self.msg:
+          commit_msg = self.msg + '\n\n' + commit_msg
 
-  return messages, commit_msg, bumps
+        if not self.dry_run and is_git_repo():
+          self.commander.run('commit', msg=commit_msg, files=messages.keys())
+
+    except Exception:
+      bumper.reverse()
+      raise
+
+    if bumps:
+      tests = {}
+
+      if self.test:
+        log.info('Running tests')
+        tests[product_name()] = self.commander.run('test', return_output=not self.skip_rb, skip_editable_install=True)
+
+      if not self.dry_run:
+        if not self.skip_rb and commit_msg and self.commander.command('review') != Review:
+          reviewer_groups = set()
+          reviewers = set()
+
+          for lib in bumps.keys():
+            g, r = self.commander.command('review').reviewers_for_product(lib)
+            if g:
+              reviewer_groups.update(g)
+            if r:
+              reviewers.update(r)
+            log.debug('Reviewers for %s: %s %s', lib, g, r)
+
+          self.commander.run('review', publish=self.push, files=messages.keys(), description=commit_msg, test=tests,
+                             skip_prereview=True, reviewer_groups=reviewer_groups, reviewers=reviewers)
+
+        if self.push and is_git_repo():
+          if not self.skip_rb:
+            branch = current_branch()
+            self.commander.run('wait', review=True)
+          self.commander.run('push', branch=branch)
+
+    return messages, commit_msg, bumps

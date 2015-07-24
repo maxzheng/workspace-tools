@@ -8,317 +8,316 @@ import tempfile
 
 import simplejson as json
 
+from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups, ToxIni
 from workspace.config import config
 from workspace.scm import repo_check, product_name, repo_path, product_repos, product_path, repos, workspace_path, current_branch
-from workspace.utils import run, split_doc, log_exception, parallel_call
+from workspace.utils import run, log_exception, parallel_call
 
 log = logging.getLogger(__name__)
 
-TEST_RE = re.compile('(?:\d+ failed, )?\d+ passed.* in [\d\.]+ seconds')
+TEST_RE = re.compile('(?:\d+ failed, )?\d+ (passed|error).* in [\d\.]+ seconds')
 
 
-def setup_test_parser(subparsers):
-  doc, docs = split_doc(test.__doc__)
-  test_parser = subparsers.add_parser('test', description=doc, help=doc.split('\n')[1])
-  test_parser.add_argument('env_or_file', nargs='*', help=docs['env_or_file'])
-  test_parser.add_argument('-k', metavar='NAME_PATTERN', dest='match_test', help=docs['match_test'])
-  test_parser.add_argument('-n', metavar='NUM_PROCESSES', type=int, dest='num_processes', help=docs['num_processes'])
-  group = test_parser.add_mutually_exclusive_group()
-  group.add_argument('-d', '--show-dependencies', metavar='FILTER', action='store', nargs='?', help=docs['show_dependencies'], const=True)
-  group.add_argument('-t', '--test-dependents', action='store_true', help=docs['test_dependents'])
-  group.add_argument('-r', '--redevelop', action='store_true', help=docs['redevelop'])
-  group.add_argument('-R', '--recreate', action='store_true', help=docs['recreate'])
-  test_parser.add_argument('-o', action='store_true', dest='install_only', help=argparse.SUPPRESS)
-
-  test_parser.set_defaults(command=test)
-
-  return test_parser
-
-
-def test(env_or_file=None, repo=None, show_dependencies=False, test_dependents=False, is_dependent=None, run_test=None, redevelop=False,
-         recreate=False, match_test=None, return_output=False, num_processes=None, tox_cmd=None, tox_ini=None,
-         tox_commands={}, skip_editable_install=False, silent=False, debug=False, extra_args=None,
-         install_only=False, **kwargs):
+class Test(AbstractCommand):
   """
-  Run tests and manage test environments for product.
+    Run tests and manage test environments for product.
 
-  Extra optional boolean args (such as -s, -v, -vv, etc) are passed to py.test.
+    Extra optional boolean args (such as -s, -v, -vv, etc) are passed to py.test.
 
-  :param list env_or_file: The tox environment to act upon, or a file to pass to py.test (only used
-                           if file exists, we don't need to redevelop, and py.test is used as a command
-                           for the default environements). Defaults to the envlist in tox.
-  :param str repo: Repo path to test instead of current repo
-  :param bool show_dependencies: Show where product dependencies are installed from and their versions.
-                            Dependencies can be configured to be installed in editable mode in workspace.cfg
-                            with [test] editable_products setting.
-  :param bool test_dependents: Run tests in this product and in checked out products that depends on this product.
-                               This product and its dependents must be listed in [test] editable_products in workspace.cfg
-                               for this to run.  Most args are ignored when this is used.
-  :param bool is_dependent: An optional callable to test if a product repo path is a dependent of this product.
-                            It should accept a product path to test and this product's name.
-  :param bool run_test: An optional callable to run tests instead of :meth:`test`
-  :param bool redevelop: Redevelop the test environment by installing on top of existing one.
-                         This is implied if test environment does not exist, or whenever requirements.txt or
-                         pinned.txt is modified after the environment was last updated.
-                         Use -ro to do redevelop only without running tests.
-  :param bool recreate: Completely recreate the test environment by removing the existing one first.
-                        Use -Ro to do recreate only without running tests.
-  :param bool install_only: Modifier for redevelop/recreate. Perform install only without running test.
-  :param bool match_test: Only run tests with method name that matches pattern
-  :param bool return_output: Return test output instead of printing to stdout
-  :param str num_processes: Number of processes to use when running tests in parallel
-  :param list tox_cmd: Alternative tox command to run.
-                       If recreate is True, '-r' will be appended.
-                       If env is passed in (from env_or_file), '-e env' will be appended as well.
-  :param str tox_ini: Path to tox_ini file.
-  :param dict tox_commands: Map of env to list of commands to override "[testenv:env] commands" setting for env.
-                            Only used when not developing.
-  :param list args: Additional args to pass to py.test
-  :param bool skip_editable_install: Skip installing editable dependencies
-  :param bool silent: Run tox/py.test silently. Only errors are printed and followed by exit.
-  :param bool debug: Turn on debug logging
-  :param list extra_args: Extra args from argparse to be passed to py.test
-  :return: Dict of env to commands ran on success. If return_output is True, return a string output.
-           If test_dependents is True, return a mapping of product name to the mentioned results.
+    :param list env_or_file: The tox environment to act upon, or a file to pass to py.test (only used
+                             if file exists, we don't need to redevelop, and py.test is used as a command
+                             for the default environements). Defaults to the envlist in tox.
+    :param str repo: Repo path to test instead of current repo
+    :param bool show_dependencies: Show where product dependencies are installed from and their versions.
+                              Dependencies can be configured to be installed in editable mode in workspace.cfg
+                              with [test] editable_products setting.
+    :param bool test_dependents: Run tests in this product and in checked out products that depends on this product.
+                                 This product and its dependents must be listed in [test] editable_products in workspace.cfg
+                                 for this to run.  Most args are ignored when this is used.
+    :param bool redevelop: Redevelop the test environment by installing on top of existing one.
+                           This is implied if test environment does not exist, or whenever requirements.txt or
+                           pinned.txt is modified after the environment was last updated.
+                           Use -ro to do redevelop only without running tests.
+                           Use -rr to remove the test environment first before redevelop (recreate).
+    :param bool install_only: Modifier for redevelop. Perform install only without running test.
+    :param bool match_test: Only run tests with method name that matches pattern
+    :param bool return_output: Return test output instead of printing to stdout
+    :param str num_processes: Number of processes to use when running tests in parallel
+    :param list tox_cmd: Alternative tox command to run.
+                         If env is passed in (from env_or_file), '-e env' will be appended as well.
+    :param str tox_ini: Path to tox_ini file.
+    :param dict tox_commands: Map of env to list of commands to override "[testenv:env] commands" setting for env.
+                              Only used when not developing.
+    :param list args: Additional args to pass to py.test
+    :param bool skip_editable_install: Skip installing editable dependencies
+    :param bool silent: Run tox/py.test silently. Only errors are printed and followed by exit.
+    :param bool debug: Turn on debug logging
+    :param list extra_args: Extra args from argparse to be passed to py.test
+    :return: Dict of env to commands ran on success. If return_output is True, return a string output.
+             If test_dependents is True, return a mapping of product name to the mentioned results.
   """
-  repo_check()
 
-  if test_dependents:
-    name = product_name()
+  def __init__(self, *args, **kwargs):
+    kwargs.setdefault('tox_commands', {})
+    kwargs.setdefault('silent', False)  # Enables test output streaming for return_output=True
+    super(Test, self).__init__(*args, **kwargs)
 
-    if not is_dependent:
-      is_dependent = product_depends_on
-    if not run_test:
-      run_test = test
+  @classmethod
+  def arguments(cls):
+    _, docs = cls.docs()
+    return [
+      cls.make_args('env_or_file', nargs='*', help=docs['env_or_file']),
+      cls.make_args('-k', metavar='NAME_PATTERN', dest='match_test', help=docs['match_test']),
+      cls.make_args('-n', metavar='NUM_PROCESSES', type=int, dest='num_processes', help=docs['num_processes']),
+      cls.make_args('-d', '--show-dependencies', metavar='FILTER', action='store', nargs='?', help=docs['show_dependencies'], const=True),
+      cls.make_args('-t', '--test-dependents', action='store_true', help=docs['test_dependents']),
+      cls.make_args('-r', '--redevelop', action='count', help=docs['redevelop']),
+      cls.make_args('-o', action='store_true', dest='install_only', help=argparse.SUPPRESS)
+    ]
 
-    # Convert None to list for tuple([])
-    if not env_or_file:
-      env_or_file = []
-    if not extra_args:
-      extra_args = []
+  def run(self):
+    repo_check()
 
-    test_args = (
-      ('env_or_file', tuple(env_or_file)),
-      ('return_output', 2),
-      ('num_processes', num_processes),
-      ('silent', True),
-      ('debug', debug),
-      ('extra_args', tuple(extra_args))
-    )
+    if self.test_dependents:
+      name = product_name()
 
-    test_repos = [repo_path()]
-    test_repos.extend(r for r in repos(workspace_path()) if is_dependent(r, name) and r not in test_repos)
-    scoped_products = config.test.editable_products and expand_product_groups(config.test.editable_products.split()) or []
+      # Convert None to list for tuple([])
+      if not self.env_or_file:
+        self.env_or_file = []
+      if not self.extra_args:
+        self.extra_args = []
 
-    if name not in scoped_products:
-      log.error('To run transitive tests, please add this product and its dependents to [test] editable_products in your ~/config/workspace.cfg')
-      sys.exit(1)
+      test_args = (
+        ('env_or_file', tuple(self.env_or_file)),
+        ('return_output', True),
+        ('num_processes', self.num_processes),
+        ('silent', True),
+        ('debug', self.debug),
+        ('extra_args', tuple(self.extra_args))
+      )
 
-    test_repos = [r for r in test_repos if not scoped_products or product_name(r) in scoped_products]
-    test_args = [(r, run_test, test_args) for r in test_repos]
+      test_repos = [repo_path()]
+      test_repos.extend(r for r in repos(workspace_path()) if self.product_depends_on(r, name) and r not in test_repos)
+      scoped_products = config.test.editable_products and expand_product_groups(config.test.editable_products.split()) or []
 
-    def test_done(result):
-      name, output = result
-      if 'collected 0 items' in output:
-        log.info('%s: No tests', name)
-
-      else:
-        match = TEST_RE.search(output)
-        summary = match.group(0) + '.' if match else None
-
-        temp_output_file = None
-        log_msg = log.info
-
-        if not summary or 'failed' in output:
-          temp_output_file = os.path.join(tempfile.gettempdir(), '%s-test.out' % name)
-          with open(temp_output_file, 'w') as fp:
-            fp.write(output)
-          temp_output_file = 'See ' + temp_output_file
-          log_msg = log.error
-
-        log_msg('%s: %s', name, '\n\t'.join(filter(None, [summary, temp_output_file])))
-
-    def show_remaining(completed, all_args):
-      completed_repos = set(product_name(r) for r, _, _ in completed)
-      all_repos = set(product_name(r) for r, _, _ in all_args)
-      remaining_repos = sorted(list(all_repos - completed_repos))
-      if len(remaining_repos):
-        repo = remaining_repos.pop()
-        more = '& %d more' % len(remaining_repos) if remaining_repos else ''
-        return '%s %s' % (repo, more)
-      else:
-        return 'None'
-
-    repo_results = parallel_call(test_repo, test_args, callback=test_done, show_progress=show_remaining, progress_title='Remaining:')
-
-    for _, result in repo_results.values():
-      if 'failed' in result:
-        sys.exit(1)
-
-    return dict(repo_results.values())
-
-  if not repo:
-    repo = repo_path()
-
-  # Strip out venv bin path to python to avoid issues with it being removed when running tox
-  if 'VIRTUAL_ENV' in os.environ:
-    venv_bin = os.environ['VIRTUAL_ENV']
-    os.environ['PATH'] = os.pathsep.join([p for p in os.environ['PATH'].split(os.pathsep)
-                                          if os.path.exists(p) and not p.startswith(venv_bin)])
-
-  envs = []
-  files = []
-
-  if env_or_file:
-    for ef in env_or_file:
-      if os.path.exists(ef):
-        files.append(os.path.abspath(ef))
-      else:
-        envs.append(ef)
-
-  pytest_args = ''
-  if match_test or num_processes is not None or files or extra_args:
-    pytest_args = []
-    if match_test:
-      pytest_args.append('-k ' + match_test)
-    if num_processes is not None:
-      pytest_args.append('-n ' + str(num_processes))
-    if extra_args:
-      pytest_args.extend(extra_args)
-    if files:
-      pytest_args.extend(files)
-    pytest_args = ' '.join(pytest_args)
-    os.environ['PYTESTARGS'] = pytest_args
-
-  tox = ToxIni(repo, tox_ini)
-
-  if not envs:
-    envs = tox.envlist
-
-  env_commands = {}
-
-  if show_dependencies:
-    for env in envs:
-      show_installed_dependencies(tox, env, filter_name=show_dependencies)
-
-  elif redevelop or recreate:
-    if tox_cmd:
-      cmd = tox_cmd
-    else:
-      cmd = ['tox', '-c', tox.path]
-
-    if envs:
-      cmd.extend(['-e', ','.join(envs)])
-
-    if recreate:
-      cmd.append('-r')
-
-    if install_only:
-      cmd.append('--notest')
-
-    output = run(cmd, cwd=repo, raises=not return_output, silent=silent, return_output=return_output)
-
-    if not output:
-      sys.exit(1)
-
-    for env in envs:
-      env_commands[env] = ' '.join(cmd)
-      strip_version_from_entry_scripts(tox, env)
-      if not skip_editable_install and env in tox.envlist:
-        install_editable_dependencies(tox, env, silent, debug)
-
-    if return_output:
-      return output
-
-  else:
-    for env in envs:
-      envdir = tox.envdir(env)
-
-      def requirements_updated():
-        req_mtime = 0
-        requirements_files = ['requirements.txt', 'pinned.txt', 'tox.ini']
-        for req_file in requirements_files:
-          req_path = os.path.join(repo, req_file)
-          if os.path.exists(req_path):
-            req_mtime = max(req_mtime, os.stat(req_path).st_mtime)
-        return req_mtime > os.stat(envdir).st_mtime
-
-      if not os.path.exists(envdir) or requirements_updated():
-        env_commands.update(test([env], repo=repo, redevelop=True, tox_cmd=tox_cmd, tox_ini=tox_ini, tox_commands=tox_commands,
-                                 match_test=match_test, num_processes=num_processes, silent=silent,
-                                 skip_editable_install=skip_editable_install, debug=debug, extra_args=extra_args))
-        continue
-
-      if len(envs) > 1 and not silent:
-          print env
-
-      commands = tox_commands.get(env) or tox.commands(env)
-      env_commands[env] = '\n'.join(commands)
-
-      for command in commands:
-        full_command = os.path.join(envdir, 'bin', command)
-
-        command_path = full_command.split()[0]
-        if os.path.exists(command_path):
-          if 'py.test' in full_command:
-            if 'PYTESTARGS' in full_command:
-              full_command = full_command.replace('{env:PYTESTARGS:}', pytest_args)
-            else:
-              full_command += ' ' + pytest_args
-          activate = '. ' + os.path.join(envdir, 'bin', 'activate')
-          output = run(activate + '; ' + full_command, shell=True, cwd=repo, raises=False, silent=silent, return_output=return_output)
-          if not output:
-            sys.exit(1)
-
-          if env != envs[-1] and not silent:
-            print
-
-          if return_output:
-            return output
+      if name not in scoped_products:
+        log.error('To run transitive tests, please add this product and its dependents to [test] editable_products in your ~/config/workspace.cfg')
+        if self.return_output:
+          return False
         else:
-          log.error('%s does not exist', command_path)
           sys.exit(1)
 
-  return env_commands
+      test_repos = [r for r in test_repos if not scoped_products or product_name(r) in scoped_products]
+      test_args = [(r, test_args, self.__class__) for r in test_repos]
 
+      def test_done(result):
+        name, output = result
 
-def test_repo(repo, run_test, test_args):
-  name = product_name(repo)
+        if 'collected 0 items' in output and 'error' not in output:
+          log.info('%s: No tests', name)
 
-  branch = current_branch(repo)
-  on_branch = '#' + branch if branch != 'master' else ''
-  log.info('Testing %s %s', name, on_branch)
+        else:
+          match = TEST_RE.search(output)
+          summary = match.group(0) + '.' if match else None
 
-  return name, run_test(repo=repo, **dict(test_args))
+          temp_output_file = None
+          log_msg = log.info
 
+          if not summary or 'failed' in output or 'error' in output:
+            temp_output_file = os.path.join(tempfile.gettempdir(), '%s-test.out' % name)
+            with open(temp_output_file, 'w') as fp:
+              fp.write(output)
+            temp_output_file = 'See ' + temp_output_file
+            log_msg = log.error
 
-def strip_version_from_entry_scripts(tox, env):
-  """ Strip out version spec "==1.2.3" from entry scripts as they require re-develop when version is changed in develop mode. """
-  name = product_name(tox.repo)
-  script_bin = tox.bindir(env)
+          log_msg('%s: %s', name, '\n\t'.join(filter(None, [summary, temp_output_file])))
 
-  if os.path.exists(script_bin):
-    name_version_re = re.compile('%s==[0-9\.]+' % name)
-    removed_from = []
-    for script in os.listdir(script_bin):
-      script_path = os.path.join(script_bin, script)
+      def show_remaining(completed, all_args):
+        completed_repos = set(product_name(r) for r, _, _ in completed)
+        all_repos = set(product_name(r) for r, _, _ in all_args)
+        remaining_repos = sorted(list(all_repos - completed_repos))
+        if len(remaining_repos):
+          repo = remaining_repos.pop()
+          more = '& %d more' % len(remaining_repos) if remaining_repos else ''
+          return '%s %s' % (repo, more)
+        else:
+          return 'None'
 
-      with open(script_path) as fp:
-        script = fp.read()
+      repo_results = parallel_call(test_repo, test_args, callback=test_done, show_progress=show_remaining, progress_title='Remaining')
 
-      if name_version_re.search(script):
-        new_script = name_version_re.sub(name, script)
-        with open(script_path, 'w') as fp:
-          fp.write(new_script)
-        removed_from.append(os.path.basename(script_path))
+      for _, result in repo_results.values():
+        if 'failed' in result:
+          if self.return_output:
+            return False
+          else:
+            sys.exit(1)
 
-    if removed_from:
-      log.debug('Removed version spec from entry script(s): %s', ', '.join(removed_from))
+      return dict(repo_results.values())
 
+    if not self.repo:
+      self.repo = repo_path()
 
-def show_installed_dependencies(tox, env, return_output=False, filter_name=None):
-  script_template = """
+    # Strip out venv bin path to python to avoid issues with it being removed when running tox
+    if 'VIRTUAL_ENV' in os.environ:
+      venv_bin = os.environ['VIRTUAL_ENV']
+      os.environ['PATH'] = os.pathsep.join([p for p in os.environ['PATH'].split(os.pathsep)
+                                            if os.path.exists(p) and not p.startswith(venv_bin)])
+
+    envs = []
+    files = []
+
+    if self.env_or_file:
+      for ef in self.env_or_file:
+        if os.path.exists(ef):
+          files.append(os.path.abspath(ef))
+        else:
+          envs.append(ef)
+
+    pytest_args = ''
+    if self.match_test or self.num_processes is not None or files or self.extra_args:
+      pytest_args = []
+      if self.match_test:
+        pytest_args.append('-k ' + self.match_test)
+      if self.num_processes is not None:
+        pytest_args.append('-n ' + str(self.num_processes))
+      if self.extra_args:
+        pytest_args.extend(self.extra_args)
+      if files:
+        pytest_args.extend(files)
+      pytest_args = ' '.join(pytest_args)
+      os.environ['PYTESTARGS'] = pytest_args
+
+    tox = ToxIni(self.repo, self.tox_ini)
+
+    if not envs:
+      envs = tox.envlist
+
+    env_commands = {}
+
+    if self.install_only and not self.redevelop:
+      self.redevelop = 1
+
+    if self.show_dependencies:
+      for env in envs:
+        self.show_installed_dependencies(tox, env, filter_name=self.show_dependencies)
+
+    elif self.redevelop:
+      if self.tox_cmd:
+        cmd = self.tox_cmd
+      else:
+        cmd = ['tox', '-c', tox.path]
+
+      if envs:
+        cmd.extend(['-e', ','.join(envs)])
+
+      if self.redevelop > 1:
+        cmd.append('-r')
+
+      if self.install_only:
+        cmd.append('--notest')
+
+      output = run(cmd, cwd=self.repo, raises=not self.return_output, silent=self.silent, return_output=self.return_output)
+
+      if not output:
+        if self.return_output:
+          return False
+        else:
+          sys.exit(1)
+
+      for env in envs:
+        env_commands[env] = ' '.join(cmd)
+        self._strip_version_from_entry_scripts(tox, env)
+        if not self.skip_editable_install and env in tox.envlist:
+          self.install_editable_dependencies(tox, env)
+
+      if self.return_output:
+        return output
+
+    else:
+      for env in envs:
+        envdir = tox.envdir(env)
+
+        def requirements_updated():
+          req_mtime = 0
+          requirements_files = ['requirements.txt', 'pinned.txt', 'tox.ini']
+          for req_file in requirements_files:
+            req_path = os.path.join(self.repo, req_file)
+            if os.path.exists(req_path):
+              req_mtime = max(req_mtime, os.stat(req_path).st_mtime)
+          return req_mtime > os.stat(envdir).st_mtime
+
+        if not os.path.exists(envdir) or requirements_updated():
+          env_commands.update(
+              self.commander.run('test', env_or_file=[env], repo=self.repo, redevelop=True, tox_cmd=self.tox_cmd,
+                                 tox_ini=self.tox_ini, tox_commands=self.tox_commands, match_test=self.match_test,
+                                 num_processes=self.num_processes, silent=self.silent,
+                                 skip_editable_install=self.skip_editable_install, debug=self.debug, extra_args=self.extra_args))
+          continue
+
+        if len(envs) > 1 and not self.silent:
+            print env
+
+        commands = self.tox_commands.get(env) or tox.commands(env)
+        env_commands[env] = '\n'.join(commands)
+
+        for command in commands:
+          full_command = os.path.join(envdir, 'bin', command)
+
+          command_path = full_command.split()[0]
+          if os.path.exists(command_path):
+            if 'py.test' in full_command:
+              if 'PYTESTARGS' in full_command:
+                full_command = full_command.replace('{env:PYTESTARGS:}', pytest_args)
+              else:
+                full_command += ' ' + pytest_args
+            activate = '. ' + os.path.join(envdir, 'bin', 'activate')
+            output = run(activate + '; ' + full_command, shell=True, cwd=self.repo, raises=False, silent=self.silent, return_output=self.return_output)
+            if not output:
+              if self.return_output:
+                return False
+              else:
+                sys.exit(1)
+
+            if env != envs[-1] and not self.silent:
+              print
+
+            if self.return_output:
+              return output
+          else:
+            log.error('%s does not exist', command_path)
+            if self.return_output:
+              return False
+            else:
+              sys.exit(1)
+
+    return env_commands
+
+  def _strip_version_from_entry_scripts(self, tox, env):
+    """ Strip out version spec "==1.2.3" from entry scripts as they require re-develop when version is changed in develop mode. """
+    name = product_name(tox.repo)
+    script_bin = tox.bindir(env)
+
+    if os.path.exists(script_bin):
+      name_version_re = re.compile('%s==[0-9\.]+' % name)
+      removed_from = []
+      for script in os.listdir(script_bin):
+        script_path = os.path.join(script_bin, script)
+
+        with open(script_path) as fp:
+          script = fp.read()
+
+        if name_version_re.search(script):
+          new_script = name_version_re.sub(name, script)
+          with open(script_path, 'w') as fp:
+            fp.write(new_script)
+          removed_from.append(os.path.basename(script_path))
+
+      if removed_from:
+        log.debug('Removed version spec from entry script(s): %s', ', '.join(removed_from))
+
+  def show_installed_dependencies(self, tox, env, return_output=False, filter_name=None):
+    script_template = """
 import json
 import os
 import pip
@@ -365,66 +364,74 @@ else:
   print '\\n'.join(output)
 """
 
-  name = product_name(tox.repo)
-  filter_name = isinstance(filter_name, str) and filter_name or ''
-  script = script_template % (name, return_output, env, filter_name)
+    name = product_name(tox.repo)
+    filter_name = isinstance(filter_name, str) and filter_name or ''
+    script = script_template % (name, return_output, env, filter_name)
 
-  python = tox.bindir(env, 'python')
+    python = tox.bindir(env, 'python')
 
-  if not os.path.exists(python):
-    log.error('Test environment %s is not installed. Please run without -d / --show-dependencies to install it first.', env)
-    sys.exit(1)
+    if not os.path.exists(python):
+      log.error('Test environment %s is not installed. Please run without -d / --show-dependencies to install it first.', env)
+      sys.exit(1)
 
-  return run([python, '-c', script], return_output=return_output, raises=False)
+    return run([python, '-c', script], return_output=return_output, raises=False)
+
+  def install_editable_dependencies(self, tox, env):
+    if not config.test.editable_products:
+      return
+
+    name = product_name(tox.repo)
+    editable_products = expand_product_groups(config.test.editable_products.split())
+
+    if name not in editable_products:
+      return
+
+    dependencies_output = self.show_installed_dependencies(tox, env, return_output=True)
+    if not dependencies_output:
+      log.debug('%s is not installed or there is no dependencies - skipping editable mode changes', name)
+      return
+    product_dependencies_list = json.loads(dependencies_output)
+    product_dependencies = {}
+
+    for dep, _, path in product_dependencies_list:
+      product_dependencies[dep] = path
+
+    available_products = [os.path.basename(r) for r in product_repos()]
+    libs = [d for d in editable_products if d in available_products and d in product_dependencies and tox.workdir in product_dependencies[d]]
+
+    pip = tox.bindir(env, 'pip')
+
+    for lib in libs:
+      if not self.silent or self.debug:
+        log.info('%s: Installing %s in editable mode' % (env, lib))
+
+      with log_exception('An error occurred when installing %s in editable mode' % lib):
+        run([pip, 'uninstall', lib, '-y'], raises=False, silent=not self.debug)
+
+        lib_path = product_path(lib)
+        if os.path.exists(os.path.join(lib_path, lib)):
+          lib_path = os.path.join(lib_path, lib)
+        run([pip, 'install', '--editable', lib_path], silent=not self.debug)
+
+  def product_depends_on(self, path, name):
+    for req_file in config.bump.requirement_files.split():
+      req_path = os.path.join(path, req_file)
+      if os.path.exists(req_path):
+        with open(req_path) as fp:
+          try:
+            reqs = pkg_resources.parse_requirements(fp.read())
+            if name in [r.project_name for r in reqs]:
+              return True
+          except:
+            pass
+    return False
 
 
-def install_editable_dependencies(tox, env, silent, debug):
-  if not config.test.editable_products:
-    return
+def test_repo(repo, test_args, test_class):
+  name = product_name(repo)
 
-  name = product_name(tox.repo)
-  editable_products = expand_product_groups(config.test.editable_products.split())
+  branch = current_branch(repo)
+  on_branch = '#' + branch if branch != 'master' else ''
+  log.info('Testing %s %s', name, on_branch)
 
-  if name not in editable_products:
-    return
-
-  dependencies_output = show_installed_dependencies(tox, env, return_output=True)
-  if not dependencies_output:
-    log.debug('%s is not installed or there is no dependencies - skipping editable mode changes', name)
-    return
-  product_dependencies_list = json.loads(dependencies_output)
-  product_dependencies = {}
-
-  for dep, _, path in product_dependencies_list:
-    product_dependencies[dep] = path
-
-  available_products = [os.path.basename(r) for r in product_repos()]
-  libs = [d for d in editable_products if d in available_products and d in product_dependencies and tox.workdir in product_dependencies[d]]
-
-  pip = tox.bindir(env, 'pip')
-
-  for lib in libs:
-    if not silent or debug:
-      log.info('%s: Installing %s in editable mode' % (env, lib))
-
-    with log_exception('An error occurred when installing %s in editable mode' % lib):
-      run([pip, 'uninstall', lib, '-y'], raises=False, silent=not debug)
-
-      lib_path = product_path(lib)
-      if os.path.exists(os.path.join(lib_path, lib)):
-        lib_path = os.path.join(lib_path, lib)
-      run([pip, 'install', '--editable', lib_path], silent=not debug)
-
-
-def product_depends_on(path, name):
-  for req_file in config.bump.requirement_files.split():
-    req_path = os.path.join(path, req_file)
-    if os.path.exists(req_path):
-      with open(req_path) as fp:
-        try:
-          reqs = pkg_resources.parse_requirements(fp.read())
-          if name in [r.project_name for r in reqs]:
-            return True
-        except:
-          pass
-  return False
+  return name, test_class(repo=repo, **dict(test_args)).run()
