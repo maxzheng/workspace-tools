@@ -1,3 +1,8 @@
+Version 1.0.0
+================================================================================
+
+* Switch to class-based command architecture to simplify downstream customization
+
 Version 0.8.19
 ================================================================================
 
