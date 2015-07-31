@@ -16,7 +16,7 @@ from workspace.utils import run, log_exception, parallel_call
 
 log = logging.getLogger(__name__)
 
-TEST_RE = re.compile('(?:\d+ failed, )?\d+ (passed|error).* in [\d\.]+ seconds')
+TEST_RE = re.compile('\d+ (?:passed|error|failed|xfailed).* in [\d\.]+ seconds')
 
 
 class Test(AbstractCommand):
@@ -62,6 +62,54 @@ class Test(AbstractCommand):
     kwargs.setdefault('tox_commands', {})
     kwargs.setdefault('silent', False)  # Enables test output streaming for return_output=True
     super(Test, self).__init__(*args, **kwargs)
+
+  @classmethod
+  def summarize(cls, tests, include_no_tests=True):
+    """
+      Summarize the test results
+
+      :param dict|str tests: Map of product name to test result, or the test result of the current prod.
+      :param bool include_no_tests: Include "No tests" results when there are no tests found.
+      :return: A tuple of (success, list(summaries)) where success is True if all tests pass and summaries
+               is a list of passed/failed summary of each test or just str if 'tests' param is str.
+    """
+    prod_name = product_name()
+
+    if isinstance(tests, dict):
+      product_tests = tests
+    else:
+      product_tests = {}
+      product_tests[prod_name] = tests
+
+    success = True
+    summaries = []
+
+    def append_summary(summary, name=None):
+      if len(product_tests) == 1:
+        summaries.append(summary)
+      else:
+        summaries.append("%s: %s" % (name, summary))
+
+    for name in sorted(product_tests, key=lambda n: n == prod_name or n):
+      if not product_tests[name]:
+        success = False
+        append_summary('Test failed / No output', name)
+
+      elif 'collected 0 items' in product_tests[name] and 'error' not in product_tests[name]:
+        append_summary('No tests')
+
+      else:
+        match = TEST_RE.search(product_tests[name])
+
+        if match:
+          append_summary(match.group(0), name)
+        else:
+          append_summary('No test summary found in output', name)
+
+        if 'failed' in product_tests[name] or 'error' in product_tests[name]:
+          success = False
+
+    return success, summaries if isinstance(tests, dict) else summaries[0]
 
   @classmethod
   def arguments(cls):
@@ -113,25 +161,18 @@ class Test(AbstractCommand):
 
       def test_done(result):
         name, output = result
+        success, summary = self.summarize(output)
 
-        if 'collected 0 items' in output and 'error' not in output:
-          log.info('%s: No tests', name)
+        if success:
+          log.info('%s: %s', name, summary)
 
         else:
-          match = TEST_RE.search(output)
-          summary = match.group(0) + '.' if match else None
+          temp_output_file = os.path.join(tempfile.gettempdir(), '%s-test.out' % name)
+          with open(temp_output_file, 'w') as fp:
+            fp.write(output)
+          temp_output_file = 'See ' + temp_output_file
 
-          temp_output_file = None
-          log_msg = log.info
-
-          if not summary or 'failed' in output or 'error' in output:
-            temp_output_file = os.path.join(tempfile.gettempdir(), '%s-test.out' % name)
-            with open(temp_output_file, 'w') as fp:
-              fp.write(output)
-            temp_output_file = 'See ' + temp_output_file
-            log_msg = log.error
-
-          log_msg('%s: %s', name, '\n\t'.join(filter(None, [summary, temp_output_file])))
+          log.error('%s: %s', name, '\n\t'.join([summary, temp_output_file]))
 
       def show_remaining(completed, all_args):
         completed_repos = set(product_name(r) for r, _, _ in completed)
@@ -147,10 +188,8 @@ class Test(AbstractCommand):
       repo_results = parallel_call(test_repo, test_args, callback=test_done, show_progress=show_remaining, progress_title='Remaining')
 
       for _, result in repo_results.values():
-        if 'failed' in result:
-          if self.return_output:
-            return False
-          else:
+        success, _ = self.summarize(result)
+        if not (success or self.return_output):
             sys.exit(1)
 
       return dict(repo_results.values())

@@ -106,8 +106,9 @@ class Commit(AbstractCommand):
       if not self.amend and self.test:
         log.info('Running tests')
         test_output = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
+        success, _ = self.commander.command('test').summarize(test_output)
 
-        if not test_output:
+        if not success:
           sys.exit(1)
 
       branches = all_branches()
@@ -135,8 +136,9 @@ class Commit(AbstractCommand):
       if self.amend and self.test:
         log.info('Running tests')
         test_output = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
+        success, _ = self.commander.command('test').summarize(test_output)
 
-        if not test_output:
+        if not success:
           sys.exit(1)
 
       if self.rb:

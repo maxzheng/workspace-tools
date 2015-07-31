@@ -1,12 +1,10 @@
 import logging
-import re
 import sys
 
 from workspace.commands import AbstractCommand
-from workspace.scm import is_git_repo, repo_check, product_name, current_branch
+from workspace.scm import is_git_repo, repo_check, current_branch
 
 log = logging.getLogger(__name__)
-TEST_PASSED_RE = re.compile('\d+ passed.* in [\d\.]+ seconds|^OK - .*')
 
 
 class Review(AbstractCommand):
@@ -53,35 +51,15 @@ class Review(AbstractCommand):
       else:
         tests = self.test
 
-      prod_name = product_name()
+      success, tests = self.commander.command('test').summarize(tests)
 
-      if isinstance(tests, dict):
-        product_tests = tests
-      else:
-        product_tests = {}
-        product_tests[prod_name] = tests
+      if not success:
+        sys.exit(1)
 
-      tests = []
-      for name in sorted(product_tests, key=lambda n: n == prod_name or n):
-        if not product_tests[name] or 'error' in product_tests[name]:
-          sys.exit(1)
+      if not isinstance(tests, list):
+        tests = [tests]
 
-        if 'collected 0 items' in product_tests[name]:
-          continue
-
-        match = TEST_PASSED_RE.search(product_tests[name])
-
-        if match:
-          if len(product_tests) == 1:
-            tests.append(match.group(0))
-          else:
-            tests.append("%s: %s" % (name, match.group(0)))
-
-        else:
-          log.error("No test summary found for %s in output:\n%s", name, product_tests[name])
-          sys.exit(1)
-
-      self.tests = '\n'.join(tests)
+      self.tests = '\n'.join(filter(lambda t: 'No tests' not in t, tests))
 
     if not self.rb_id and is_git_repo():
       self.rb_id = self.id_for_branch()
