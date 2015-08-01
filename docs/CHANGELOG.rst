@@ -1,5 +1,10 @@
-Version 1.0.0
+Version 1.0.1
 ================================================================================
+
+* Centralize test result summary / evaluation logic
+
+Version 1.0.0
+--------------------------------------------------------------------------------
 
 * Switch to class-based command architecture to simplify downstream customization
 
