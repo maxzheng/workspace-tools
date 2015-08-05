@@ -104,6 +104,9 @@ class Commit(AbstractCommand):
       test_output = None
 
       if not self.amend and self.test:
+        log.info('Running style check')
+        self.commander.run('test', env_or_file=['style'], silent=2)
+
         log.info('Running tests')
         test_output = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
         success, _ = self.commander.command('test').summarize(test_output)
@@ -134,6 +137,9 @@ class Commit(AbstractCommand):
       local_commit(self.msg, self.amend)
 
       if self.amend and self.test:
+        log.info('Running style check')
+        self.commander.run('test', env_or_file=['style'], silent=2)
+
         log.info('Running tests')
         test_output = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
         success, _ = self.commander.command('test').summarize(test_output)
@@ -142,7 +148,7 @@ class Commit(AbstractCommand):
           sys.exit(1)
 
       if self.rb:
-        self.commander.run('review', publish=self.push, test=test_output)
+        self.commander.run('review', publish=self.push, test=test_output, skip_prereview=True)
         if self.push:
           self.branch = current_branch()  # Ensure branch is set for push as it could change while waiting
           self.commander.run('wait', review=True)

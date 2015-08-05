@@ -106,7 +106,7 @@ class Test(AbstractCommand):
         else:
           append_summary('No test summary found in output', name)
 
-        if 'failed' in product_tests[name] or 'error' in product_tests[name]:
+        if 'failed' in product_tests[name].replace('xfailed', '') or 'error' in product_tests[name]:
           success = False
 
     return success, summaries if isinstance(tests, dict) else summaries[0]
