@@ -132,8 +132,21 @@ class Commander(object):
                                           formatter_class=argparse.RawDescriptionHelpFormatter)
       parser.set_defaults(command=name)
 
-      for args, kwargs in command.arguments():
+      cmd_args = command.arguments()
+
+      if isinstance(cmd_args, tuple):
+        normal_args, chain_args = cmd_args
+      else:
+        normal_args = cmd_args
+        chain_args = []
+
+      for args, kwargs in normal_args:
         parser.add_argument(*args, **kwargs)
+
+      if chain_args:
+        group = parser.add_argument_group('chaining options')
+        for args, kwargs in chain_args:
+          group.add_argument(*args, **kwargs)
 
 
 # Copied from https://gist.github.com/sampsyo/471779

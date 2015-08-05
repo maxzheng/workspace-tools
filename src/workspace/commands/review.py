@@ -25,14 +25,15 @@ class Review(AbstractCommand):
   @classmethod
   def arguments(cls):
     _, docs = cls.docs()
-    return [
-      cls.make_args('files', nargs='*', help=docs['files']),
-      cls.make_args('-r', '--rb-id', type=int, help=docs['rb_id']),
-      cls.make_args('-m', '--description', help=docs['description']),
-      cls.make_args('-p', '--push', action='store_true', help=docs['push']),
-      cls.make_args('-P', '--publish', action='store_true', help='Publish the RB'),
-      cls.make_args('-t', '--test', action='count', help=docs['test'])
-    ]
+    return ([
+        cls.make_args('files', nargs='*', help=docs['files']),
+        cls.make_args('-r', '--rb-id', type=int, help=docs['rb_id']),
+        cls.make_args('-m', '--description', help=docs['description']),
+        cls.make_args('-P', '--publish', action='store_true', help='Publish the RB'),
+      ], [
+        cls.make_args('-t', '--test', action='count', help=docs['test']),
+        cls.make_args('-p', '--push', action='store_true', help=docs['push'])
+      ])
 
   def run(self):
 

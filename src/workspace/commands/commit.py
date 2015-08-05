@@ -35,19 +35,20 @@ class Commit(AbstractCommand):
   @classmethod
   def arguments(cls):
     _, docs = cls.docs()
-    return [
-      cls.make_args('msg', nargs='?', help=docs['msg']),
-      cls.make_args('-a', '--amend', action='store_true', help=docs['amend']),
-      cls.make_args('-r', '--rb', action='store_true',
-                    help='Create or update existing RB after commit. Existing RB is looked up in .git/config. '
-                         'Use -rt to run / post the test results. Repeat twice to test dependents too (-rtt)'),
-      cls.make_args('-t', '--test', action='count', help=docs['test']),
-      cls.make_args('-p', '--push', action='store_true', help=docs['push']),
-      cls.make_args('-d', '--dummy', action='store_true', help=docs['dummy']),
-      cls.make_args('-D', '--discard', action='count', help=docs['discard']),
-      cls.make_args('--move', metavar='branch', nargs=1, help=docs['move']),
-      cls.make_args('-b', '--branch', help=docs['branch']),
-    ]
+    return ([
+        cls.make_args('msg', nargs='?', help=docs['msg']),
+        cls.make_args('-a', '--amend', action='store_true', help=docs['amend']),
+        cls.make_args('-d', '--dummy', action='store_true', help=docs['dummy']),
+        cls.make_args('-D', '--discard', action='count', help=docs['discard']),
+        cls.make_args('--move', metavar='branch', nargs=1, help=docs['move']),
+        cls.make_args('-b', '--branch', help=docs['branch'])
+      ], [
+        cls.make_args('-r', '--rb', action='store_true',
+                      help='Create or update existing RB after commit. Existing RB is looked up in .git/config. '
+                           'Use -rt to run / post the test results. Repeat twice to test dependents too (-rtt)'),
+        cls.make_args('-t', '--test', action='count', help=docs['test']),
+        cls.make_args('-p', '--push', action='store_true', help=docs['push'])
+      ])
 
   def run(self):
     git_repo_check()

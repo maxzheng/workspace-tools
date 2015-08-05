@@ -41,17 +41,18 @@ class Bump(AbstractCommand):
   @classmethod
   def arguments(cls):
     _, docs = cls.docs()
-    return [
-      cls.make_args('names', nargs='*', help=docs['names']),
-      cls.make_args('-t', '--test', action='count', help=docs['test']),  # Experimental feature when invoked multiple times
-      cls.make_args('-p', '--push', action='store_true', help=docs['push']),
-      cls.make_args('-s', '--skip-rb', action='store_true', help=docs['skip_rb']),
-      cls.make_args('--add', action='store_true', help=docs['add']),
-      cls.make_args('--force', action='store_true', help=docs['force']),
-      cls.make_args('-m', '--msg', help=docs['msg']),
-      cls.make_args('--file', help=docs['file']),
-      cls.make_args('-n', '--dry-run', action='store_true', help=docs['dry_run'])
-    ]
+    return ([
+        cls.make_args('names', nargs='*', help=docs['names']),
+        cls.make_args('-s', '--skip-rb', action='store_true', help=docs['skip_rb']),
+        cls.make_args('--add', action='store_true', help=docs['add']),
+        cls.make_args('--force', action='store_true', help=docs['force']),
+        cls.make_args('-m', '--msg', help=docs['msg']),
+        cls.make_args('--file', help=docs['file']),
+        cls.make_args('-n', '--dry-run', action='store_true', help=docs['dry_run'])
+      ], [
+        cls.make_args('-t', '--test', action='count', help=docs['test']),
+        cls.make_args('-p', '--push', action='store_true', help=docs['push']),
+      ])
 
   def run(self):
     """

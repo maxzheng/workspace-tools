@@ -59,11 +59,20 @@ class AbstractCommand(object):
   def arguments(cls):
     """
       List of arguments to be passed to argparse's add_argument.
+      Optionally, return a tuple of two lists where first one consists
+      of normal arguments, and the 2nd one consists of chaining arguments.
+
       Use :meth:`make_args` to create the args::
 
         return [cls.make_args('--name', help='Product name')]
 
-      :return: List of add_argument params
+      Or return a tuple of two lists where the 2nd one consists of chaining options::
+
+        return ([cls.make_args('--name', help='Product name')],
+                [cls.make_args('--test', help='Run tests after commit')])
+
+
+      :return: List of add_argument params or tuple of two lists
     """
     return []
 
