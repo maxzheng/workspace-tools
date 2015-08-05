@@ -1,5 +1,12 @@
-Version 1.0.1
+Version 1.0.2
 ================================================================================
+
+* Display chaining options separately in help
+* Run style check when running tests for commit
+* Quote args to tv alias
+
+Version 1.0.1
+--------------------------------------------------------------------------------
 
 * Centralize test result summary / evaluation logic
 
