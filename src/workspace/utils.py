@@ -42,12 +42,12 @@ def log_exception(title=None, exit=False, call=None, stack=False):
   """
   try:
     yield
-  except Exception as e:
+  except (Exception, KeyboardInterrupt) as e:
     if title:
       log.error(title)
     if stack:
       log.exception(e)
-    else:
+    elif str(e):
       log.error(e)
     if call:
       call()
