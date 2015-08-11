@@ -94,7 +94,7 @@ class Commander(object):
 
     if name in self.commands():
       kwargs['commander'] = self
-      return self.commands()[name](**kwargs).run()
+      return self.command(name)(**kwargs).run()
     else:
       log.error('Command "%s" is not registered. Override Commander.commands() to add.', name)
       sys.exit(1)

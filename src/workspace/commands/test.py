@@ -64,6 +64,19 @@ class Test(AbstractCommand):
     super(Test, self).__init__(*args, **kwargs)
 
   @classmethod
+  def supports_style_check(cls, repo=None):
+    try:
+      if not repo:
+        repo = repo_path()
+      tox = ToxIni(repo)
+      return 'style' in tox.envlist
+
+    except Exception as e:
+      log.debug(e)
+
+    return False
+
+  @classmethod
   def summarize(cls, tests, include_no_tests=True):
     """
       Summarize the test results

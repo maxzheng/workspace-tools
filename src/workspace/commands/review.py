@@ -93,8 +93,9 @@ class Review(AbstractCommand):
       Run local tests before creating the RB, such as doing a style check.
       It should run with silent=2 (silent but show output on error).
     """
-    log.info('Running style check')
-    self.commander.run('test', env_or_file=['style'], silent=2)
+    if self.commander.command('test').supports_style_check():
+      log.info('Running style check')
+      self.commander.run('test', env_or_file=['style'], silent=2)
 
   @classmethod
   def id_for_branch(cls, branch=None):

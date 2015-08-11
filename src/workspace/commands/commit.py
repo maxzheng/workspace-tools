@@ -105,8 +105,9 @@ class Commit(AbstractCommand):
       test_output = None
 
       if not self.amend and self.test:
-        log.info('Running style check')
-        self.commander.run('test', env_or_file=['style'], silent=2)
+        if self.commander.command('test').supports_style_check():
+          log.info('Running style check')
+          self.commander.run('test', env_or_file=['style'], silent=2)
 
         log.info('Running tests')
         test_output = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
@@ -138,8 +139,9 @@ class Commit(AbstractCommand):
       local_commit(self.msg, self.amend)
 
       if self.amend and self.test:
-        log.info('Running style check')
-        self.commander.run('test', env_or_file=['style'], silent=2)
+        if self.commander.command('test').supports_style_check():
+          log.info('Running style check')
+          self.commander.run('test', env_or_file=['style'], silent=2)
 
         log.info('Running tests')
         test_output = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
