@@ -17,6 +17,7 @@ from workspace.utils import run, log_exception, parallel_call
 log = logging.getLogger(__name__)
 
 TEST_RE = re.compile('\d+ (?:passed|error|failed|xfailed).* in [\d\.]+ seconds')
+BUILD_RE = re.compile('BUILD SUCCESSFUL')
 
 
 class Test(AbstractCommand):
@@ -113,6 +114,9 @@ class Test(AbstractCommand):
 
       else:
         match = TEST_RE.search(product_tests[name])
+
+        if not match:  # Fall back to build if there are no tests.
+          match = BUILD_RE.search(product_tests[name])
 
         if match:
           append_summary(match.group(0), name)
