@@ -1,5 +1,12 @@
-Version 1.0.2
+Version 1.0.3
 ================================================================================
+
+* Fall back to use build results if there is no test result
+* Skip style check if there is no style env
+* Suppress stacktrace when getting ^C
+
+Version 1.0.2
+--------------------------------------------------------------------------------
 
 * Display chaining options separately in help
 * Run style check when running tests for commit
