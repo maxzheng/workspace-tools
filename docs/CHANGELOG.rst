@@ -1,5 +1,11 @@
-Version 1.0.3
+Version 1.0.4
 ================================================================================
+
+* Support running tasks in background
+* Detect if .pypirc has necessary info and prompt as needed. require=localconfig
+
+Version 1.0.3
+--------------------------------------------------------------------------------
 
 * Fall back to use build results if there is no test result
 * Skip style check if there is no style env
