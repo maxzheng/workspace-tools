@@ -1,8 +1,10 @@
+import getpass
 import logging
 import os
 import re
 import sys
 
+from localconfig import LocalConfig
 from workspace.commands import AbstractCommand
 from workspace.scm import repo_check, repo_path, commit_logs, extract_commit_msgs, is_git_repo
 from workspace.utils import silent_run
@@ -29,12 +31,27 @@ class Publish(AbstractCommand):
       cls.make_args('--major', action='store_true', help=docs['major'])
     ]
 
-  def publish(self):
+  def run(self):
     if self.minor and self.major:
       log.error('--minor and --major are mutually exclusive, please use only one.')
       return
 
     repo_check()
+
+    pypirc = LocalConfig('~/.pypirc')
+    if not pypirc.pypi or not pypirc.pypi.repository:
+      log.error('Please add repository / username to [pypi] section in ~/.pypirc')
+      sys.exit(1)
+
+    if not pypirc.pypi.username:
+      pypirc.pypi.username = getpass.getuser('PyPI Username: ')
+      if not pypirc.pypi.username:
+        sys.exit()
+
+    if not pypirc.pypi.password:
+      pypirc.pypi.password = getpass.getpass('PyPI Password: ')
+      if not pypirc.pypi.password:
+        sys.exit()
 
     self.commander.run('update', raises=True)
 
@@ -55,7 +72,8 @@ class Publish(AbstractCommand):
     silent_run('python setup.py sdist', cwd=repo_path())
 
     log.info('Uploading')
-    silent_run('twine upload dist/*', shell=True, cwd=repo_path())
+
+    silent_run('twine upload -u "{username}" -p "{password}" dist/*'.format(**dict(list(pypirc.pypi))), shell=True, cwd=repo_path())
 
   def changes_since_last_publish(self):
     commit_msgs = extract_commit_msgs(commit_logs(limit=100, repo=repo_path()), is_git_repo())
