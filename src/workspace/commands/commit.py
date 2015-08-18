@@ -154,7 +154,7 @@ class Commit(AbstractCommand):
         self.commander.run('review', publish=self.push, test=test_output, skip_prereview=True)
         if self.push:
           self.branch = current_branch()  # Ensure branch is set for push as it could change while waiting
-          self.commander.run('wait', review=True)
+          self.commander.run('wait', review=True, in_background=True)
 
       if self.push:
         self.commander.run('push', branch=self.branch, skip_precommit=self.rb)

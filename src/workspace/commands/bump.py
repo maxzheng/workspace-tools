@@ -131,7 +131,7 @@ class Bump(AbstractCommand):
         if self.push and is_git_repo():
           if not self.skip_rb:
             branch = current_branch()
-            self.commander.run('wait', review=True)
+            self.commander.run('wait', review=True, in_background=True)
           self.commander.run('push', branch=branch)
 
     return messages, commit_msg, bumps

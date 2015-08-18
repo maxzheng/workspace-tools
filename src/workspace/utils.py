@@ -5,6 +5,9 @@ import signal
 import subprocess
 import sys
 
+import psutil
+from setproctitle import setproctitle
+
 
 log = logging.getLogger(__name__)
 
@@ -206,3 +209,73 @@ def show_status(message):
 
   sys.stdout.write('%s\r' % message)
   sys.stdout.flush()
+
+
+def background_processes():
+  """
+    List of background processes from `run_in_background`
+  """
+  prog_prefix = os.path.basename(sys.argv[0]) + ' ['
+  processes = []
+
+  for process in psutil.process_iter():
+    try:
+      if process.cmdline()[0].startswith(prog_prefix):
+        processes.append((process.pid, ' '.join(process.cmdline())[len(prog_prefix)-1:]))
+    except Exception:
+      pass
+
+  return processes
+
+
+def run_in_background(title, repo=None, info_suffix='[To check, run: {prog} wait]', log_file='/dev/null'):
+  """
+    Run any code after this point in the background. This call is idempotent as subsequent calls
+    won't do anything except change the title.
+
+    :param str title: Title to set the running process. This should be informative to the user on
+                      what is being run in the background and will happen.
+    :param str repo: Name of repo the task is being acted on. Defaults to os.getcwd()
+    :param str info_suffix: Informational suffix to append when showing the title before forking.
+                            {prog} will be replaced by the running program's name.
+    :param str log_file: Full path to log file to save output/error.
+  """
+  prog = os.path.basename(sys.argv[0])
+  setproctitle('%s [%s] %s' % (prog, os.path.basename(repo or os.getcwd()), title))
+
+  if hasattr(run_in_background, 'forked'):
+    return
+  else:
+    run_in_background.forked = True
+
+  log.info('%s %s' % (title, info_suffix.format(prog=prog)))
+
+  try:
+    pid = os.fork()
+    if pid > 0:
+      sys.exit(0)
+  except OSError as e:
+    log.error(e)
+    sys.exit(1)
+
+  if repo:
+    os.chdir(repo)
+  os.setsid()
+  os.umask(0)
+
+  try:
+    pid = os.fork()
+    if pid > 0:
+      sys.exit(0)
+  except OSError as e:
+    log.error(e)
+    sys.exit(1)
+
+  sys.stdout.flush()
+  sys.stderr.flush()
+  so = file(log_file, 'a+')
+  se = file(log_file, 'a+', 0)
+  si = file(log_file, 'r')
+  os.dup2(si.fileno(), sys.stdin.fileno())
+  os.dup2(so.fileno(), sys.stdout.fileno())
+  os.dup2(se.fileno(), sys.stderr.fileno())
