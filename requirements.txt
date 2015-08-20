@@ -1,5 +1,8 @@
 bumper-lib
 localconfig
+psutil
 remoteconfig
 requests
+setproctitle
 simplejson
+tabulate

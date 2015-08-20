@@ -2,7 +2,7 @@ import logging
 import sys
 
 from workspace.commands import AbstractCommand
-from workspace.scm import is_git_repo, repo_check, current_branch
+from workspace.scm import is_git_repo, repo_check
 
 log = logging.getLogger(__name__)
 
@@ -82,9 +82,7 @@ class Review(AbstractCommand):
 
     if self.push:
       if is_git_repo():
-        branch = current_branch()
-        self.commander.run('wait', review=True, rb_id=self.rb_id)
-        self.commander.run('push', branch=branch)
+        self.commander.run('wait', push=True, rb_id=self.rb_id, in_background=True)
       else:
         log.error('--push is not supported for svn yet.')
 

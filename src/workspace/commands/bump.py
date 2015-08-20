@@ -50,7 +50,7 @@ class Bump(AbstractCommand):
         cls.make_args('--file', help=docs['file']),
         cls.make_args('-n', '--dry-run', action='store_true', help=docs['dry_run'])
       ], [
-        cls.make_args('-t', '--test', action='count', help=docs['test']),
+        cls.make_args('-t', '--test', action='store_true', help=docs['test']),
         cls.make_args('-p', '--push', action='store_true', help=docs['push']),
       ])
 

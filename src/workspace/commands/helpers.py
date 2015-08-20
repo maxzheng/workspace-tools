@@ -125,10 +125,16 @@ def create_pager(highlight_text=None):
 def expand_product_groups(names):
   """ Expand product groups found in the given list of names to produce a sorted list of unique names. """
   unique_names = set(names)
+  exclude_names = set()
+
+  for name in list(unique_names):
+    if name.startswith('-'):
+      unique_names.remove(name)
+      exclude_names.update(expand_product_groups([name.lstrip('-')]))
 
   for group, names in product_groups().items():
     if group in unique_names:
       unique_names.remove(group)
       unique_names.update(expand_product_groups(names))
 
-  return sorted(list(unique_names))
+  return sorted(list(unique_names - exclude_names))
