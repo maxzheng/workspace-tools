@@ -1,5 +1,10 @@
-Version 1.0.4
+Version 1.0.5
 ================================================================================
+
+* Add --push/--bump-in chaining options to wait command
+
+Version 1.0.4
+--------------------------------------------------------------------------------
 
 * Support running tasks in background
 * Detect if .pypirc has necessary info and prompt as needed. require=localconfig
