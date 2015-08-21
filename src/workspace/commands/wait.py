@@ -31,6 +31,8 @@ class Wait(AbstractCommand):
                     Implies --publish, however it is non-blocking / runs in the background.
     :param list extra_args: Arbitrary commands to run in background.
   """
+  alias = 'w8'
+
   def __init__(self, *args, **kwargs):
     #: Run wait in background if possible
     self.in_background = False

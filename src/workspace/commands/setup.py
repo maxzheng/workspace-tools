@@ -102,7 +102,7 @@ COMMAND_ALIAS_TEMPLATE = 'alias %s=%s\n'
 COMMANDS = {
   'a': "'activate'",
   'd': "'deactivate'",
-  'tv': "'open_files_from_last_command'  # from ag/find/which [t]o [v]im",
+  'tv': "'open_files_from_last_command'  # from ag/ack/grep/find/which [t]o [v]im",
 
   'co': 'checkout',
   'ci': 'commit',

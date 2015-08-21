@@ -7,6 +7,7 @@ from workspace.config import config
 from workspace.commands import AbstractCommand
 from workspace.scm import local_commit, add_files, git_repo_check, checkout_branch,\
     create_branch, all_branches, diff_branch, current_branch, remove_branch, hard_reset, commit_logs
+from workspace.utils import prompt_with_editor
 
 log = logging.getLogger(__name__)
 
@@ -103,6 +104,11 @@ class Commit(AbstractCommand):
 
     else:
       test_output = None
+
+      if not (self.msg or self.amend):
+        self.msg = prompt_with_editor('Please provide a commit message. Empty message will cancel the commit.')
+        if not self.msg:
+          sys.exit()
 
       if not self.amend and self.test:
         if self.commander.command('test').supports_style_check():

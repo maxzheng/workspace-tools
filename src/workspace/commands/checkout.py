@@ -1,8 +1,9 @@
 import logging
+import os
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
-from workspace.scm import checkout_product, checkout_branch, is_git_repo, all_branches, checkout_files, is_repo, product_checkout_path
+from workspace.scm import checkout_product, checkout_branch, is_git_repo, all_branches, checkout_files, is_repo, product_checkout_path, product_name
 log = logging.getLogger(__name__)
 
 
@@ -35,7 +36,11 @@ class Checkout(AbstractCommand):
     for product_url in product_urls:
       product_url = product_url.strip('/')
 
-      log.info('Checking out %s', product_url)
-
       product_path = product_checkout_path(product_url)
+
+      if os.path.exists(product_path):
+        log.info('Updating %s', product_name(product_path))
+      else:
+        log.info('Checking out %s', product_url)
+
       checkout_product(product_url, product_path)

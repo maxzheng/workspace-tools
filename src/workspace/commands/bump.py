@@ -30,12 +30,13 @@ class Bump(AbstractCommand):
     :param dict bumper_models: List of classes that implements :class:`bumper.cars.AbstractBumper`
                                Defaults to :class:`bumper.cars.RequirementsBumper`
     :param bool force: Force a bump even when certain bump requirements are not met.
-    :param bool dry_run: Performs a dry run by printing out the changes instead of committing/creating an rb
+    :param bool dry_run: Perform a dry run by printing out the changes only without making changes.
     :param dict kwargs: Additional args from argparse
   """
 
   def __init__(self, *args, **kwargs):
     kwargs.setdefault('show_filter', True)
+    kwargs.setdefault('skip_rb', False)
     super(Bump, self).__init__(*args, **kwargs)
 
   @classmethod

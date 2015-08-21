@@ -412,7 +412,7 @@ def checkout_product(product_url, checkout_path):
   prod_name = product_name(product_url)
 
   if os.path.exists(checkout_path):
-    log.info('%s is already checked out. Updating...', prod_name)
+    log.debug('%s is already checked out. Updating...', prod_name)
     if is_git_repo(checkout_path):
       checkout_branch('master', checkout_path)
     return update_repo(checkout_path)

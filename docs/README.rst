@@ -5,7 +5,6 @@ Tools to simplify working with multiple product repositories with SCM / developm
 
 It helps you do more with less work by seamlessly integrating all workspace tooling into one where
 you can simply run one command instead of many native commands individually to do common tasks.
-And it is SCM agnostic (git/git-svn/svn), so you don't need to remember the different syntaxes.
 
 It is mostly a wrapper on top of existing tools with the end goal of providing a simple, seamless, and
 less repetive experience when working with one or more repositories. Feature support is mostly limited
@@ -16,15 +15,15 @@ Feature Summary
 ===============
 
 * One tool to seamlessly manage / integrate all workspace tools, from setup to publish.
-* SCM agnostic for git/git-svn/svn - svn commit support later or never? Keep holding your breath... :)
 * Simplified command execution for common workflow - just run one command, instead of many individual native ones.
 * Command execution is also smart / optimized - i.e. test command auto detects requirement changes to redevelop.
 * Path aware context commands that run across all checkouts - i.e. see status / diff for all repos.
 * Get the most out of other products by easily update your dependencies to the latest
-* Automatically install dependencies in editable mode for testing
+* Automatically install dependencies in editable mode for testing if configured
 * Templates included to setup new product quickly
 * Extensible by adding your own custom commands or modify existing by wrapping them.
 * Trunk based development - one branch per one change that is merged into master when pushed.
+* Full support for git/git-svn with limited support for svn.
 * Cool and sensible shortcut aliases to help you do more by typing less - you will love "tv" [if you know ag]!
 
 Quick Start Tutorial
@@ -43,7 +42,7 @@ Second, optionally setup environment with bash functions/aliases::
     [INFO] Added "ws" bash function with workspace directory set to ~/workspace
     [INFO] Added bash functions: bump, checkout, clean, commit, log, publish, push, status, test, update
     [INFO] Added aliases: co=checkout, ci=commit, di=diff, st=status, up=update
-    [INFO] Added special aliases: a='source .tox/${PWD##*/}/bin/activate', d='deactivate', tv='open_files_from_last_command'  # from ag/find/which [t]o [v]im
+    [INFO] Added special aliases: a='source .tox/${PWD##*/}/bin/activate', d='deactivate', tv='open_files_from_last_command'  # from ag/ack/grep/find/which [t]o [v]im
     [INFO] To use, run "source ~/.wstrc" or open a new shell.
 
     $ source ~/.wstrc
@@ -201,18 +200,19 @@ Now you are ready to try out the other commands yourself::
                             out changelog, builds a source distribution, and
                             uploads with twine.
         push                Push changes for branch
+        review (rb)         Create or update a ReviewBoard.
         setup               Optional (refer to setup --help). Setup workspace
                             environment. Run from primary workspace directory.
         status (st)         Show status on current product or all products in
                             workspace
         test                Run tests and manage test environments for product.
         update (up)         Update current product or all products in workspace
+        wait (w8)           Wait for an event to be completed and optionally start
+                            background/waiting tasks.
 
 Links & Contact Info
 ====================
 
-| bumper: https://pypi.python.org/pypi/bumper
-|
 | Documentation: http://workspace-tools.readthedocs.org
 |
 | PyPI Package: https://pypi.python.org/pypi/workspace-tools

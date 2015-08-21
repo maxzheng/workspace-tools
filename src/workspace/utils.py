@@ -4,12 +4,24 @@ import os
 import signal
 import subprocess
 import sys
+from tempfile import NamedTemporaryFile
 
 import psutil
 from setproctitle import setproctitle
 
 
 log = logging.getLogger(__name__)
+
+
+def prompt_with_editor(instruction):
+  """ Prompt user with instruction in $EDITOR and return the response """
+
+  with NamedTemporaryFile(suffix='.tmp') as fh:
+    fh.write('\n\n# ' + '\n# '.join(instruction.split('\n')))
+    fh.flush()
+    editor = os.environ.get('EDITOR', 'vim')
+    run([editor, fh.name])
+    return '\n'.join(filter(lambda l: not l.startswith('#'), open(fh.name).read().split('\n'))).strip()
 
 
 def parent_path_with_dir(directory, path=None):
