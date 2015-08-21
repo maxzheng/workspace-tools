@@ -129,8 +129,8 @@ class Bump(AbstractCommand):
                              skip_prereview=True, reviewer_groups=reviewer_groups, reviewers=reviewers)
 
         if self.push and is_git_repo():
+          branch = current_branch()
           if not self.skip_rb:
-            branch = current_branch()
             self.commander.run('wait', review=True, in_background=True)
           self.commander.run('push', branch=branch)
 
