@@ -46,6 +46,9 @@ class Wait(AbstractCommand):
     if self.bump_in:
       self.publish = True
 
+    if not self.in_background:
+      self.in_background = self.push or self.bump_in or self.extra_args
+
     #: Save the branch as it could change while waiting
     self.branch = is_git_repo() and current_branch()
 
@@ -87,3 +90,19 @@ class Wait(AbstractCommand):
             self.commander.run('bump', test=True, push=True, names=[name])
 
     raise NotImplementedError('Not implemented. Please implement Wait.run() in a subclass.')
+
+  @property
+  def then_action(self):
+    """ Description for the next action if any. """
+    action = None
+
+    if self.push:
+      action = 'push'
+
+    if self.bump_in:
+      action = 'bump in %s' % ', '.join(self.bump_in)
+
+    if self.extra_args:
+      action = ' '.join(self.extra_args)
+
+    return ', then ' + action if action else ''
