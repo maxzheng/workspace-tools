@@ -233,7 +233,9 @@ def background_processes():
   for process in psutil.process_iter():
     try:
       if process.cmdline()[0].startswith(prog_prefix):
-        processes.append((process.pid, ' '.join(process.cmdline())[len(prog_prefix)-1:]))
+        cmdline = ' '.join(process.cmdline())[len(prog_prefix)-1:]
+        repo, task = cmdline.lstrip('[').split(']', 1)
+        processes.append((repo, task, process.pid))
     except Exception:
       pass
 

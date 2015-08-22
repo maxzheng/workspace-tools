@@ -1,5 +1,6 @@
 import logging
 import os
+from operator import itemgetter
 import sys
 
 from tabulate import tabulate
@@ -70,7 +71,7 @@ class Wait(AbstractCommand):
     if not (self.review or self.publish):
       processes = background_processes()
       if processes:
-        print tabulate(processes, headers=['PID', 'Task'])
+        print tabulate(sorted(processes, key=itemgetter(0, 1)), headers=['Repo', 'Task', 'PID'])
       sys.exit(0)
 
     if self.push:
