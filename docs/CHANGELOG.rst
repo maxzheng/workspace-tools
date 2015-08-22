@@ -1,5 +1,11 @@
-Version 1.0.5
+Version 1.0.6
 ================================================================================
+
+* Prompt user for commit msg if not given
+* Ensure branch is assigned before use
+
+Version 1.0.5
+--------------------------------------------------------------------------------
 
 * Add --push/--bump-in chaining options to wait command
 
