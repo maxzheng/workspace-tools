@@ -1,5 +1,11 @@
-Version 1.0.6
+Version 1.0.7
 ================================================================================
+
+* Run wait chaining actions in background
+* Sort task view by repo/task
+
+Version 1.0.6
+--------------------------------------------------------------------------------
 
 * Prompt user for commit msg if not given
 * Ensure branch is assigned before use
