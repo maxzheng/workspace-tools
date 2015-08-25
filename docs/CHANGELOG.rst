@@ -1,5 +1,10 @@
-Version 1.0.7
+Version 1.0.8
 ================================================================================
+
+* Scope not implemented exception to base Wait class for review/publish event
+
+Version 1.0.7
+--------------------------------------------------------------------------------
 
 * Run wait chaining actions in background
 * Sort task view by repo/task
