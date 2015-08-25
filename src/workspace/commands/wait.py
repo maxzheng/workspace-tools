@@ -18,7 +18,10 @@ class Wait(AbstractCommand):
     Wait for an event to be completed and optionally start background/waiting tasks.
 
     If no argument is passed, then show running background/waiting tasks.
-    Any extra arguments passed to wait will be run in the background. I.e. ws wait sleep 10
+
+    Extra arguments passed to wait will be run in the background. I.e. ws wait sleep 10.
+    This can be used with any of the waiting or chaining options.  If any chaining options
+    are used, then extra argument commands will run afterward/last.
 
     :param int review: Wait for 'Ship It' from review board.
                        This is blocking, and so can be used to chain commands in command prompt.
@@ -66,12 +69,11 @@ class Wait(AbstractCommand):
       ])
 
   def run(self):
-    if self.extra_args:
-      run_in_background(' '.join(self.extra_args))
-      run(self.extra_args, shell=True)
-      sys.exit(0)
+    # Refactor to have core logic here and call out to self._wait_for_review and self._wait_for_publish
+    if type(self) == Wait and (self.review or self.publish):
+      raise NotImplementedError('Not implemented. Please implement Wait.run() in a subclass with review/publish')
 
-    if not (self.review or self.publish):
+    if not (self.review or self.publish or self.extra_args):
       processes = background_processes()
       if processes:
         print tabulate(sorted(processes, key=itemgetter(0, 1)), headers=['Repo', 'Task', 'PID'])
@@ -89,7 +91,9 @@ class Wait(AbstractCommand):
             os.chdir(path)
             self.commander.run('bump', test=True, push=True, names=[name])
 
-    raise NotImplementedError('Not implemented. Please implement Wait.run() in a subclass.')
+    if self.extra_args:
+      run_in_background(' '.join(self.extra_args))
+      run(self.extra_args, shell=True)
 
   @property
   def then_action(self):
