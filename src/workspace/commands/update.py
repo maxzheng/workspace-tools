@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
@@ -16,6 +17,10 @@ class Update(AbstractCommand):
   :param list products: When updating all products, filter by these products or product groups
   """
   alias = 'up'
+
+  def __init__(self, *args, **kwargs):
+    kwargs.setdefault('raises', True)
+    super(Update, self).__init__(*args, **kwargs)
 
   @classmethod
   def arguments(cls):
@@ -36,7 +41,8 @@ class Update(AbstractCommand):
       _update_repo(select_repos[0], self.raises)
 
     else:
-      parallel_call(_update_repo, select_repos)
+      if not all(parallel_call(_update_repo, select_repos).values()):
+        sys.exit(1)
 
 
 def _update_repo(repo, raises=False):
@@ -64,3 +70,4 @@ def _update_repo(repo, raises=False):
       raise
     else:
       log.error('%s: %s', name, e)
+      return False

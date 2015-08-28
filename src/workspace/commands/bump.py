@@ -61,7 +61,7 @@ class Bump(AbstractCommand):
     """
     repo_check()
 
-    self.commander.run('update', raises=True)
+    self.commander.run('update')
 
     config.commit.auto_branch_from_commit_words = 1
 

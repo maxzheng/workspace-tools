@@ -53,7 +53,7 @@ class Publish(AbstractCommand):
       if not pypirc.pypi.password:
         sys.exit()
 
-    self.commander.run('update', raises=True)
+    self.commander.run('update')
 
     changes = self.changes_since_last_publish()
 

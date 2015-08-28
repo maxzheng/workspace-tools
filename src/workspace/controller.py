@@ -30,7 +30,6 @@ class Commander(object):
 
     It helps you do more with less work by seamlessly integrating all workspace tooling into one where
     you can simply run one command instead of many native commands individually to do common tasks.
-    And it is SCM agnostic (git/git-svn/svn), so you don't need to remember the different syntaxes.
 
     To get started
     ---------------
@@ -108,9 +107,14 @@ class Commander(object):
     self.parser = argparse.ArgumentParser(description=textwrap.dedent(self.__doc__), formatter_class=argparse.RawDescriptionHelpFormatter)
     self.parser.register('action', 'parsers', AliasedSubParsersAction)
 
-    version = '\n'.join('%s %s' % (pkg, pkg_resources.get_distribution(pkg).version)
-                        for pkg in filter(None, [getattr(self, 'package_name', None), 'workspace-tools']))
-    self.parser.add_argument('-v', '--version', action='version', version=version)
+    versions = []
+    for pkg in filter(None, [getattr(self, 'package_name', None), 'workspace-tools']):
+      try:
+        versions.append('%s %s' % (pkg, pkg_resources.get_distribution(pkg).version))
+      except Exception:
+        pass
+
+    self.parser.add_argument('-v', '--version', action='version', version='\n'.join(versions))
     self.parser.add_argument('--debug', action='store_true', help='Turn on debug mode')
 
   def setup_parsers(self):
