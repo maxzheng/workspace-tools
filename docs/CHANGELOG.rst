@@ -1,5 +1,13 @@
-Version 1.0.8
+Version 1.0.9
 ================================================================================
+
+* Add --rb to bump to be consistent with other commands and various test fixes
+* Do sys.exit(1) if any repo failed to update instead of existing silently.
+  
+  Also check if package exists before including it in version display.
+
+Version 1.0.8
+--------------------------------------------------------------------------------
 
 * Scope not implemented exception to base Wait class for review/publish event
 
