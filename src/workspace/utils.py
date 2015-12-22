@@ -90,10 +90,12 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
                           If 2, print cmd output on error.
   :param bool return_output: Return the command output. Defaults silent=True. Set silent=False to see output.
                              If True, always return output.
-                             If set to 2, return False on error instead of output.
+                             If set to 2, return a tuple of (output, success) where output is the output of the command
+                             and success is exit code 0.
+                             When used, it is guaranteed to always return output / other options are ignored (like raises).
   :param bool raises: Raise an exception if command exits with an error code.
   :param dict subprocess_args: Additional args to pass to subprocess
-  :return: Output or None depending on option selected
+  :return: Output or boolean of success depending on option selected
   :raise RunError: if the command exits with an error code and raises=True
   """
 
@@ -131,9 +133,11 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
 
       if return_output is True:
         return output
+      elif return_output == 2:
+        return output, exit_code == 0
 
       if exit_code == 0:
-        if return_output:  # == 2
+        if return_output:
           return output
         else:
           return True

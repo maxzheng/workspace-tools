@@ -109,6 +109,9 @@ class Test(AbstractCommand):
         success = False
         append_summary('Test failed / No output', name)
 
+      elif product_tests[name] is True:
+        append_summary('Test successful / No output', name)
+
       elif 'collected 0 items' in product_tests[name] and 'error' not in product_tests[name]:
         append_summary('No tests')
 

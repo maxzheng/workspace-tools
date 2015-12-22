@@ -20,9 +20,9 @@ class Bump(AbstractCommand):
                       Name can be a product group name defined in workspace.cfg.
                       To bump to a specific version instead of latest, append version to name
                       (i.e. requests==1.2.3 or 'requests>=1.2.3'). When > or < is used, be sure to quote.
-    :param int test: Run tests and include results in RB.
+    :param int test: Run tests. Results will be posted to ReviewBoard if --rb is used.
+    :param bool rb: Create or update existing RB after commit. Existing RB is looked up in .git/config.
     :param bool push: Wait for 'Ship It' from RB (unless --skip-rb is used) and push the bump (git only)
-    :param bool skip_rb: Skip creating or updating RB
     :param bool add: Add the `names` to the requirements file if they don't exist.
     :param str msg: Summary commit message
     :param str/list file: Requirement file to bump. Defaults to requirements.txt or pinned.txt
@@ -36,7 +36,6 @@ class Bump(AbstractCommand):
 
   def __init__(self, *args, **kwargs):
     kwargs.setdefault('show_filter', True)
-    kwargs.setdefault('skip_rb', False)
     super(Bump, self).__init__(*args, **kwargs)
 
   @classmethod
@@ -44,14 +43,14 @@ class Bump(AbstractCommand):
     _, docs = cls.docs()
     return ([
         cls.make_args('names', nargs='*', help=docs['names']),
-        cls.make_args('-s', '--skip-rb', action='store_true', help=docs['skip_rb']),
         cls.make_args('--add', action='store_true', help=docs['add']),
         cls.make_args('--force', action='store_true', help=docs['force']),
         cls.make_args('-m', '--msg', help=docs['msg']),
         cls.make_args('--file', help=docs['file']),
         cls.make_args('-n', '--dry-run', action='store_true', help=docs['dry_run'])
       ], [
-        cls.make_args('-t', '--test', action='store_true', help=docs['test']),
+        cls.make_args('-t', '--test', action='count', help=docs['test']),
+        cls.make_args('-r', '--rb', action='store_true', help=docs['rb']),
         cls.make_args('-p', '--push', action='store_true', help=docs['push']),
       ])
 
@@ -63,7 +62,8 @@ class Bump(AbstractCommand):
 
     self.commander.run('update')
 
-    config.commit.auto_branch_from_commit_words = 1
+    if not self.msg:
+      config.commit.auto_branch_from_commit_words = 1
 
     if not self.names:
       self.names = []
@@ -111,10 +111,10 @@ class Bump(AbstractCommand):
 
       if self.test:
         log.info('Running tests')
-        tests[product_name()] = self.commander.run('test', return_output=not self.skip_rb, skip_editable_install=True)
+        tests[product_name()] = self.commander.run('test', return_output=self.rb, skip_editable_install=True, test_dependents=self.test > 1)
 
       if not self.dry_run:
-        if not self.skip_rb and commit_msg and self.commander.command('review') != Review:
+        if self.rb and commit_msg and self.commander.command('review') != Review:
           reviewer_groups = set()
           reviewers = set()
 
@@ -131,7 +131,7 @@ class Bump(AbstractCommand):
 
         if self.push and is_git_repo():
           branch = current_branch()
-          if not self.skip_rb:
+          if self.rb:
             self.commander.run('wait', review=True, in_background=True)
           self.commander.run('push', branch=branch)
 

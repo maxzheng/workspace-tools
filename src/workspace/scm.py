@@ -128,7 +128,7 @@ def add_files(repo=None, files=None):
   else:
     files = '.'
 
-  silent_run('git add ' + files, cwd=repo)
+  silent_run('git add --all ' + files, cwd=repo)
 
 
 def repo_check():
@@ -500,6 +500,7 @@ def repo_url(path=None, name='origin', action='push'):
   output = run(cmd, cwd=path, return_output=True)
 
   for line in output.split('\n'):
-    remote_name, remote_url, remote_action = line.split()
-    if remote_name == name and action in remote_action:
-      return remote_url
+    if line:
+      remote_name, remote_url, remote_action = line.split()
+      if remote_name == name and action in remote_action:
+        return remote_url

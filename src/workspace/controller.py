@@ -57,6 +57,7 @@ class Commander(object):
 
   @classmethod
   def main(cls):
+    logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
     cls()._run()
 
   def _run(self):
@@ -64,7 +65,6 @@ class Commander(object):
       Sets up logging, parser, and creates the necessary command sequences to run, and runs
       the command given by the user.
     """
-    logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
     self.setup_parsers()
 
     args, extra_args = self.parser.parse_known_args()
