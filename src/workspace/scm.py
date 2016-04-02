@@ -89,7 +89,7 @@ def commit_logs(limit=None, repo=None, diff=False, show_revision=None, extra_arg
       limit = 1
 
   if is_git_repo(repo):
-    cmd = ['git', 'log']
+    cmd = ['git', 'log', '--decorate']
     if show_revision:
       cmd.extend(['-U', show_revision])
     if limit:
@@ -318,13 +318,16 @@ def stat_repo(path=None, return_output=False):
   return run(cmd, cwd=path, return_output=return_output)
 
 
-def diff_repo(path=None, branch=None, file=None, return_output=False):
+def diff_repo(path=None, branch=None, file=None, return_output=False, name_only=False):
   if is_git_repo(path):
     cmd = ['git', 'diff']
     if branch:
       cmd.append(branch)
     if file:
       cmd.append(file)
+    if name_only:
+      cmd.append('--name-only')
+
   else:
     cmd = ['svn', 'diff']
     if file:

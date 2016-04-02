@@ -7,7 +7,7 @@ from tabulate import tabulate
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
-from workspace.scm import product_name, is_git_repo, current_branch, product_path
+from workspace.scm import product_name, is_git_repo, current_branch, product_path, checkout_branch
 from workspace.utils import background_processes, run, run_in_background
 
 log = logging.getLogger(__name__)
@@ -89,7 +89,8 @@ class Wait(AbstractCommand):
         if os.path.exists(path):
           if not os.fork():  # child
             os.chdir(path)
-            self.commander.run('bump', test=True, push=True, names=[name])
+            checkout_branch('master')
+            self.commander.run('bump', rb=True, test=True, push=True, names=[name])
 
     if self.extra_args:
       run_in_background(' '.join(self.extra_args))

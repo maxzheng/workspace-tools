@@ -1,8 +1,9 @@
+import os
 import logging
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import ProductPager
-from workspace.scm import stat_repo, repos, product_name, all_branches, is_git_repo
+from workspace.scm import stat_repo, repos, product_name, all_branches, is_git_repo, is_repo
 
 log = logging.getLogger(__name__)
 
@@ -15,10 +16,13 @@ class Status(AbstractCommand):
 
     try:
       scm_repos = repos()
+      in_repo = is_repo(os.getcwd())
       optional = len(scm_repos) == 1
       pager = ProductPager(optional=optional)
+
       for repo in scm_repos:
-        output = stat_repo(repo, True)
+        stat_path = os.getcwd() if in_repo else repo
+        output = stat_repo(stat_path, True)
         nothing_to_commit = 'nothing to commit' in output and 'Your branch is ahead of' not in output
 
         branches = all_branches(repo) if is_git_repo(repo) else []

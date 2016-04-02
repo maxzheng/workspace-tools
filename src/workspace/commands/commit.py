@@ -83,7 +83,7 @@ class Commit(AbstractCommand):
         log.info('Deleted branch %s', self.branch)
 
       else:
-        match = re.match('([a-f0-9]+)\n', changes[0])
+        match = re.match('([a-f0-9]+)(?: \(.*\))\n', changes[0])
 
         if match:
           last_commit = match.group(1)
@@ -157,7 +157,7 @@ class Commit(AbstractCommand):
           sys.exit(1)
 
       if self.rb:
-        self.commander.run('review', publish=self.push, test=test_output, skip_prereview=True)
+        self.commander.run('review', publish=self.push, test=test_output, skip_prereview=self.test)
         if self.push:
           self.branch = current_branch()  # Ensure branch is set for push as it could change while waiting
           self.commander.run('wait', review=True, in_background=True)
