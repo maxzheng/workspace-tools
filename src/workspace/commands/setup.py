@@ -205,6 +205,7 @@ max-line-length = 160
 
 [pytest]
 addopts = -n 4
+testpaths = test
 
 [wst]
 template_version = 1
