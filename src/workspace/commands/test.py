@@ -126,7 +126,8 @@ class Test(AbstractCommand):
         else:
           append_summary('No test summary found in output', name)
 
-        if 'failed' in product_tests[name].replace('xfailed', '') or 'error' in product_tests[name]:
+        summary_lines = [l for l in product_tests[name].replace('xfailed', '').split('\n') if l.startswith('===')]
+        if not len(summary_lines) == 2 or 'failed' in summary_lines[-1] or 'error' in summary_lines[-1]:
           success = False
 
     return success, summaries if isinstance(tests, dict) else summaries[0]
@@ -286,6 +287,13 @@ class Test(AbstractCommand):
 
       for env in envs:
         env_commands[env] = ' '.join(cmd)
+
+        # Touch envdir
+        envdir = tox.envdir(env)
+        if os.path.exists(envdir):
+          os.utime(envdir, None)
+
+        # Strip entry version
         self._strip_version_from_entry_scripts(tox, env)
         if not self.skip_editable_install and env in tox.envlist:
           self.install_editable_dependencies(tox, env)
@@ -363,14 +371,15 @@ class Test(AbstractCommand):
       for script in os.listdir(script_bin):
         script_path = os.path.join(script_bin, script)
 
-        with open(script_path) as fp:
-          script = fp.read()
+        if os.path.isfile(script_path):
+          with open(script_path) as fp:
+            script = fp.read()
 
-        if name_version_re.search(script):
-          new_script = name_version_re.sub(name, script)
-          with open(script_path, 'w') as fp:
-            fp.write(new_script)
-          removed_from.append(os.path.basename(script_path))
+          if name_version_re.search(script):
+            new_script = name_version_re.sub(name, script)
+            with open(script_path, 'w') as fp:
+              fp.write(new_script)
+            removed_from.append(os.path.basename(script_path))
 
       if removed_from:
         log.debug('Removed version spec from entry script(s): %s', ', '.join(removed_from))
@@ -394,13 +403,13 @@ workspace_dir = os.path.dirname(cwd)
 try:
   libs = [(p.key, p.version, p.location) for p in pip.get_installed_distributions()]
 except Exception as e:
-  print e
+  print(e)
   sys.exit(1)
 
 output = []
 
 if not json_output:
-  print env + ':'
+  print(env + ':')
 
 def strip_cwd(dir):
   if dir.startswith(cwd + '/'):
@@ -418,9 +427,9 @@ for lib, version, location in sorted(libs):
     output.append('  %%-25s %%-10s  %%s' %% (lib, version, strip_cwd(location)))
 
 if json_output:
-  print json.dumps(output)
+  print(json.dumps(output))
 else:
-  print '\\n'.join(output)
+  print('\\n'.join(output))
 """
 
     name = product_name(tox.repo)
@@ -449,7 +458,13 @@ else:
     if not dependencies_output:
       log.debug('%s is not installed or there is no dependencies - skipping editable mode changes', name)
       return
-    product_dependencies_list = json.loads(dependencies_output)
+
+    try:
+      product_dependencies_list = json.loads(dependencies_output)
+    except Exception as e:
+      log.debug('Failed to get installed dependencies - skipping editable mode changes: %s', e)
+      return
+
     product_dependencies = {}
 
     for dep, _, path in product_dependencies_list:

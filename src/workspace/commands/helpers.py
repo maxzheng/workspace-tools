@@ -45,7 +45,7 @@ class ToxIni(LocalConfig):
 
   @property
   def envlist(self):
-    return filter(None, self.tox.envlist.split(','))
+    return [e.strip() for e in self.tox.envlist.split(',') if e]
 
   def envsection(self, env):
     return 'testenv:%s' % env

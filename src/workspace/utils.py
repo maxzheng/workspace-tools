@@ -180,8 +180,10 @@ def parallel_call(call, args, callback=None, workers=10, show_progress=None, pro
   signal.signal(signal.SIGTERM, lambda *args: sys.exit(1))
   pool = Pool(workers, lambda: signal.signal(signal.SIGINT, signal.SIG_IGN))
 
+  def to_tuple(a):
+    return a if isinstance(a, (list, tuple, set)) else [a]
+
   try:
-    to_tuple = lambda a: a if isinstance(a, (list, tuple, set)) else [a]
     async_results = [(arg, pool.apply_async(call, to_tuple(arg), callback=callback)) for arg in args]
 
     results = {}

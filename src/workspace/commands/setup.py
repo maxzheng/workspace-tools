@@ -204,7 +204,6 @@ max-line-length = 160
 
 [pytest]
 addopts = -n 4
-testpaths = test
 
 [wst]
 template_version = 1
@@ -521,7 +520,8 @@ class Setup(AbstractCommand):
       if self.additional_commands:
         COMMANDS.update(self.additional_commands)
 
-      special = lambda c: c.startswith("'") or c.startswith('"') or c.startswith(' ')
+      def special(c):
+        return c.startswith("'") or c.startswith('"') or c.startswith(' ')
 
       if self.commands or self.commands_with_aliases:
         functions = sorted([f for f in COMMANDS.values() if not special(f)])

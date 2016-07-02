@@ -117,10 +117,12 @@ class Commit(AbstractCommand):
 
         log.info('Running tests')
         test_output = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
-        success, _ = self.commander.command('test').summarize(test_output)
 
-        if not success:
-          sys.exit(1)
+        if self.rb:
+          success, _ = self.commander.command('test').summarize(test_output)
+
+          if not success:
+            sys.exit(1)
 
       branches = all_branches()
       cur_branch = branches and branches[0]
@@ -151,14 +153,20 @@ class Commit(AbstractCommand):
 
         log.info('Running tests')
         test_output = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
-        success, _ = self.commander.command('test').summarize(test_output)
 
-        if not success:
-          sys.exit(1)
+        if self.rb:
+          success, _ = self.commander.command('test').summarize(test_output)
+
+          if not success:
+            sys.exit(1)
 
       if self.rb:
-        self.commander.run('review', publish=self.push, test=test_output, skip_prereview=self.test)
+        publish = self.push and (self.amend or test_output)
+        self.commander.run('review', publish=publish, test=test_output, skip_prereview=self.test)
+
         if self.push:
+          if not publish:
+            log.info("Review was not published as there is no testing done. Please update testing done and then publish")
           self.branch = current_branch()  # Ensure branch is set for push as it could change while waiting
           self.commander.run('wait', review=True, in_background=True)
 
@@ -193,8 +201,9 @@ class Commit(AbstractCommand):
     if not branch_name:
       raise Exception('No words found in commit msg to create branch name')
 
-    if ((branch_name[-1] in ignored_words or not ignored_num_re.match(word) and len(branch_name[-1]) <= ignored_word_length)
-       and (not branches or '-'.join(branch_name[:-1]) not in branches)):
+    has_ignored_or_short_name = branch_name[-1] in ignored_words or not ignored_num_re.match(word) and len(branch_name[-1]) <= ignored_word_length
+    no_name_conflict = not branches or '-'.join(branch_name[:-1]) not in branches
+    if has_ignored_or_short_name and no_name_conflict:
       branch_name = branch_name[:-1]
 
     branch_name = '-'.join(branch_name)
