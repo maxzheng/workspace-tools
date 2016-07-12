@@ -1,5 +1,14 @@
-Version 1.0.9
+Version 1.0.10
 ================================================================================
+
+* Add --install-editable option to "ws test" and remove config.test.editable_products
+* Sync changes from downstream
+* Remove use of --download-cache option
+* Set testpaths to "test"
+* Add --name-only option and fix some bugs
+
+Version 1.0.9
+--------------------------------------------------------------------------------
 
 * Add --rb to bump to be consistent with other commands and various test fixes
 * Do sys.exit(1) if any repo failed to update instead of existing silently.
