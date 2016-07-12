@@ -57,18 +57,6 @@
 
   # Automatically create branch based on the first number of commit words. Set to 0 to turn off.
   auto_branch_from_commit_words = 2
-
-
-  ###########################################################################################################
-  # Settings for test command
-  ###########################################################################################################
-  [test]
-
-  # List of products or product groups that will:
-  # * Be installed as editable for the environments in [tox] envlist if they are checked out in workspace.
-  # * Install editable product dependencies.
-  # * Be used for transitive testing.
-  editable_products =
 """
 
 import logging

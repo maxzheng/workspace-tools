@@ -111,7 +111,7 @@ class Bump(AbstractCommand):
 
       if self.test:
         log.info('Running tests')
-        tests[product_name()] = self.commander.run('test', return_output=self.rb, skip_editable_install=True, test_dependents=self.test > 1)
+        tests[product_name()] = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
 
       if not self.dry_run:
         if self.rb and commit_msg and self.commander.command('review') != Review:

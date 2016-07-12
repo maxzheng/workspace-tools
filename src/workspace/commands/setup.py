@@ -5,7 +5,7 @@ import re
 import sys
 
 from localconfig import LocalConfig
-from workspace.config import product_groups, USER_CONFIG_FILE
+from workspace.config import product_groups
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
@@ -329,25 +329,6 @@ class Setup(AbstractCommand):
 
     # Checkout product
     self.commander.run('checkout', target=[self.product_group])
-
-    # Add to editable_products
-    config_dir = os.path.expanduser(os.path.dirname(USER_CONFIG_FILE))
-    if not os.path.exists(config_dir):
-      os.makedirs(config_dir)
-    user_config = LocalConfig(USER_CONFIG_FILE, compact_form=True)
-    not_set = not user_config.get('test', 'editable_products', None)
-    if not_set or self.product_group not in user_config.test.editable_products:
-      if not_set:
-        if 'test' not in user_config:
-          user_config.add_section('test')
-        user_config.test.editable_products = self.product_group
-      else:
-        products = user_config.test.editable_products.split()
-        products.append(self.product_group)
-        user_config.test.editable_products = ' '.join(sorted(products))
-
-      user_config.save()
-      log.info('Added "%s" to editable_products in %s', self.product_group, USER_CONFIG_FILE)
 
     # Develop the environment
     current_dir = os.getcwd()

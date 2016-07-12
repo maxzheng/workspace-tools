@@ -31,11 +31,9 @@ class Test(AbstractCommand):
                              for the default environements). Defaults to the envlist in tox.
     :param str repo: Repo path to test instead of current repo
     :param bool show_dependencies: Show where product dependencies are installed from and their versions.
-                              Dependencies can be configured to be installed in editable mode in workspace.cfg
-                              with [test] editable_products setting.
     :param bool test_dependents: Run tests in this product and in checked out products that depends on this product.
-                                 This product and its dependents must be listed in [test] editable_products in workspace.cfg
-                                 for this to run.  Most args are ignored when this is used.
+                                 This product must be installed as editable in its dependents for the results to be useful.
+                                 Most args are ignored when this is used.
     :param bool redevelop: Redevelop the test environment by installing on top of existing one.
                            This is implied if test environment does not exist, or whenever requirements.txt or
                            pinned.txt is modified after the environment was last updated.
@@ -51,9 +49,9 @@ class Test(AbstractCommand):
     :param dict tox_commands: Map of env to list of commands to override "[testenv:env] commands" setting for env.
                               Only used when not developing.
     :param list args: Additional args to pass to py.test
-    :param bool skip_editable_install: Skip installing editable dependencies
     :param bool silent: Run tox/py.test silently. Only errors are printed and followed by exit.
     :param bool debug: Turn on debug logging
+    :param list install_editable: List of products or product groups to install in editable mode.
     :param list extra_args: Extra args from argparse to be passed to py.test
     :return: Dict of env to commands ran on success. If return_output is True, return a string output.
              If test_dependents is True, return a mapping of product name to the mentioned results.
@@ -142,7 +140,8 @@ class Test(AbstractCommand):
       cls.make_args('-d', '--show-dependencies', metavar='FILTER', action='store', nargs='?', help=docs['show_dependencies'], const=True),
       cls.make_args('-t', '--test-dependents', action='store_true', help=docs['test_dependents']),
       cls.make_args('-r', '--redevelop', action='count', help=docs['redevelop']),
-      cls.make_args('-o', action='store_true', dest='install_only', help=argparse.SUPPRESS)
+      cls.make_args('-o', action='store_true', dest='install_only', help=argparse.SUPPRESS),
+      cls.make_args('-e', '--install-editable', nargs='+', help=docs['install_editable'])
     ]
 
   def run(self):
@@ -168,16 +167,6 @@ class Test(AbstractCommand):
 
       test_repos = [repo_path()]
       test_repos.extend(r for r in repos(workspace_path()) if self.product_depends_on(r, name) and r not in test_repos)
-      scoped_products = config.test.editable_products and expand_product_groups(config.test.editable_products.split()) or []
-
-      if name not in scoped_products:
-        log.error('To run transitive tests, please add this product and its dependents to [test] editable_products in your ~/config/workspace.cfg')
-        if self.return_output:
-          return False
-        else:
-          sys.exit(1)
-
-      test_repos = [r for r in test_repos if not scoped_products or product_name(r) in scoped_products]
       test_args = [(r, test_args, self.__class__) for r in test_repos]
 
       def test_done(result):
@@ -262,6 +251,12 @@ class Test(AbstractCommand):
       for env in envs:
         self.show_installed_dependencies(tox, env, filter_name=self.show_dependencies)
 
+    elif self.install_editable:
+      for env in envs:
+        if len(envs) > 1:
+          print(env + ':')
+        self.install_editable_dependencies(tox, env, editable_products=self.install_editable)
+
     elif self.redevelop:
       if self.tox_cmd:
         cmd = self.tox_cmd
@@ -295,8 +290,6 @@ class Test(AbstractCommand):
 
         # Strip entry version
         self._strip_version_from_entry_scripts(tox, env)
-        if not self.skip_editable_install and env in tox.envlist:
-          self.install_editable_dependencies(tox, env)
 
       if self.return_output:
         return output
@@ -319,11 +312,11 @@ class Test(AbstractCommand):
               self.commander.run('test', env_or_file=[env], repo=self.repo, redevelop=True, tox_cmd=self.tox_cmd,
                                  tox_ini=self.tox_ini, tox_commands=self.tox_commands, match_test=self.match_test,
                                  num_processes=self.num_processes, silent=self.silent,
-                                 skip_editable_install=self.skip_editable_install, debug=self.debug, extra_args=self.extra_args))
+                                 debug=self.debug, extra_args=self.extra_args))
           continue
 
         if len(envs) > 1 and not self.silent:
-            print env
+            print(env)
 
         commands = self.tox_commands.get(env) or tox.commands(env)
         env_commands[env] = '\n'.join(commands)
@@ -347,7 +340,7 @@ class Test(AbstractCommand):
                 sys.exit(1)
 
             if env != envs[-1] and not self.silent:
-              print
+              print()
 
             if self.return_output:
               return output
@@ -444,15 +437,9 @@ else:
 
     return run([python, '-c', script], return_output=return_output, raises=False)
 
-  def install_editable_dependencies(self, tox, env):
-    if not config.test.editable_products:
-      return
-
+  def install_editable_dependencies(self, tox, env, editable_products):
     name = product_name(tox.repo)
-    editable_products = expand_product_groups(config.test.editable_products.split())
-
-    if name not in editable_products:
-      return
+    editable_products = expand_product_groups(editable_products)
 
     dependencies_output = self.show_installed_dependencies(tox, env, return_output=True)
     if not dependencies_output:
@@ -472,6 +459,18 @@ else:
 
     available_products = [os.path.basename(r) for r in product_repos()]
     libs = [d for d in editable_products if d in available_products and d in product_dependencies and tox.workdir in product_dependencies[d]]
+
+    already_editable = [d for d in editable_products if d in product_dependencies and tox.workdir not in product_dependencies[d]]
+    for lib in already_editable:
+      log.info('%s is already installed in editable mode.', lib)
+
+    not_dependent = [d for d in editable_products if d not in product_dependencies]
+    for lib in not_dependent:
+      log.debug('%s is not currently installed (not a dependency) and will be ignored.', lib)
+
+    not_available = [d for d in editable_products if d not in not_dependent and d not in available_products]
+    for lib in not_available:
+      log.info('%s is a dependency but not checked out in workspace, and so can not be installed in editable mode.', lib)
 
     pip = tox.bindir(env, 'pip')
 
