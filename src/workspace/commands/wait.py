@@ -1,3 +1,4 @@
+from glob import glob
 import logging
 import os
 from operator import itemgetter
@@ -7,7 +8,7 @@ from tabulate import tabulate
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
-from workspace.scm import product_name, is_git_repo, current_branch, product_path, checkout_branch
+from workspace.scm import product_name, is_git_repo, current_branch, product_path, checkout_branch, repo_path
 from workspace.utils import background_processes, run, run_in_background
 
 log = logging.getLogger(__name__)
@@ -30,9 +31,12 @@ class Wait(AbstractCommand):
                          This is blocking, and so can be used to chain commands in command prompt.
     :param int interval: Minutes to wait between each check.
                          Defaults to 5 minutes.
-    :param push: Wait for review and push. Implies --review, however it is non-blocking / runs in background.
-    :param bump_in: Wait for publish and bump it in the given products/product groups.
+    :param bool push: Wait for review and push. Implies --review, however it is non-blocking / runs in background.
+    :param list bump_in: Wait for publish and bump it in the given products/product groups.
                     Implies --publish, however it is non-blocking / runs in the background.
+    :param bool log: List all wait logs in temp dir (/var/tmp/workspace/wait-*), optionally matching current repo if
+                     in a repo.
+                     Use -ll to view last log. Each additional 'l' will view the log before last.
     :param list extra_args: Arbitrary commands to run in background.
   """
   alias = 'w8'
@@ -61,7 +65,8 @@ class Wait(AbstractCommand):
     return ([
         cls.make_args('-r', '--review', action='store_true', help=docs['review']),
         cls.make_args('-P', '--publish', action='store_true', help=docs['publish']),
-        cls.make_args('-i', '--interval', type=int, default=5, help=docs['interval'])
+        cls.make_args('-i', '--interval', type=int, default=5, help=docs['interval']),
+        cls.make_args('-l', '--log', action='count', help=docs['log'])
       ],
       [
         cls.make_args('-p', '--push', action='store_true', help=docs['push']),
@@ -73,11 +78,35 @@ class Wait(AbstractCommand):
     if type(self) == Wait and (self.review or self.publish):
       raise NotImplementedError('Not implemented. Please implement Wait.run() in a subclass with review/publish')
 
-    if not (self.review or self.publish or self.extra_args):
+    if not (self.review or self.publish or self.log or self.extra_args):
       processes = background_processes()
       if processes:
         print tabulate(sorted(processes, key=itemgetter(0, 1)), headers=['Repo', 'Task', 'PID'])
       sys.exit(0)
+
+    if self.log:
+      repo = repo_path()
+      logs = sorted(glob('/var/tmp/workspace/wait-*'), key=lambda f: os.stat(f).st_mtime)
+
+      if len(logs) > 10:
+        for log_file in logs[:len(logs)-10]:
+          log.debug('Deleting old log: %s', log_file)
+          os.unlink(log_file)
+        logs = logs[-10:]
+
+      if repo:
+        name = product_name(repo)
+        repo_key = 'wait-' + name.replace('-', '_') + '-'
+        logs = [l for l in logs if repo_key in l]
+
+      if logs:
+        if self.log == 1:
+          print '\n'.join(logs)
+        else:
+          print open(logs[-(self.log-1)]).read()
+
+      else:
+        print 'No logs found'
 
     if self.push:
       self.commander.run('push', branch=self.branch)

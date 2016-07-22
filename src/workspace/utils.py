@@ -1,10 +1,11 @@
 from contextlib import contextmanager
 import logging
 import os
+import re
 import signal
 import subprocess
 import sys
-from tempfile import NamedTemporaryFile
+import tempfile
 
 import psutil
 from setproctitle import setproctitle
@@ -16,7 +17,7 @@ log = logging.getLogger(__name__)
 def prompt_with_editor(instruction):
   """ Prompt user with instruction in $EDITOR and return the response """
 
-  with NamedTemporaryFile(suffix='.tmp') as fh:
+  with tempfile.NamedTemporaryFile(suffix='.tmp') as fh:
     fh.write('\n\n# ' + '\n# '.join(instruction.split('\n')))
     fh.flush()
     editor = os.environ.get('EDITOR', 'vim')
@@ -248,7 +249,7 @@ def background_processes():
   return processes
 
 
-def run_in_background(title, repo=None, info_suffix='[To check, run: {prog} wait]', log_file='/dev/null'):
+def run_in_background(title, repo=None, info_suffix='[To check, run: {prog} wait]', log_file=None):
   """
     Run any code after this point in the background. This call is idempotent as subsequent calls
     won't do anything except change the title.
@@ -258,7 +259,8 @@ def run_in_background(title, repo=None, info_suffix='[To check, run: {prog} wait
     :param str repo: Name of repo the task is being acted on. Defaults to os.getcwd()
     :param str info_suffix: Informational suffix to append when showing the title before forking.
                             {prog} will be replaced by the running program's name.
-    :param str log_file: Full path to log file to save output/error.
+    :param str log_file: Full path to log file to save output/error. Saves to temp dir by default.
+                         Set to "/dev/null" to discard output.
   """
   prog = os.path.basename(sys.argv[0])
   setproctitle('%s [%s] %s' % (prog, os.path.basename(repo or os.getcwd()), title))
@@ -268,7 +270,13 @@ def run_in_background(title, repo=None, info_suffix='[To check, run: {prog} wait
   else:
     run_in_background.forked = True
 
+  if not log_file:
+    def rs(s):  # Remove special characters
+      return re.sub('[^a-zA-Z0-9]', '_', s)
+    log_file = os.path.join(tempfile.gettempdir(), 'wait-{0}-{1}.out'.format(rs(os.path.basename(repo or os.getcwd())), rs(title)))
+
   log.info('%s %s' % (title, info_suffix.format(prog=prog)))
+  log.debug('Log file: %s', log_file)
 
   try:
     pid = os.fork()
@@ -293,9 +301,12 @@ def run_in_background(title, repo=None, info_suffix='[To check, run: {prog} wait
 
   sys.stdout.flush()
   sys.stderr.flush()
-  so = file(log_file, 'a+')
-  se = file(log_file, 'a+', 0)
+  so = file(log_file, 'w+')
+  se = file(log_file, 'w+', 0)
   si = file(log_file, 'r')
   os.dup2(si.fileno(), sys.stdin.fileno())
   os.dup2(so.fileno(), sys.stdout.fileno())
   os.dup2(se.fileno(), sys.stderr.fileno())
+
+  print '[%s] %s' % (os.path.basename(repo or os.getcwd()), title)
+  sys.stdout.flush()

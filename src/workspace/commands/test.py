@@ -177,7 +177,7 @@ class Test(AbstractCommand):
           log.info('%s: %s', name, summary)
 
         else:
-          temp_output_file = os.path.join(tempfile.gettempdir(), '%s-test.out' % name)
+          temp_output_file = os.path.join(tempfile.gettempdir(), 'test-%s.out' % name)
           with open(temp_output_file, 'w') as fp:
             fp.write(output)
           temp_output_file = 'See ' + temp_output_file
