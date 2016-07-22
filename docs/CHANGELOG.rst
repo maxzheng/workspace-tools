@@ -1,5 +1,10 @@
-Version 1.0.10
+Version 1.0.11
 ================================================================================
+
+* Log wait command output and allow them to be viewed with --log option
+
+Version 1.0.10
+--------------------------------------------------------------------------------
 
 * Add --install-editable option to "ws test" and remove config.test.editable_products
 * Sync changes from downstream
