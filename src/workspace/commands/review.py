@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import logging
 import sys
 
@@ -60,7 +61,7 @@ class Review(AbstractCommand):
       if not isinstance(tests, list):
         tests = [tests]
 
-      self.tests = '\n'.join(filter(lambda t: 'No tests' not in t, tests))
+      self.tests = '\n'.join([t for t in tests if 'No tests' not in t])
 
     if not self.rb_id and is_git_repo():
       self.rb_id = self.id_for_branch()

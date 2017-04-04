@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from glob import glob
 import logging
 import os
@@ -36,10 +37,16 @@ function ws() {
 function activate() {
   if [ -e activate ]; then
     source activate
+  elif [ -e ../build/${PWD##*/}/venv/bin/activate ]; then
+    source ../build/${PWD##*/}/venv/bin/activate
+  elif [ -e build/${PWD##*/}/venv/bin/activate ]; then
+    source build/${PWD##*/}/venv/bin/activate
   elif [ -e ${PWD##*/}/activate ]; then
     source ${PWD##*/}/activate
-  else
+  elif [ -e .tox/${PWD##*/}/bin/activate ]; then
     source .tox/${PWD##*/}/bin/activate
+  else
+    echo "No activate script found. Please setup your venv."
   fi
 }
 
@@ -300,7 +307,7 @@ class Setup(AbstractCommand):
     ]
 
   def run(self):
-    num_options = len(filter(None, [self.product_group, self.product, self.commands, self.commands_with_aliases, self.uninstall]))
+    num_options = len([_f for _f in [self.product_group, self.product, self.commands, self.commands_with_aliases, self.uninstall] if _f])
     if num_options > 1:
       log.error('Only one setup option can be selected at a time.')
       sys.exit(1)
@@ -369,7 +376,7 @@ class Setup(AbstractCommand):
               os.chdir(repo)
               for name, script in setup.scripts:
                 log.info('Running %s', name)
-                run(['bash', '-c', '; '.join(filter(None, script.split('\n')))])
+                run(['bash', '-c', '; '.join([_f for _f in script.split('\n') if _f])])
             except Exception as e:
               log.error('Error occurred running script: %s', e)
             finally:
@@ -505,7 +512,7 @@ class Setup(AbstractCommand):
         return c.startswith("'") or c.startswith('"') or c.startswith(' ')
 
       if self.commands or self.commands_with_aliases:
-        functions = sorted([f for f in COMMANDS.values() if not special(f)])
+        functions = sorted([f for f in list(COMMANDS.values()) if not special(f)])
         fh.write('\n')
         for func in functions:
           fh.write(COMMAND_FUNCTION_TEMPLATE % (func, func.lstrip('_')))
@@ -513,7 +520,7 @@ class Setup(AbstractCommand):
 
       if self.commands_with_aliases:
         fh.write('\n')
-        aliases = [item for item in sorted(COMMANDS.items(), key=lambda x: x[1].lstrip('_')) if not item[0].startswith('_')]
+        aliases = [item for item in sorted(list(COMMANDS.items()), key=lambda x: x[1].lstrip('_')) if not item[0].startswith('_')]
         for alias, command in aliases:
           fh.write(COMMAND_ALIAS_TEMPLATE % (alias, command.lstrip(' ')))
         log.info('Added aliases: %s', ', '.join(["%s=%s" % (a, c.lstrip('_ ')) for a, c in aliases if not special(c)]))

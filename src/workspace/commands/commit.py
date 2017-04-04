@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import logging
 import re
 import sys
@@ -75,7 +76,7 @@ class Commit(AbstractCommand):
         changes = commit_logs(self.discard) if self.branch == 'master' else diff_branch(self.branch)
       else:
         changes = commit_logs(1)
-      changes = filter(None, changes.split('commit '))
+      changes = [_f for _f in changes.split('commit ') if _f]
 
       if self.discard and len(changes) <= self.discard and self.branch != 'master':
         checkout_branch('master')

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import logging
 import os
 import re
@@ -8,6 +9,7 @@ import requests
 
 from workspace.config import config
 from workspace.utils import run, silent_run, parent_path_with_dir
+from six.moves import range
 
 
 log = logging.getLogger(__name__)

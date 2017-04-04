@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from contextlib import contextmanager
 import logging
 import os
@@ -9,6 +11,7 @@ import tempfile
 
 import psutil
 from setproctitle import setproctitle
+import six
 
 
 log = logging.getLogger(__name__)
@@ -22,7 +25,7 @@ def prompt_with_editor(instruction):
     fh.flush()
     editor = os.environ.get('EDITOR', 'vim')
     run([editor, fh.name])
-    return '\n'.join(filter(lambda l: not l.startswith('#'), open(fh.name).read().split('\n'))).strip()
+    return '\n'.join([l for l in open(fh.name).read().split('\n') if not l.startswith('#')]).strip()
 
 
 def parent_path_with_dir(directory, path=None):
@@ -100,7 +103,7 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
   :raise RunError: if the command exits with an error code and raises=True
   """
 
-  if isinstance(cmd, basestring):
+  if isinstance(cmd, six.string_types):
     cmd = cmd.split()
 
   cmd_str = ' '.join(cmd)
@@ -145,7 +148,7 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
 
       elif raises or silent == 2:
         if output and silent:
-          print output.strip()
+          print(output.strip())
 
     else:
       exit_code = subprocess.call(cmd, cwd=cwd, **subprocess_args)
@@ -201,7 +204,7 @@ def parallel_call(call, args, callback=None, workers=10, show_progress=None, pro
 
       if show_progress:
         if callable(show_progress):
-          progress = show_progress(results.keys(), args)
+          progress = show_progress(list(results.keys()), args)
         else:
           progress = '%.2f%% completed' % (len(results) * 100.0 / len(async_results))
         show_status('%s: %s' % (progress_title, progress))
@@ -301,12 +304,12 @@ def run_in_background(title, repo=None, info_suffix='[To check, run: {prog} wait
 
   sys.stdout.flush()
   sys.stderr.flush()
-  so = file(log_file, 'w+')
-  se = file(log_file, 'w+', 0)
-  si = file(log_file, 'r')
+  so = open(log_file, 'w+')
+  se = open(log_file, 'w+', 0)
+  si = open(log_file, 'r')
   os.dup2(si.fileno(), sys.stdin.fileno())
   os.dup2(so.fileno(), sys.stdout.fileno())
   os.dup2(se.fileno(), sys.stderr.fileno())
 
-  print '[%s] %s' % (os.path.basename(repo or os.getcwd()), title)
+  print('[%s] %s' % (os.path.basename(repo or os.getcwd()), title))
   sys.stdout.flush()

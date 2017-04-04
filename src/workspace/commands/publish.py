@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import getpass
 import logging
 import os
@@ -8,6 +9,7 @@ from localconfig import LocalConfig
 from workspace.commands import AbstractCommand
 from workspace.scm import repo_check, repo_path, commit_logs, extract_commit_msgs, is_git_repo
 from workspace.utils import silent_run
+from six.moves import range
 
 
 log = logging.getLogger(__name__)

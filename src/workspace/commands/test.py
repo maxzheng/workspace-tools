@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import argparse
 import logging
 import os
@@ -197,12 +199,12 @@ class Test(AbstractCommand):
 
       repo_results = parallel_call(test_repo, test_args, callback=test_done, show_progress=show_remaining, progress_title='Remaining')
 
-      for _, result in repo_results.values():
+      for _, result in list(repo_results.values()):
         success, _ = self.summarize(result)
         if not (success or self.return_output):
             sys.exit(1)
 
-      return dict(repo_results.values())
+      return dict(list(repo_results.values()))
 
     if not self.repo:
       self.repo = repo_path()

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import logging
 
 from bumper import BumperDriver
@@ -100,7 +101,7 @@ class Bump(AbstractCommand):
           commit_msg = self.msg + '\n\n' + commit_msg
 
         if not self.dry_run and is_git_repo():
-          self.commander.run('commit', msg=commit_msg, files=messages.keys())
+          self.commander.run('commit', msg=commit_msg, files=list(messages.keys()))
 
     except Exception:
       bumper.reverse()
@@ -118,7 +119,7 @@ class Bump(AbstractCommand):
           reviewer_groups = set()
           reviewers = set()
 
-          for lib in bumps.keys():
+          for lib in list(bumps.keys()):
             g, r = self.commander.command('review').reviewers_for_product(lib)
             if g:
               reviewer_groups.update(g)
@@ -126,7 +127,7 @@ class Bump(AbstractCommand):
               reviewers.update(r)
             log.debug('Reviewers for %s: %s %s', lib, g, r)
 
-          self.commander.run('review', publish=self.push, files=messages.keys(), description=commit_msg, test=tests,
+          self.commander.run('review', publish=self.push, files=list(messages.keys()), description=commit_msg, test=tests,
                              skip_prereview=True, reviewer_groups=reviewer_groups, reviewers=reviewers)
 
         if self.push and is_git_repo():

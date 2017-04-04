@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import argparse
 import logging
 import pkg_resources
@@ -69,7 +70,7 @@ class Commander(object):
 
     args, extra_args = self.parser.parse_known_args()
 
-    if args.command not in [c.name() for c in self.commands().values() if 'extra_args' in c.docs()[1]] and extra_args:
+    if args.command not in [c.name() for c in list(self.commands().values()) if 'extra_args' in c.docs()[1]] and extra_args:
       log.error('Unrecognized arguments: %s', ' '.join(extra_args))
       sys.exit(1)
 
@@ -108,7 +109,7 @@ class Commander(object):
     self.parser.register('action', 'parsers', AliasedSubParsersAction)
 
     versions = []
-    for pkg in filter(None, [getattr(self, 'package_name', None), 'workspace-tools']):
+    for pkg in [_f for _f in [getattr(self, 'package_name', None), 'workspace-tools'] if _f]:
       try:
         versions.append('%s %s' % (pkg, pkg_resources.get_distribution(pkg).version))
       except Exception:

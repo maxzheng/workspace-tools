@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from glob import glob
 import logging
 import os
@@ -81,7 +83,7 @@ class Wait(AbstractCommand):
     if not (self.review or self.publish or self.log or self.extra_args):
       processes = background_processes()
       if processes:
-        print tabulate(sorted(processes, key=itemgetter(0, 1)), headers=['Repo', 'Task', 'PID'])
+        print(tabulate(sorted(processes, key=itemgetter(0, 1)), headers=['Repo', 'Task', 'PID']))
       sys.exit(0)
 
     if self.log:
@@ -101,12 +103,12 @@ class Wait(AbstractCommand):
 
       if logs:
         if self.log == 1:
-          print '\n'.join(logs)
+          print('\n'.join(logs))
         else:
-          print open(logs[-(self.log-1)]).read()
+          print(open(logs[-(self.log-1)]).read())
 
       else:
-        print 'No logs found'
+        print('No logs found')
 
     if self.push:
       self.commander.run('push', branch=self.branch)

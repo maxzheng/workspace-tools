@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from glob import glob
 import logging
 import os
@@ -70,7 +72,7 @@ class ToxIni(LocalConfig):
   def commands(self, env):
     envsection = self.envsection(env)
     commands = self.get(envsection, 'commands', self.get('testenv', 'commands', 'py.test {env:PYTESTARGS:}'))
-    return filter(None, self.expand_vars(commands).split('\n'))
+    return [_f for _f in self.expand_vars(commands).split('\n') if _f]
 
   def expand_vars(self, value):
     if '{' in value:
@@ -99,8 +101,8 @@ class ProductPager(object):
       self.pager.stdin.write(output.strip() + '\n\n')
     else:
       if branch and branch != 'master':
-        print '# On branch %s' % branch
-      print output
+        print('# On branch %s' % branch)
+      print(output)
 
   def close_and_wait(self):
     if self.pager:
@@ -132,7 +134,7 @@ def expand_product_groups(names):
       unique_names.remove(name)
       exclude_names.update(expand_product_groups([name.lstrip('-')]))
 
-  for group, names in product_groups().items():
+  for group, names in list(product_groups().items()):
     if group in unique_names:
       unique_names.remove(group)
       unique_names.update(expand_product_groups(names))
