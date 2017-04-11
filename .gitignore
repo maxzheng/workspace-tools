@@ -22,6 +22,7 @@ sdist/
 var/
 *.egg-info/
 .installed.cfg
+.eggs
 *.egg
 
 # PyInstaller
