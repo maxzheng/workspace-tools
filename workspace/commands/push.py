@@ -2,8 +2,10 @@ from __future__ import absolute_import
 import logging
 
 from workspace.commands import AbstractCommand
-from workspace.scm import (checkout_branch, remove_branch, git_repo_check, current_branch, update_repo,
-                           push_repo, merge_branch, update_branch)
+from workspace.config import config
+from workspace.scm import (checkout_branch, remove_branch, current_branch, update_repo,
+                           push_repo, merge_branch, update_branch, parent_branch)
+from workspace.utils import run
 
 
 log = logging.getLogger(__name__)
@@ -22,25 +24,27 @@ class Push(AbstractCommand):
 
   def run(self):
 
-    git_repo_check()
+    current = current_branch()
 
     if not self.branch:
-      self.branch = current_branch()
+      self.branch = current
 
     log.info('Pushing %s', self.branch)
 
-    checkout_branch('master')
+    parent = parent_branch(self.branch)
+
+    checkout_branch(parent)
 
     update_repo()
 
-    if self.branch != 'master':
+    if self.branch != parent:
       checkout_branch(self.branch)
-      update_branch()  # Failed rebase can be continued easily than failed merge
+      update_branch(parent=parent)  # Failed rebase can be continued easily than failed merge
 
-      checkout_branch('master')
+      checkout_branch(parent)
       merge_branch(self.branch)
 
     push_repo()
 
-    if self.branch != 'master':
+    if self.branch != parent:
       remove_branch(self.branch)

@@ -2,20 +2,17 @@ from __future__ import absolute_import
 import logging
 import os
 import re
-import shutil
 import sys
 
 import requests
 
 from workspace.config import config
-from workspace.utils import run, silent_run, parent_path_with_dir
-from six.moves import range
+from workspace.utils import run, silent_run, parent_path_with_dir, parent_path_with_file
 
 
 log = logging.getLogger(__name__)
 
 USER_REPO_REFERENCE_RE = re.compile('^[\w-]+/[\w-]+$')
-SVN_COMMIT_HEADER_RE = re.compile('^(-+|r\d+\s.*\slines?|\s+)$')
 GITIGNORE_FILE = '.gitignore'
 GITIGNORE = """\
 # Byte-compiled / optimized / DLL files
@@ -56,6 +53,7 @@ pip-delete-this-directory.txt
 htmlcov/
 .tox/
 .coverage
+*/.coverage.*
 .cache
 nosetests.xml
 coverage.xml
@@ -90,60 +88,31 @@ def commit_logs(limit=None, repo=None, diff=False, show_revision=None, extra_arg
     if not limit:
       limit = 1
 
-  if is_git_repo(repo):
-    cmd = ['git', 'log', '--decorate']
-    if show_revision:
-      cmd.extend(['-U', show_revision])
-    if limit:
-      cmd.append('-%d' % limit)
-    if diff:
-      cmd.append('-p')
-    if extra_args:
-      cmd.extend(extra_args)
-
-  else:
-    cmd = ['svn', 'log']
-    if show_revision:
-      cmd.extend(['-r', show_revision])
-    if limit:
-      cmd.extend(['-l', str(limit)])
-    if diff:
-      cmd.append('--diff')
-    if extra_args:
-      limit_re = re.compile('-\d')
-      for i, arg in enumerate(extra_args):
-        if limit_re.match(arg):
-          extra_args[i] = '-l %s' % arg.lstrip('-')
-      cmd.extend(extra_args)
-    if to_pager and (show_revision or not limit or limit > 3):
-      cmd.extend(['|', os.environ.get('PAGER') or 'less'])
+  cmd = ['git', 'log', '--decorate']
+  if show_revision:
+    cmd.extend(['-U', show_revision])
+  if limit:
+    cmd.append('-%d' % limit)
+  if diff:
+    cmd.append('-p')
+  if extra_args:
+    cmd.extend(extra_args)
 
   return run(cmd, return_output=not to_pager, shell=to_pager, cwd=repo)
 
 
-def add_files(repo=None, files=None):
-  if not repo:
-    repo = git_repo_path()
-
+def add_files(files=None):
   if files:
     files = ' '.join(files)
   else:
     files = '.'
 
-  silent_run('git add --all ' + files, cwd=repo)
+  silent_run('git add --all ' + files)
 
 
 def repo_check():
   if not is_repo():
     log.error('This should be run from within a product checkout')
-    sys.exit(1)
-
-
-def git_repo_check(hint='This command only supports git repo.'):
-  if not is_git_repo():
-    log.error('Not a git repository. %s', hint)
-    if is_svn_repo():
-      log.info('Please consider using git-svn for your svn repo as git is AWESOME!! :)')
     sys.exit(1)
 
 
@@ -158,10 +127,7 @@ def extract_commit_msgs(output, is_git=True):
       if not line:
         continue
 
-      if is_git:
-        is_commit_msg = line.startswith(' ') or not line
-      else:
-        is_commit_msg = not(SVN_COMMIT_HEADER_RE.match(line))
+      is_commit_msg = line.startswith(' ') or not line
 
       if is_commit_msg:
         if is_git and line.startswith('    '):
@@ -177,39 +143,24 @@ def extract_commit_msgs(output, is_git=True):
   return msgs
 
 
-def is_git_svn_repo(path=None):
-  """ Checks if given or current path is a git svn repo """
-  repo_path = git_repo_path(path)
-  return repo_path and os.path.isfile(os.path.join(repo_path, '.git', 'svn', '.metadata'))
-
-
 def is_repo(path=None):
-  return repo_path(path)
+  """ Check if we are inside of a git repo. """
+  return repo_path(path=path)
 
 
 def repo_path(path=None):
-  # Last element is longest path, which is the current repo in a nested repo situation.
-  return sorted([git_repo_path(path), svn_repo_path(path)])[-1]
+  """ Return the git repo path with .git by looking at current dir and its parent dirs. """
+  return parent_path_with_dir('.git', path=path)
 
 
-def is_svn_repo(path=None):
-  svn_repo = svn_repo_path(path)
-  return svn_repo and svn_repo == repo_path(path)
+def is_project(path=None):
+  """ Check if we are inside of a project. """
+  return project_path(path=path)
 
 
-def svn_repo_path(path=None):
-  """ Checks if given or current path is a svn repo """
-  return parent_path_with_dir('.svn', path)
-
-
-def is_git_repo(path=None):
-  git_repo = git_repo_path(path)
-  return git_repo and git_repo == repo_path(path)
-
-
-def git_repo_path(path=None):
-  """ Checks if given or current path is a git repo """
-  return parent_path_with_dir('.git', path)
+def project_path(path=None):
+  """ Return the project path with tox.ini by looking at the current dir and its parent dirs. """
+  return parent_path_with_file('tox.ini', path=path)
 
 
 def product_repos():
@@ -247,8 +198,8 @@ def create_branch(branch, from_branch=None):
   silent_run(cmd)
 
 
-def update_branch(repo=None):
-  silent_run('git rebase master', cwd=repo)
+def update_branch(repo=None, parent='master'):
+  silent_run('git rebase {}'.format(parent), cwd=repo)
 
 
 def remove_branch(branch, raises=False):
@@ -293,47 +244,35 @@ def current_branch(repo=None):
   return all_branches(repo)[0]
 
 
+def parent_branch(branch):
+  if config.commit.commit_branch_indicator in branch:
+    _, parent = branch.rsplit(config.commit.commit_branch_indicator, 1)
+    return parent
+
+  return branch
+
 def update_repo(path=None):
   """ Updates given or current repo to HEAD """
-
-  if is_git_svn_repo(path):
-    silent_run('git svn rebase', cwd=path)
-  elif is_git_repo(path):
-    silent_run('git pull --rebase', cwd=path)
-  else:
-    silent_run('svn update --ignore-externals', cwd=path)
+  silent_run('git pull --rebase', cwd=path)
 
 
 def push_repo(path=None):
-  if is_git_svn_repo(path):
-    silent_run('git svn dcommit')
-  else:
-    silent_run('git push')
+  silent_run('git push')
 
 
 def stat_repo(path=None, return_output=False):
-  if is_git_repo(path):
-    cmd = 'git status'
-  else:
-    cmd = 'svn status'
-
+  cmd = 'git status'
   return run(cmd, cwd=path, return_output=return_output)
 
 
 def diff_repo(path=None, branch=None, file=None, return_output=False, name_only=False):
-  if is_git_repo(path):
-    cmd = ['git', 'diff']
-    if branch:
-      cmd.append(branch)
-    if file:
-      cmd.append(file)
-    if name_only:
-      cmd.append('--name-only')
-
-  else:
-    cmd = ['svn', 'diff']
-    if file:
-      cmd.append(file)
+  cmd = ['git', 'diff']
+  if branch:
+    cmd.append(branch)
+  if file:
+    cmd.append(file)
+  if name_only:
+    cmd.append('--name-only')
 
   return run(cmd, cwd=path, return_output=return_output)
 
@@ -355,71 +294,15 @@ def local_commit(msg=None, amend=False, empty=False):
   run(cmd)
 
 
-def svn_revision_range(repo=None, num_commmits=1):
-  cmd = ['svn', 'log', '-l', str(num_commmits)]
-
-  if repo and (repo.startswith('http://') or repo.startswith('https://') or repo.startswith('svn+ssh://')):
-    cmd.append(repo)
-    repo = None
-
-  output = silent_run(cmd, cwd=repo, return_output=True, raises=False)
-
-  if output:
-    try:
-      output = output.split('\n')
-      svn_revision_re = re.compile('r(\d+) ')
-      head_revision = svn_revision_re.match(output[1]).group(1)
-      for i in range(len(output) - 1, -1, -1):
-        match = svn_revision_re.match(output[i])
-        if match:
-          from_revision = match.group(1)
-          break
-      return int(from_revision), int(head_revision)
-    except Exception:
-      return None, None
-
-
-def clone_svn_repo(product_url, checkout_path, clone_svn_commits):
-  prod_name = product_name(product_url)
-
-  log.info('Cloning last %d commit(s) for svn repo using git-svn.', clone_svn_commits)
-  if clone_svn_commits > 1:
-    log.info('This might take some time...')
-
-  from_revision, head_revision = svn_revision_range(product_url, clone_svn_commits)
-
-  if not head_revision:
-    raise Exception('Unable to get latest revision from %s' % product_url)
-
-  workspace_path = os.path.dirname(checkout_path)
-  revision_range = '-r%d:%s' % (from_revision, head_revision)
-
-  clone_cmd = ['git', 'svn', 'clone', revision_range]
-  if product_url.endswith('/trunk'):
-    clone_cmd.extend(['-T', 'trunk', product_url[:-6], checkout_path])
-  else:
-    clone_cmd.extend([product_url, checkout_path])
-
-  silent_run(clone_cmd, cwd=workspace_path)
-
-  gitignore_file = os.path.join(workspace_path, prod_name, GITIGNORE_FILE)
-  if not os.path.exists(gitignore_file):
-    with open(gitignore_file, 'w') as fp:
-      fp.write(GITIGNORE)
-    log.info('Created %s/%s. Please check that in so git ignores build/temp files.', prod_name, os.path.basename(gitignore_file))
-
-
 def checkout_product(product_url, checkout_path):
   """ Checks out the product from url. Raises on error """
   product_url = product_url.strip('/')
 
-  clone_svn_commits = config.checkout.use_gitsvn_to_clone_svn_commits
   prod_name = product_name(product_url)
 
   if os.path.exists(checkout_path):
     log.debug('%s is already checked out. Updating...', prod_name)
-    if is_git_repo(checkout_path):
-      checkout_branch('master', checkout_path)
+    checkout_branch('master', checkout_path)
     return update_repo(checkout_path)
 
   if re.match('[\w-]+$', product_url):
@@ -440,27 +323,12 @@ def checkout_product(product_url, checkout_path):
   elif USER_REPO_REFERENCE_RE.match(product_url):
     product_url = config.checkout.user_repo_url % product_url
 
-  if clone_svn_commits and not product_url.endswith('.git'):
-    try:
-      return clone_svn_repo(product_url, checkout_path, clone_svn_commits)
-    except Exception as e:
-      log.exception('Falling back to svn as git-svn clone failed: %s', e)
-      if os.path.exists(checkout_path):
-        shutil.rmtree(checkout_path)
-
-  if product_url.endswith('.git'):
-    silent_run(['git', 'clone', product_url, checkout_path])
-  else:
-    silent_run(['svn', 'checkout', product_url, checkout_path])
+  silent_run(['git', 'clone', product_url, checkout_path])
 
 
 def checkout_files(files, repo_path=None):
   """ Checks out the given list of files. Raises on error. """
-  if is_git_repo(repo_path):
-    silent_run(['git', 'checkout'] + files, cwd=repo_path)
-  else:
-    silent_run(['svn', 'revert'] + files, cwd=repo_path)
-
+  silent_run(['git', 'checkout'] + files, cwd=repo_path)
 
 def hard_reset(to_commit):
   run(['git', 'reset', '--hard', to_commit])

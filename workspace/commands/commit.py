@@ -3,10 +3,9 @@ import logging
 import re
 import sys
 
-from workspace.config import config
-
 from workspace.commands import AbstractCommand
-from workspace.scm import local_commit, add_files, git_repo_check, checkout_branch,\
+from workspace.config import config
+from workspace.scm import local_commit, add_files, checkout_branch,\
     create_branch, all_branches, diff_branch, current_branch, remove_branch, hard_reset, commit_logs
 from workspace.utils import prompt_with_editor
 
@@ -53,8 +52,6 @@ class Commit(AbstractCommand):
       ])
 
   def run(self):
-    git_repo_check()
-
     if self.dummy:
       checkout_branch('master')
       self.commander.run('update')  # Needs to be updated otherwise empty commit below gets erased in push_branch when update is called
@@ -128,9 +125,12 @@ class Commit(AbstractCommand):
       branches = all_branches()
       cur_branch = branches and branches[0]
 
-      if (not (not self.rb and self.push or self.amend) and cur_branch == 'master' and not self.branch and self.msg and
+      if (not (not self.rb and self.push or self.amend) and config.commit.commit_branch_indicator not in cur_branch and not self.branch and self.msg and
          config.commit.auto_branch_from_commit_words):
-        self.branch = self._branch_for_msg(self.msg, config.commit.auto_branch_from_commit_words, branches)
+        self.branch = '{}@{}'.format(
+            self._branch_for_msg(self.msg, words=config.commit.auto_branch_from_commit_words,
+                                 branches=branches),
+            cur_branch)
 
       if self.branch:
         if branches:
@@ -139,7 +139,7 @@ class Commit(AbstractCommand):
               checkout_branch(self.branch)
 
           else:
-            create_branch(self.branch, 'master')
+            create_branch(self.branch, cur_branch)
 
         else:  # Empty repo without a commit has no branches
           create_branch(self.branch)

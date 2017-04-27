@@ -1,7 +1,7 @@
 workspace-tools
 ===============
 
-Tools to simplify working with multiple product repositories with SCM / development tools abstraction.
+Tools to simplify working with multiple repositories, git, and tox.
 
 It helps you do more with less work by seamlessly integrating all workspace tooling into one where
 you can simply run one command instead of many native commands individually to do common tasks.
@@ -23,7 +23,6 @@ Feature Summary
 * Templates included to setup new product quickly
 * Extensible by adding your own custom commands or modify existing by wrapping them.
 * Trunk based development - one branch per one change that is merged into master when pushed.
-* Full support for git/git-svn with limited support for svn.
 * Cool and sensible shortcut aliases to help you do more by typing less - you will love "tv" [if you know ag]!
 
 Quick Start Tutorial

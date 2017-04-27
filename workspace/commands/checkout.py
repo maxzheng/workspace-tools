@@ -4,7 +4,7 @@ import os
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
-from workspace.scm import checkout_product, checkout_branch, is_git_repo, all_branches, checkout_files, is_repo, product_checkout_path, product_name
+from workspace.scm import checkout_product, checkout_branch, all_branches, checkout_files, is_repo, product_checkout_path, product_name
 log = logging.getLogger(__name__)
 
 
@@ -12,9 +12,8 @@ class Checkout(AbstractCommand):
   """
     Checkout products (repo urls) or branch, or revert files.
 
-    :param list target: List of products (git/svn repository URLs) to checkout. When inside a git repo,
-                        checkout the branch or revert changes for file(s). When inside a svn repo, revert
-                        changes for file(s)
+    :param list target: List of products (git repository URLs) to checkout. When inside a git repo,
+                        checkout the branch or revert changes for file(s).
   """
   alias = 'co'
 
@@ -25,7 +24,7 @@ class Checkout(AbstractCommand):
 
   def run(self):
     if is_repo():
-      if is_git_repo() and len(self.target) == 1 and self.target[0] in all_branches():
+      if len(self.target) == 1 and self.target[0] in all_branches():
         checkout_branch(self.target[0])
         log.info('Switched to branch %s', self.target[0])
       else:

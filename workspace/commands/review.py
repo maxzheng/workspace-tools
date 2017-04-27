@@ -3,7 +3,7 @@ import logging
 import sys
 
 from workspace.commands import AbstractCommand
-from workspace.scm import is_git_repo, repo_check
+from workspace.scm import repo_check
 
 log = logging.getLogger(__name__)
 
@@ -15,9 +15,7 @@ class Review(AbstractCommand):
     Note: This is an abtract command, though may change in the future.
     To use review command, please implement all the abstract methods using the arguments.
 
-    :param str files: [svn only] List of files to use for RB.
     :param int rb_id: RB id to update. For git, this is auto looked up in .git/config
-    :param str description: [svn only] Description for RB
     :param bool push: Wait for "Ship It" for RB and push the change. This implies --publish.
     :param int test: Update testing done section with results from tests. Repeat twice to test dependents too (-tt)
   """
@@ -27,9 +25,7 @@ class Review(AbstractCommand):
   def arguments(cls):
     _, docs = cls.docs()
     return ([
-        cls.make_args('files', nargs='*', help=docs['files']),
         cls.make_args('-r', '--rb-id', type=int, help=docs['rb_id']),
-        cls.make_args('-m', '--description', help=docs['description']),
         cls.make_args('-P', '--publish', action='store_true', help='Publish the RB'),
       ], [
         cls.make_args('-t', '--test', action='count', help=docs['test']),
@@ -63,7 +59,7 @@ class Review(AbstractCommand):
 
       self.tests = '\n'.join([t for t in tests if 'No tests' not in t])
 
-    if not self.rb_id and is_git_repo():
+    if not self.rb_id:
       self.rb_id = self.id_for_branch()
 
     if self.rb_id:
@@ -82,10 +78,7 @@ class Review(AbstractCommand):
       self.create()
 
     if self.push:
-      if is_git_repo():
-        self.commander.run('wait', push=True, rb_id=self.rb_id, in_background=True)
-      else:
-        log.error('--push is not supported for svn yet.')
+      self.commander.run('wait', push=True, rb_id=self.rb_id, in_background=True)
 
   def prereview_test(self):
     """

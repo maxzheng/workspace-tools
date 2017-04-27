@@ -13,7 +13,8 @@ import simplejson as json
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups, ToxIni
 from workspace.config import config
-from workspace.scm import repo_check, product_name, repo_path, product_repos, product_path, repos, workspace_path, current_branch
+from workspace.scm import (product_name, repo_path, product_repos, product_path, repos,
+                           workspace_path, current_branch, project_path)
 from workspace.utils import run, log_exception, parallel_call
 
 log = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ class Test(AbstractCommand):
   def supports_style_check(cls, repo=None):
     try:
       if not repo:
-        repo = repo_path()
+        repo = project_path()
       tox = ToxIni(repo)
       return 'style' in tox.envlist
 
@@ -147,8 +148,6 @@ class Test(AbstractCommand):
     ]
 
   def run(self):
-    repo_check()
-
     if self.test_dependents:
       name = product_name()
 
@@ -207,7 +206,7 @@ class Test(AbstractCommand):
       return dict(list(repo_results.values()))
 
     if not self.repo:
-      self.repo = repo_path()
+      self.repo = project_path()
 
     # Strip out venv bin path to python to avoid issues with it being removed when running tox
     if 'VIRTUAL_ENV' in os.environ:
@@ -263,7 +262,7 @@ class Test(AbstractCommand):
       if self.tox_cmd:
         cmd = self.tox_cmd
       else:
-        cmd = ['tox', '-c', tox.path]
+        cmd = ['tox', '-c', tox.tox_ini]
 
       if envs:
         cmd.extend(['-e', ','.join(envs)])
@@ -357,7 +356,7 @@ class Test(AbstractCommand):
 
   def _strip_version_from_entry_scripts(self, tox, env):
     """ Strip out version spec "==1.2.3" from entry scripts as they require re-develop when version is changed in develop mode. """
-    name = product_name(tox.repo)
+    name = product_name(tox.path)
     script_bin = tox.bindir(env)
 
     if os.path.exists(script_bin):
@@ -367,8 +366,12 @@ class Test(AbstractCommand):
         script_path = os.path.join(script_bin, script)
 
         if os.path.isfile(script_path):
-          with open(script_path) as fp:
-            script = fp.read()
+          try:
+            with open(script_path) as fp:
+              script = fp.read()
+
+          except Exception:
+            continue  # Binary files
 
           if name_version_re.search(script):
             new_script = name_version_re.sub(name, script)
@@ -427,7 +430,7 @@ else:
   print('\\n'.join(output))
 """
 
-    name = product_name(tox.repo)
+    name = product_name(tox.path)
     filter_name = isinstance(filter_name, str) and filter_name or ''
     script = script_template % (name, return_output, env, filter_name)
 
@@ -440,7 +443,7 @@ else:
     return run([python, '-c', script], return_output=return_output, raises=False)
 
   def install_editable_dependencies(self, tox, env, editable_products):
-    name = product_name(tox.repo)
+    name = product_name(tox.path)
     editable_products = expand_product_groups(editable_products)
 
     dependencies_output = self.show_installed_dependencies(tox, env, return_output=True)

@@ -35,8 +35,10 @@ function ws() {
 }
 
 function activate() {
-  if [ -e activate ]; then
-    source activate
+  if [ -e ./activate ]; then
+    source ./activate
+  elif [ -e bin/activate ]; then
+    source bin/activate
   elif [ -e ../build/${PWD##*/}/venv/bin/activate ]; then
     source ../build/${PWD##*/}/venv/bin/activate
   elif [ -e build/${PWD##*/}/venv/bin/activate ]; then
@@ -160,12 +162,23 @@ complete -o default di
 TOX_INI_FILE = 'tox.ini'
 TOX_INI_TMPL = """\
 [tox]
-envlist = py27
+envlist = test
 
 [testenv]
-commands =
-    py.test {env:PYTESTARGS:}
-install_command = pip install -U {packages}
+# Consolidate all deps here instead of cleanly/separately in test/style/cover so we
+# have a single env to work with, which makes debugging easier (like which env?).
+# Not as clean but easier to work with during development, which is better.
+# -rrequirements.txt is to allow local package paths to work.
+deps =
+    -rrequirements.txt
+    flake8
+    mock
+    pytest
+    pytest-xdist
+    pytest-cov
+    sphinx!=1.2b2
+install_command =
+    pip install -U {packages}
 recreate = False
 skipsdist = True
 usedevelop = True
@@ -173,99 +186,77 @@ setenv =
     PIP_PROCESS_DEPENDENCY_LINKS=1
     PIP_DEFAULT_TIMEOUT=60
     ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future
-basepython = python
-
-[testenv:py]
-deps =
-    pytest
-    pytest-xdist
-
-[testenv:pydev]
-deps =
-    {[testenv:py]deps}
-    {[testenv:style]deps}
-    pytest-cov
-    sphinx!=1.2b2
-
-[testenv:py27]
-deps = {[testenv:pydev]deps}
+basepython = python3
 envdir = {toxworkdir}/%s
-basepython = python2.7
+
+[testenv:test]
+commands =
+    py.test {env:PYTESTARGS:} test
 
 [testenv:style]
 commands =
-    flake8 --config tox.ini src test
-deps =
-    flake8
+    flake8 --config tox.ini
 
-[testenv:coverage]
+[testenv:cover]
 commands =
-    py.test {env:PYTESTARGS:} --cov=src --cov-report=xml --cov-report=html --cov-report=term test
-deps =
-    {[testenv:py]deps}
-    pytest-cov
+    py.test {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term test
 
 [flake8]
+exclude = .git,.tox,__pycache__,docs,build,dist
 ignore = E111,E121,W292,E123,E226
 max-line-length = 160
 
 [pytest]
 addopts = -n 4
-
-[wst]
-template_version = 1
 """
 SETUP_PY_TMPL = """\
-#!/usr/bin/env python
-
-import os
+from pip.req import parse_requirements
 import setuptools
 
 
+# Filters out relative/local requirements (i.e. ../lib/utils)
+remote_requirements = '\\n'.join(str(r.req) for r in parse_requirements("%s", session='dummy') if r.req)
+
 setuptools.setup(
-  name='%s',
-  version='0.0.1',
+    name='%s',
+    version='0.0.1',
 
-  author='<PLACEHOLDER>',
-  author_email='<PLACEHOLDER>',
+    author='<PLACEHOLDER>',
+    author_email='<PLACEHOLDER>',
 
-  description='<PLACEHOLDER>',
-  long_description=open('%s').read(),
+    description='<PLACEHOLDER>',
+    long_description=open('%s').read(),
 
-  url='<PLACEHOLDER>',
+    url='<PLACEHOLDER>',
 
-#  entry_points={
-#    'console_scripts': [
-#      'script_name = package.module:entry_callable',
-#    ],
-#  },
+    install_requires=remote_requirements,
 
-  install_requires=open('%s').read(),
+    license='MIT',
 
-  license='MIT',
+    packages=setuptools.find_packages(),
+    include_package_data=True,
 
-  package_dir={'': 'src'},
-  packages=setuptools.find_packages('src'),
-  include_package_data=True,
+    setup_requires=['setuptools-git'],
 
-  setup_requires=['setuptools-git'],
+    # entry_points={
+    #    'console_scripts': [
+    #        'script_name = package.module:entry_callable',
+    #    ],
+    # },
 
-#  scripts=['bin/cast-example'],
+    classifiers=[
+      'Development Status :: 5 - Production/Stable',
 
-  classifiers=[
-    'Development Status :: 5 - Production/Stable',
+      'Intended Audience :: Developers',
+      'Topic :: Software Development :: <PLACEHOLDER SUB-TOPIC>',
 
-    'Intended Audience :: Developers',
-    'Topic :: Software Development :: <PLACEHOLDER SUB-TOPIC>',
+      'License :: OSI Approved :: MIT License',
 
-    'License :: OSI Approved :: MIT License',
+      'Programming Language :: Python :: 3',
+      'Programming Language :: Python :: 3.6',
+    ],
 
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.6',
-    'Programming Language :: Python :: 2.7',
-  ],
-
-  keywords='<KEYWORDS>',
+    keywords='<KEYWORDS>',
 )
 """
 README_TMPL = """\
@@ -273,6 +264,15 @@ README_TMPL = """\
 ===========
 
 <PLACEHOLDER DESCRIPTION>
+"""
+COVERAGERC_TMPL = """\
+[run]
+omit =
+    docs/*
+    setup.py
+    .git/*
+    .tox/*
+    test/*
 """
 
 
@@ -283,7 +283,7 @@ class Setup(AbstractCommand):
     :param str product_group: Setup product group by checking them out, developing them, and running any setup scripts and
                               exports as defined by setup.cfg in each product.
     :param bool product: Initialize product by setting up tox with py27, style, and coverage test environments.
-                         Also create setup.py, README.rst, and src / test directories if they don't exist.
+                         Also create setup.py, README.rst, and test directories if they don't exist.
     :param bool commands: Add convenience bash function for certain commands, such as checkout to run
                           "workspace checkout", or "ws" bash function that goes to your workspace directory
                           when no argument is passed in, otherwise runs wst command.
@@ -407,31 +407,38 @@ class Setup(AbstractCommand):
       log.info('Created ./%s. To activate, run: source %s. To deactivate, run: deactivate_%s', activate_group, activate_group, self.product_group)
 
   def setup_product(self):
-    repo_check()
+    project_path = os.getcwd()
 
-    name = product_name(repo_path())
+    name = product_name(project_path)
+    sanitized_name = re.sub('[^A-Za-z]', '_', name)
     placeholder_info = '- please update <PLACEHOLDER> with appropriate value'
 
     tox_ini = TOX_INI_TMPL % name
-    tox_ini_file = os.path.join(repo_path(), TOX_INI_FILE)
+    tox_ini_file = os.path.join(project_path, TOX_INI_FILE)
     tox_change_word = 'Updated' if os.path.exists(tox_ini_file) else 'Created'
     with open(tox_ini_file, 'w') as fp:
       fp.write(tox_ini)
 
     log.info('%s %s', tox_change_word, self._relative_path(tox_ini_file))
 
-    readme_files = glob(os.path.join(repo_path(), 'README*'))
+    readme_files = glob(os.path.join(project_path, 'README*'))
     if readme_files:
       readme_file = readme_files[0]
     else:
-      readme_file = os.path.join(repo_path(), 'README.rst')
+      readme_file = os.path.join(project_path, 'README.rst')
       with open(readme_file, 'w') as fp:
         fp.write(README_TMPL % name)
       log.info('Created %s %s', self._relative_path(readme_file), placeholder_info)
 
-    setup_py_file = os.path.join(repo_path(), 'setup.py')
+    coveragerc_file = os.path.join(project_path, '.coveragerc')
+    if not os.path.exists(coveragerc_file):
+      with open(coveragerc_file, 'w') as fp:
+        fp.write(COVERAGERC_TMPL)
+      log.info('Created %s', self._relative_path(coveragerc_file))
+
+    setup_py_file = os.path.join(project_path, 'setup.py')
     if not os.path.exists(setup_py_file):
-      requirements_file = os.path.join(repo_path(), 'requirements.txt')
+      requirements_file = os.path.join(project_path, 'requirements.txt')
       if not os.path.exists(requirements_file):
         with open(requirements_file, 'w') as fp:
           pass
@@ -441,24 +448,23 @@ class Setup(AbstractCommand):
       requirements_name = os.path.basename(requirements_file)
 
       with open(setup_py_file, 'w') as fp:
-        fp.write(SETUP_PY_TMPL % (name, readme_name, requirements_name))
+        fp.write(SETUP_PY_TMPL % (requirements_name, name, readme_name))
 
       log.info('Created %s %s', self._relative_path(setup_py_file), placeholder_info)
 
-    src_dir = os.path.join(repo_path(), 'src')
-    if not os.path.exists(src_dir):
-      package_dir = os.path.join(src_dir, re.sub('[^A-Za-z]', '', name))
+    package_dir = os.path.join(project_path, sanitized_name)
+    if not os.path.exists(package_dir):
       os.makedirs(package_dir)
       init_file = os.path.join(package_dir, '__init__.py')
       open(init_file, 'w').close()
       log.info('Created %s', self._relative_path(init_file))
 
-    test_dir = os.path.join(repo_path(), 'test')
+    test_dir = os.path.join(project_path, 'test')
     if not os.path.exists(test_dir):
       os.makedirs(test_dir)
-      test_file = os.path.join(test_dir, 'test_%s.py' % re.sub('[^A-Za-z]', '_', name))
+      test_file = os.path.join(test_dir, 'test_%s.py' % sanitized_name)
       with open(test_file, 'w') as fp:
-        fp.write('# Placeholder for tests')
+        fp.write('def test_{}():\n    """ Test is code\'s best friend. ^_^ """'.format(sanitized_name))
       log.info('Created %s', self._relative_path(test_file))
 
   def setup_workspace(self):

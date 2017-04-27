@@ -101,7 +101,7 @@ def test_commit(run):
 
     logs = commit_logs()
     assert 'new file' in logs
-    assert 1 == len(filter(None, logs.split('commit')))
+    assert 1 == len(list(filter(None, logs.split('commit'))))
 
 
 def test_test(run):
@@ -123,22 +123,18 @@ def test_test(run):
     with open('test/test_pass.py', 'w') as fp:
       fp.write(pass_test)
     commands = run('test')
-    assert 'py27' in commands
-    assert 'tox' in commands['py27']
+    assert 'test' in commands
+    assert 'tox' in commands['test']
 
     with open('test/test_fail.py', 'w') as fp:
       fp.write(fail_test + '\n' + pass_test)
     with pytest.raises(SystemExit):
       run('test')
 
-    commands = run('test test/test_pass.py')
-    assert 'py27' in commands
-    assert 'py.test' in commands['py27']
+    assert 'test' in run('test test/test_pass.py')
 
     os.utime('requirements.txt', None)
-    commands = run('test -k test_pass')
-    assert 'py27' in commands
-    assert 'tox' in commands['py27']
+    assert 'test' in run('test -k test_pass')
 
     with pytest.raises(SystemExit):
       run('test style')
@@ -147,7 +143,7 @@ def test_test(run):
     assert 'style' in run('test style')
 
     os.unlink('test/test_fail.py')
-    assert 'coverage' in run('test coverage')
+    assert 'cover' in run('test coverage')
     assert os.path.exists('coverage.xml')
     assert os.path.exists('htmlcov/index.html')
 

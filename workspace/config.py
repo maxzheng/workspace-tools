@@ -27,10 +27,6 @@
   ###########################################################################################################
   [checkout]
 
-  # Check out SVN repo using git-svn and clone the specified # of commits. Set to 0 to disable git-svn clone.
-  # Higher the number, the longer it takes to clone.
-  use_gitsvn_to_clone_svn_commits = 10
-
   # API used to find git repo for single word checkout (i.e. wst checkout workspace-tools)
   # It should accept a ?q=singleWord param
   search_api_url = https://api.github.com/search/repositories
@@ -57,6 +53,10 @@
 
   # Automatically create branch based on the first number of commit words. Set to 0 to turn off.
   auto_branch_from_commit_words = 2
+
+  # When auto branching from commit words, this is the indicator that will be used to
+  # separate the commit branch from the parent branch, like commit_branch@parent_branch.
+  commit_branch_indicator = @
 """
 from __future__ import absolute_import
 

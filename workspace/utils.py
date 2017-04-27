@@ -37,16 +37,40 @@ def parent_path_with_dir(directory, path=None):
   :return: Parent path that contains the directory
   :rtype: str on success or False on failure
   """
+  return parent_path_with(lambda p: os.path.isdir(os.path.join(p, directory)), path=path)
+
+
+def parent_path_with_file(name, path=None):
+  """
+  Find parent that contains the given directory.
+
+  :param str name: File name to look for
+  :param str path: Initial path to look from. Defaults to current working directory.
+  :return: Parent path that contains the file name
+  :rtype: str on success or False on failure
+  """
+  return parent_path_with(lambda p: os.path.isfile(os.path.join(p, name)), path=path)
+
+
+def parent_path_with(check, path=None):
+  """
+  Find parent that satisfies check with content.
+
+  :param str check: Callable that accepts current path returns True if path should be returned
+  :param str path: Initial path to look from. Defaults to current working directory.
+  :return: Parent path that contains the directory
+  :rtype: str on success or False on failure
+  """
   if path == '/':
     return False
 
   if not path:
     path = os.getcwd()
 
-  if os.path.isdir(os.path.join(path, directory)):
+  if check(path):
     return path
 
-  return parent_path_with_dir(directory, os.path.dirname(path))
+  return parent_path_with(check, os.path.dirname(path))
 
 
 @contextmanager
@@ -134,6 +158,8 @@ def run(cmd, cwd=None, silent=None, return_output=False, raises=True, **subproce
           output += ch
           if p.poll() is not None and exit_code == -1:
             exit_code = p.returncode
+
+      output = output.decode('utf-8')
 
       if return_output is True:
         return output

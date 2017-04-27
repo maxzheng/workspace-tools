@@ -10,7 +10,7 @@ from tabulate import tabulate
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
-from workspace.scm import product_name, is_git_repo, current_branch, product_path, checkout_branch, repo_path
+from workspace.scm import product_name, current_branch, product_path, checkout_branch, repo_path
 from workspace.utils import background_processes, run, run_in_background
 
 log = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ class Wait(AbstractCommand):
       self.in_background = self.push or self.bump_in or self.extra_args
 
     #: Save the branch as it could change while waiting
-    self.branch = is_git_repo() and current_branch()
+    self.branch = current_branch()
 
   @classmethod
   def arguments(cls):

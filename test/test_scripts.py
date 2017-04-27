@@ -10,5 +10,5 @@ def test_script_sanity(script):
   try:
     run([script, '-h'], stderr=subprocess.STDOUT)
   except subprocess.CalledProcessError as e:
-    print e.output
+    print(e.output)
     assert e.returncode == 0

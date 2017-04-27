@@ -10,12 +10,12 @@ def find_files(path):
 
 setuptools.setup(
   name='workspace-tools',
-  version='1.0.11',
+  version='2.0.0',
 
   author='Max Zheng',
   author_email='maxzheng.os @t gmail.com',
 
-  description='Tools to simplify working with multiple product repositories with SCM / development tools abstraction.',
+  description='Convenience wrapper for git/tox to simplify local development',
   long_description=open('README.rst').read(),
 
   changelog_url='https://raw.githubusercontent.com/maxzheng/workspace-tools/master/docs/CHANGELOG.rst',
@@ -31,8 +31,7 @@ setuptools.setup(
 
   license='MIT',
 
-  package_dir={'': 'src'},
-  packages=setuptools.find_packages('src'),
+  packages=setuptools.find_packages(),
   include_package_data=True,
 
   setup_requires=['setuptools-git'],
@@ -50,5 +49,5 @@ setuptools.setup(
     'Programming Language :: Python :: 2.7',
   ],
 
-  keywords='workspace multiple repositories git svn scm abstraction development tools',
+  keywords='workspace multiple repositories git scm abstraction development tools',
 )

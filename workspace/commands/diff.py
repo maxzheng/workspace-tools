@@ -4,7 +4,7 @@ import os
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import ProductPager
-from workspace.scm import diff_repo, repos, product_name, current_branch, is_git_repo
+from workspace.scm import diff_repo, repos, product_name, current_branch
 from workspace.utils import log_exception
 
 log = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ class Diff(AbstractCommand):
         branch = 'master' if self.master else None
         output = diff_repo(repo, branch=branch, file=self.file, return_output=True, name_only=self.name_only)
         if output:
-          branch = current_branch(repo) if is_git_repo(repo) else None
+          branch = current_branch(repo)
           pager.write(product_name(repo), output, branch)
 
     pager.close_and_wait()

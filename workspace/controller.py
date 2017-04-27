@@ -36,8 +36,7 @@ class Commander(object):
     ---------------
     * Optionally setup workspace environment/shortcuts, run "wst setup -h" for options.
         - "wst setup -a" is recommended. :)
-    * To checkout a product, run: wst checkout <git or svn repository url> [<url2> ...]
-        - Product that use svn is checked out with git-svn
+    * To checkout a product, run: wst checkout <git repository url> [<url2> ...]
     * All commands are named appropriately for what they do, but see its --help for additional info.
     * For more info, read the docs at http://workspace-tools.readthedocs.org
   """
@@ -130,7 +129,7 @@ class Commander(object):
 
     for name, command in sorted(self.commands().items()):
       doc, _ = command.docs()
-      help = filter(None, doc.split('\n'))[0]
+      help = list(filter(None, doc.split('\n')))[0]
       aliases = [command.alias] if command.alias else None
 
       parser = self.subparsers.add_parser(name, aliases=aliases, description=textwrap.dedent(doc), help=help,

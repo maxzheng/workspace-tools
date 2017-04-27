@@ -28,12 +28,6 @@ def test_checkout_with_git(run):
     assert os.path.exists('clicast/README.rst')
 
 
-def test_checkout_with_svn(run):
-  with temp_dir():
-    run('checkout https://github.com/maxzheng/localconfig/trunk')
-    assert os.path.exists('localconfig/README.rst')
-
-
 def test_checkout_with_multiple_repos(run):
   with temp_dir():
     run('checkout https://github.com/maxzheng/localconfig.git https://github.com/maxzheng/remoteconfig.git')

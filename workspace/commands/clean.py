@@ -7,7 +7,7 @@ from time import time
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
 from workspace.config import config
-from workspace.scm import workspace_path, product_name, repos, stat_repo, all_branches, is_git_repo, repo_path
+from workspace.scm import workspace_path, product_name, repos, stat_repo, all_branches, repo_path
 from workspace.utils import silent_run
 
 log = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ class Clean(AbstractCommand):
           modified_time = os.stat(repo).st_mtime
           if name not in keep_products or keep_time and modified_time < keep_time:
             status = stat_repo(repo, return_output=True)
-            if not status or 'nothing to commit' in status and 'working directory clean' in status and is_git_repo(repo) and len(all_branches(repo)) <= 1:
+            if not status or 'nothing to commit' in status and 'working directory clean' in status and len(all_branches(repo)) <= 1:
               shutil.rmtree(repo)
               removed_products.append(name)
             else:

@@ -4,8 +4,8 @@ import sys
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
-from workspace.scm import is_git_repo, checkout_branch, update_repo, repos, product_name, current_branch,\
-    update_branch
+from workspace.scm import checkout_branch, update_repo, repos, product_name, current_branch,\
+    update_branch, parent_branch
 from workspace.utils import parallel_call
 
 log = logging.getLogger(__name__)
@@ -52,18 +52,17 @@ def _update_repo(repo, raises=False):
   log.info('Updating %s', name)
 
   try:
-    branch = None
-    if is_git_repo(repo):
-      branch = current_branch(repo)
-      if branch != 'master':
-        checkout_branch('master', repo)
+    branch = current_branch(repo)
+    parent = parent_branch(branch)
+    if branch != parent:
+      checkout_branch(parent, repo)
 
     update_repo(repo)
 
-    if branch and branch != 'master':
+    if branch and branch != parent:
       log.info('Rebasing %s', branch)
-      checkout_branch(branch, repo)
-      update_branch(repo)
+      checkout_branch(branch, repo_path=repo)
+      update_branch(repo=repo, parent=parent)
 
     return True
   except Exception as e:

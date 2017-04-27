@@ -7,7 +7,7 @@ from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
 from workspace.commands.review import Review
 from workspace.config import config
-from workspace.scm import repo_check, is_git_repo, product_name, current_branch
+from workspace.scm import repo_check, product_name, current_branch
 
 
 log = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class Bump(AbstractCommand):
       requirement_files = config.bump.requirement_files.strip().split()
 
     bumper = BumperDriver(requirement_files, bumper_models=self.bumper_models, full_throttle=self.force, detail=True, test_drive=self.dry_run)
-    messages, bumps = bumper.bump(filter_requirements, required=self.add, show_summary=not is_git_repo())
+    messages, bumps = bumper.bump(filter_requirements, required=self.add, show_summary=False)
     commit_msg = None
 
     try:
@@ -100,7 +100,7 @@ class Bump(AbstractCommand):
         if self.msg:
           commit_msg = self.msg + '\n\n' + commit_msg
 
-        if not self.dry_run and is_git_repo():
+        if not self.dry_run:
           self.commander.run('commit', msg=commit_msg, files=list(messages.keys()))
 
     except Exception:
@@ -130,7 +130,7 @@ class Bump(AbstractCommand):
           self.commander.run('review', publish=self.push, files=list(messages.keys()), description=commit_msg, test=tests,
                              skip_prereview=True, reviewer_groups=reviewer_groups, reviewers=reviewers)
 
-        if self.push and is_git_repo():
+        if self.push:
           branch = current_branch()
           if self.rb:
             self.commander.run('wait', review=True, in_background=True)

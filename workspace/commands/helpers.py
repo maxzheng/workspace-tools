@@ -9,6 +9,7 @@ import subprocess
 from localconfig import LocalConfig
 
 from workspace.config import product_groups
+from workspace.scm import project_path
 
 log = logging.getLogger(__name__)
 
@@ -18,50 +19,47 @@ class ToxIni(LocalConfig):
 
   VAR_RE = re.compile('{\[(.+)](.+)}')
 
-  def __init__(self, repo=None, tox_ini=None):
+  def __init__(self, path=None, tox_ini=None):
     """
-    :param str repo: The repo to load tox*.ini from.
-    :param str tox_ini: Path to tox ini file. Defaults to tox*.ini in repo root.
+    :param str path: The path to load tox*.ini from.
+    :param str tox_ini: Path to tox ini file. Defaults to tox.ini in path root.
     """
-    self.repo = repo
-    self.path = tox_ini or self.path_for(repo)
-    super(ToxIni, self).__init__(self.path)
+    self.path = path
+    self.tox_ini = tox_ini or self.find_tox_ini(self.path)
+
+    super(ToxIni, self).__init__(self.tox_ini)
 
   @classmethod
-  def path_for(cls, repo):
+  def find_tox_ini(cls, path):
     """
-    :param str repo: Repo to get tox*.ini for
-    :return: Path to tox*.ini
-    :raise IOError: if there is no tox*.ini found
+    Find tox.ini in path or its parent paths.
+
+    :param str path: Path to get tox.ini for or its parent paths.
+    :return: Path to tox.ini
+    :raise IOError: if there is no tox.ini found
     """
 
-    tox_inis = glob(os.path.join(repo, 'tox*.ini'))
+    tox_ini  = project_path(path=path)
 
-    if not tox_inis:
-      raise IOError('No tox.ini found in %s. Please run "wst setup --product" first to setup tox.' % repo)
+    if not tox_ini:
+      raise IOError('No tox.ini found in %s. Please run "wst setup --product" first to setup tox.' % path)
 
-    elif len(tox_inis) > 1:
-      log.warn('More than one ini files found - will use first one: %s', ', '.join(tox_inis))
-
-    return tox_inis[0]
+    return os.path.join(tox_ini, 'tox.ini')
 
   @property
   def envlist(self):
     return [e.strip() for e in self.tox.envlist.split(',') if e]
 
-  def envsection(self, env):
-    return 'testenv:%s' % env
+  def envsection(self, env=None):
+    return 'testenv:%s' % env if env else 'testenv'
 
   @property
   def workdir(self):
-    return os.path.join(self.repo, self.get('tox', 'toxworkdir', '.tox'))
+    return os.path.join(self.path, self.get('tox', 'toxworkdir', '.tox'))
 
   def envdir(self, env):
-    envsection = self.envsection(env)
-    if envsection not in self:
-      log.debug('Using default envdir and commands as %s section is not defined in %s', envsection, self.path)
-
-    return self.expand_vars(self.get(envsection, 'envdir', os.path.join(self.repo, '.tox', env)).replace('{toxworkdir}', self.workdir))
+    default_envdir = os.path.join(self.path, '.tox', env)
+    return self.expand_vars(self.get(self.envsection(env), 'envdir', self.get(self.envsection(), 'envdir', default_envdir)).replace('{toxworkdir}', self.workdir))
 
   def bindir(self, env, script=None):
     dir = os.path.join(self.envdir(env), 'bin')
@@ -81,7 +79,7 @@ class ToxIni(LocalConfig):
 
 
 class ProductPager(object):
-  """ Pager to show contents from multiple products (repos) """
+  """ Pager to show contents from multiple products (paths) """
   MAX_TERMINAL_ROWS = 25
 
   def __init__(self, optional=False):
@@ -95,10 +93,10 @@ class ProductPager(object):
         self.pager = create_pager('^\[.*]')
 
     if self.pager:
-      self.pager.stdin.write('[ ' + product + ' ]\n')
+      self.pager.stdin.write('[ {} ]\n'.format(product).encode())
       if branch and branch != 'master':
-        self.pager.stdin.write('# On branch %s\n' % branch)
-      self.pager.stdin.write(output.strip() + '\n\n')
+        self.pager.stdin.write('# On branch {}\n'.format(branch).encode())
+      self.pager.stdin.write('{}\n\n'.format(output.strip()).encode())
     else:
       if branch and branch != 'master':
         print('# On branch %s' % branch)
