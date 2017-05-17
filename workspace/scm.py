@@ -253,7 +253,7 @@ def parent_branch(branch):
 
 def update_repo(path=None):
   """ Updates given or current repo to HEAD """
-  silent_run('git pull --rebase', cwd=path)
+  silent_run('git pull --rebase --autostash', cwd=path)
 
 
 def push_repo(path=None):
