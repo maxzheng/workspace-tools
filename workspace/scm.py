@@ -202,9 +202,13 @@ def update_branch(repo=None, parent='master'):
   silent_run('git rebase {}'.format(parent), cwd=repo)
 
 
-def remove_branch(branch, raises=False):
+def remove_branch(branch, raises=False, remote=False, force=False):
   """ Removes branch """
-  silent_run(['git', 'branch', '-D', branch], raises=raises)
+  silent_run(['git', 'branch', '-D' if force else '-d', branch], raises=raises)
+
+  if remote:
+    silent_run(['git', 'push', default_remote(), '--delete', branch], raises=raises)
+
 
 
 def rename_branch(branch, new_branch):
@@ -222,6 +226,32 @@ def diff_branch(right_branch, left_branch='master', path=None):
   cmd = 'git log %s..%s' % (left_branch, right_branch)
 
   return run(cmd, cwd=path, return_output=True)
+
+
+def all_remotes(repo=None):
+  """ Returns all remotes. """
+  remotes_output = silent_run('git remote', cwd=repo, return_output=True)
+  remotes = []
+
+  if remotes_output:
+    for remote in remotes_output.split('\n'):
+      if remote:
+        remote = remote.strip()
+        remotes.append(remote)
+
+  return remotes
+
+
+def default_remote(repo=None):
+  return all_remotes(repo=repo)[0]
+
+def remote_tracking_branch(repo=None):
+  remote_output = silent_run('git rev-parse --abbrev-ref --symbolic-full-name @{u}', cwd=repo, return_output=True)
+
+  if 'no upstream' in remote_output:
+    return None
+  else:
+    return remote_output
 
 
 def all_branches(repo=None):
@@ -245,32 +275,45 @@ def current_branch(repo=None):
 
 
 def parent_branch(branch):
+  """ Returns the parent branch if available, otherwise None """
   if config.commit.commit_branch_indicator in branch:
     _, parent = branch.rsplit(config.commit.commit_branch_indicator, 1)
     return parent
 
-  return branch
 
 def update_repo(path=None):
   """ Updates given or current repo to HEAD """
-  silent_run('git pull --rebase --autostash', cwd=path)
+  if not remote_tracking_branch(repo=path):
+    return
+
+  branch = current_branch(repo=path)
+
+  for remote in all_remotes(repo=path):
+    silent_run('git pull {} {}'.format(remote, branch), cwd=path)
 
 
-def push_repo(path=None):
-  silent_run('git push')
+def push_repo(path=None, force=False):
+  push_opts = []
 
+  if force:
+    push_opts.append('--force')
+
+  if not remote_tracking_branch(repo=path):
+    push_opts.append('--set-upstream {} {}'.format(default_remote(repo=path), current_branch(repo=path)))
+
+  silent_run('git push ' + ' '.join(push_opts))
 
 def stat_repo(path=None, return_output=False):
   cmd = 'git status'
   return run(cmd, cwd=path, return_output=return_output)
 
 
-def diff_repo(path=None, branch=None, file=None, return_output=False, name_only=False):
+def diff_repo(path=None, branch=None, context=None, return_output=False, name_only=False):
   cmd = ['git', 'diff']
   if branch:
     cmd.append(branch)
-  if file:
-    cmd.append(file)
+  if context:
+    cmd.append(context)
   if name_only:
     cmd.append('--name-only')
 

@@ -4,7 +4,7 @@ import os
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import ProductPager
-from workspace.scm import diff_repo, repos, product_name, current_branch
+from workspace.scm import diff_repo, repos, product_name, current_branch, parent_branch
 from workspace.utils import log_exception
 
 log = logging.getLogger(__name__)
@@ -14,8 +14,8 @@ class Diff(AbstractCommand):
   """
     Show diff on current product or all products in workspace
 
-    :param str file: Show diff for file only
-    :param bool master: Diff against the master branch
+    :param str context: Show diff for context (i.e. branch or file)
+    :param bool parent: Diff against the parent branch. If there is not parent, defaults to master.
     :param bool name_only: List file names only. Git only.
   """
   alias = 'di'
@@ -24,13 +24,13 @@ class Diff(AbstractCommand):
   def arguments(cls):
     _, docs = cls.docs()
     return [
-      cls.make_args('file', nargs='?', help=docs['file']),
-      cls.make_args('-m', '--master', action='store_true', help=docs['master']),
+      cls.make_args('context', nargs='?', help=docs['context']),
+      cls.make_args('-p', '--parent', action='store_true', help=docs['parent']),
       cls.make_args('-l', '--name-only', action='store_true', help=docs['name_only'])
     ]
 
   def run(self):
-    if self.file:
+    if self.context:
       scm_repos = [os.getcwd()]
     else:
       scm_repos = repos()
@@ -40,10 +40,10 @@ class Diff(AbstractCommand):
 
     for repo in scm_repos:
       with log_exception():
-        branch = 'master' if self.master else None
-        output = diff_repo(repo, branch=branch, file=self.file, return_output=True, name_only=self.name_only)
+        cur_branch = current_branch(repo)
+        branch = (parent_branch(cur_branch) or 'master') if self.parent else None
+        output = diff_repo(repo, branch=branch, context=self.context, return_output=True, name_only=self.name_only)
         if output:
-          branch = current_branch(repo)
-          pager.write(product_name(repo), output, branch)
+          pager.write(product_name(repo), output, cur_branch)
 
     pager.close_and_wait()

@@ -39,27 +39,28 @@ class Update(AbstractCommand):
       log.info('No product found')
 
     elif len(select_repos) == 1:
-      _update_repo(select_repos[0], self.raises)
+      _update_repo(select_repos[0], raises=self.raises, quiet=self.quiet)
 
     else:
       if not all(parallel_call(_update_repo, select_repos).values()):
         sys.exit(1)
 
 
-def _update_repo(repo, raises=False):
+def _update_repo(repo, raises=False, quiet=False):
   name = product_name(repo)
 
-  log.info('Updating %s', name)
+  if not quiet:
+    log.info('Updating %s', name)
 
   try:
     branch = current_branch(repo)
     parent = parent_branch(branch)
-    if branch != parent:
+    if parent:
       checkout_branch(parent, repo)
 
     update_repo(repo)
 
-    if branch and branch != parent:
+    if parent:
       log.info('Rebasing %s', branch)
       checkout_branch(branch, repo_path=repo)
       update_branch(repo=repo, parent=parent)

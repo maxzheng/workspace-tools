@@ -22,8 +22,6 @@ class Commit(AbstractCommand):
     :param bool amend: Amend last commit with any new changes made
     :param bool test: Run tests. Repeat twice (-tt) to test dependents too.
     :param bool push: Push the current branch after commit
-    :param bool dummy: Perform a dummy commit without any changes on master branch. This implies --push.
-                       Other options are ignored.
     :param int discard: Discard last commit, or branch if there are no more commits. Use multiple times to discard multiple commits.
                         Other options are ignored.
     :param str move: Move last commit to branch. Other options are ignored.
@@ -39,8 +37,7 @@ class Commit(AbstractCommand):
     return ([
         cls.make_args('msg', nargs='?', help=docs['msg']),
         cls.make_args('-a', '--amend', action='store_true', help=docs['amend']),
-        cls.make_args('-d', '--dummy', action='store_true', help=docs['dummy']),
-        cls.make_args('-D', '--discard', action='count', help=docs['discard']),
+        cls.make_args('-d', '--discard', action='count', help=docs['discard']),
         cls.make_args('--move', metavar='branch', nargs=1, help=docs['move']),
         cls.make_args('-b', '--branch', help=docs['branch'])
       ], [
@@ -52,17 +49,7 @@ class Commit(AbstractCommand):
       ])
 
   def run(self):
-    if self.dummy:
-      checkout_branch('master')
-      self.commander.run('update')  # Needs to be updated otherwise empty commit below gets erased in push_branch when update is called
-      if not self.msg:
-        self.msg = 'Empty commit to trigger build'
-      elif not self.msg.startswith('Empty commit'):
-        self.msg = 'Empty commit. %s' % self.msg
-      local_commit(self.msg, empty=True)
-      self.commander.run('push', skip_precommit=True)
-
-    elif self.discard or self.move:
+    if self.discard or self.move:
       if not self.branch:
         if self.discard:
           self.branch = current_branch()
@@ -77,7 +64,7 @@ class Commit(AbstractCommand):
 
       if self.discard and len(changes) <= self.discard and self.branch != 'master':
         checkout_branch('master')
-        remove_branch(self.branch, raises=True)
+        remove_branch(self.branch, raises=True, force=True)
         log.info('Deleted branch %s', self.branch)
 
       else:
@@ -172,7 +159,7 @@ class Commit(AbstractCommand):
           self.commander.run('wait', review=True, in_background=True)
 
       if self.push:
-        self.commander.run('push', branch=self.branch, skip_precommit=self.rb)
+        self.commander.run('push', branch=self.branch, skip_precommit=self.rb, force=self.amend)
 
       return test_output
 

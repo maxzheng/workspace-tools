@@ -16,11 +16,16 @@ class Push(AbstractCommand):
     Push changes for branch
 
     :param bool push: The branch to push. Defaults to current branch.
+    :param bool merge: Merge the branch into its parent branch before push
+    :param bool force: Force the push
   """
   @classmethod
   def arguments(cls):
     _, docs = cls.docs()
-    return [cls.make_args('branch', nargs='?', help=docs['push'])]
+    return [cls.make_args('branch', nargs='?', help=docs['push']),
+            cls.make_args('-m', '--merge', action='store_true', help=docs['merge']),
+            cls.make_args('-f', '--force', action='store_true', help=docs['force'])
+    ]
 
   def run(self):
 
@@ -31,20 +36,24 @@ class Push(AbstractCommand):
 
     log.info('Pushing %s', self.branch)
 
-    parent = parent_branch(self.branch)
+    if self.merge:
+      parent = parent_branch(self.branch)
+      if parent:
+        checkout_branch(parent)
+      else:
+        self.merge = False
+        log.info('Ignoring merge request as there is no parent branch')
 
-    checkout_branch(parent)
+    self.commander.run('update', quiet=True)
 
-    update_repo()
-
-    if self.branch != parent:
+    if self.merge:
       checkout_branch(self.branch)
       update_branch(parent=parent)  # Failed rebase can be continued easily than failed merge
 
       checkout_branch(parent)
       merge_branch(self.branch)
 
-    push_repo()
+    push_repo(force=self.force)
 
-    if self.branch != parent:
-      remove_branch(self.branch)
+    if self.merge:
+      remove_branch(self.branch, remote=True)
