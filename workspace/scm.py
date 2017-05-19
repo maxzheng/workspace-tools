@@ -270,6 +270,12 @@ def all_branches(repo=None):
   return branches
 
 
+def master_branch(repo=None):
+  if 'trunk' in all_branches(repo=repo):
+    return 'trunk'
+  else:
+    return 'master'
+
 def current_branch(repo=None):
   return all_branches(repo)[0]
 

@@ -6,7 +6,8 @@ import sys
 from workspace.commands import AbstractCommand
 from workspace.config import config
 from workspace.scm import local_commit, add_files, checkout_branch,\
-    create_branch, all_branches, diff_branch, current_branch, remove_branch, hard_reset, commit_logs
+    create_branch, all_branches, diff_branch, current_branch, remove_branch, hard_reset, \
+    commit_logs, master_branch, parent_branch
 from workspace.utils import prompt_with_editor
 
 log = logging.getLogger(__name__)
@@ -22,8 +23,9 @@ class Commit(AbstractCommand):
     :param bool amend: Amend last commit with any new changes made
     :param bool test: Run tests. Repeat twice (-tt) to test dependents too.
     :param bool push: Push the current branch after commit
-    :param int discard: Discard last commit, or branch if there are no more commits. Use multiple times to discard multiple commits.
-                        Other options are ignored.
+    :param int discard: Discard last commit, or branch (child only) if there are no more commits.
+                        Use multiple times to discard multiple commits.
+                        Other options are ignored. Any local changes may be discarded (hard reset)
     :param str move: Move last commit to branch. Other options are ignored.
     :param callable test_command: Alternative test command to run
     :param bool skip_auto_branch: Skip automatic branch creation from commit msg
@@ -56,14 +58,16 @@ class Commit(AbstractCommand):
         else:
           self.branch = self.move[0]
 
+      is_child_branch = base_branch = parent_branch(self.branch)
+
       if self.discard:
-        changes = commit_logs(self.discard) if self.branch == 'master' else diff_branch(self.branch)
+        changes = commit_logs(self.discard) if not is_child_branch else diff_branch(self.branch, left_branch=base_branch)
       else:
         changes = commit_logs(1)
       changes = [_f for _f in changes.split('commit ') if _f]
 
-      if self.discard and len(changes) <= self.discard and self.branch != 'master':
-        checkout_branch('master')
+      if self.discard and len(changes) <= self.discard and is_child_branch:
+        checkout_branch(base_branch)
         remove_branch(self.branch, raises=True, force=True)
         log.info('Deleted branch %s', self.branch)
 
