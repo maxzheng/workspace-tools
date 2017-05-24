@@ -5,7 +5,6 @@ from bumper import BumperDriver
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
-from workspace.commands.review import Review
 from workspace.config import config
 from workspace.scm import repo_check, product_name, current_branch
 
@@ -21,9 +20,8 @@ class Bump(AbstractCommand):
                       Name can be a product group name defined in workspace.cfg.
                       To bump to a specific version instead of latest, append version to name
                       (i.e. requests==1.2.3 or 'requests>=1.2.3'). When > or < is used, be sure to quote.
-    :param int test: Run tests. Results will be posted to ReviewBoard if --rb is used.
-    :param bool rb: Create or update existing RB after commit. Existing RB is looked up in .git/config.
-    :param bool push: Wait for 'Ship It' from RB (unless --skip-rb is used) and push the bump (git only)
+    :param int test: Run tests.
+    :param bool push: Push the change. Use with --test to test before pushing.
     :param bool add: Add the `names` to the requirements file if they don't exist.
     :param str msg: Summary commit message
     :param str/list file: Requirement file to bump. Defaults to requirements.txt or pinned.txt
@@ -51,7 +49,6 @@ class Bump(AbstractCommand):
         cls.make_args('-n', '--dry-run', action='store_true', help=docs['dry_run'])
       ], [
         cls.make_args('-t', '--test', action='count', help=docs['test']),
-        cls.make_args('-r', '--rb', action='store_true', help=docs['rb']),
         cls.make_args('-p', '--push', action='store_true', help=docs['push']),
       ])
 
@@ -108,32 +105,13 @@ class Bump(AbstractCommand):
       raise
 
     if bumps:
-      tests = {}
-
       if self.test:
         log.info('Running tests')
-        tests[product_name()] = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
+        self.commander.run('test', return_output=False, test_dependents=self.test > 1)
 
       if not self.dry_run:
-        if self.rb and commit_msg and self.commander.command('review') != Review:
-          reviewer_groups = set()
-          reviewers = set()
-
-          for lib in list(bumps.keys()):
-            g, r = self.commander.command('review').reviewers_for_product(lib)
-            if g:
-              reviewer_groups.update(g)
-            if r:
-              reviewers.update(r)
-            log.debug('Reviewers for %s: %s %s', lib, g, r)
-
-          self.commander.run('review', publish=self.push, files=list(messages.keys()), description=commit_msg, test=tests,
-                             skip_prereview=True, reviewer_groups=reviewer_groups, reviewers=reviewers)
-
         if self.push:
           branch = current_branch()
-          if self.rb:
-            self.commander.run('wait', review=True, in_background=True)
           self.commander.run('push', branch=branch)
 
     return messages, commit_msg, bumps

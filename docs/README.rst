@@ -1,15 +1,13 @@
 workspace-tools
 ===============
 
-Tools to simplify working with multiple repositories, git, and tox.
+Tools to simplify working with multiple Python repositories by seamlessly integrating git and tox,
+where you can simply run one command instead of many native commands individually to do common tasks.
 
-It helps you do more with less work by seamlessly integrating all workspace tooling into one where
-you can simply run one command instead of many native commands individually to do common tasks.
-
-It is mostly a wrapper on top of existing tools with the end goal of providing a simple, seamless, and
-less repetive experience when working with one or more repositories. Feature support is mostly limited
-to what the author uses as, currently, it is foremost a personal tool to enhance the author's own productivity,
-but sharing it as others might find it useful.
+It is mostly a wrapper on top of existing tools with the end goal of providing a simple, seamless,
+and less repetive experience when working with one or more repositories. Feature support is mostly
+limited to what the author uses as, currently, it is foremost a personal tool to enhance the
+author's own productivity, but sharing it as others might find it useful.
 
 Feature Summary
 ===============
@@ -21,8 +19,7 @@ Feature Summary
 * Get the most out of other products by easily update your dependencies to the latest
 * Automatically install dependencies in editable mode for testing if configured
 * Templates included to setup new product quickly
-* Extensible by adding your own custom commands or modify existing by wrapping them.
-* Trunk based development - one branch per one change that is merged into master when pushed.
+* Support for multiple branches with child/parent relationship.
 * Cool and sensible shortcut aliases to help you do more by typing less - you will love "tv" [if you know ag]!
 
 Quick Start Tutorial
@@ -57,7 +54,7 @@ To checkout a repo::
     # Or checkout a group of repos as defined in workspace.cfg (using 'ws' alias from setup)
     # ws checkout mzheng-repos
 
-    # Or checkout a repo from GitHub (using 'co' alias from setup, or use 'wst checkout'):
+    # Or checkout a repo from GitHub (using 'co' alias from setup above, or use 'wst checkout'):
     # co workspace-tools                # Best match
     # co maxzheng/workspace-tools       # Exact match
 
@@ -80,8 +77,9 @@ Make a commit and create a new branch for it::
     [updated-readme 0af8850] Updated README.rst
      1 file changed, 1 deletion(-)
 
-    # The commit created the branch 'updated-readme', added all files, and then committed
-    # To specify a different branch, use --branch option.
+    # The commit created the branch 'updated-readme:master', added all files, and then committed
+    # Notice the ":master" that indicates the parent branch. The parent branch will be used
+    # during push. To specify a different branch without parent relationship, use --branch option.
 
 To install your test environment and test your change (with tox/py.test)::
 
@@ -112,10 +110,10 @@ See status for all of your repos::
     no changes added to commit (use "git add" and/or "git commit -a")
 
     [ clicast ]
-    # Branches: master display-changes fix-download
+    # Branches: master display-changes:master fix-download:master
 
     [ workspace-tools ]
-    # Branches: updated-readme master
+    # Branches: updated-readme:master master
 
 See diff for all of your repos::
 
@@ -143,18 +141,20 @@ And finally amend the change and push::
 
     $ wst commit --amend --push
 
-    [updated-readme 738f659] Updated README.rst
+    [updated-readme:master 738f659] Updated README.rst
     1 file changed, 2 insertions(+), 1 deletion(-)
-    Pushing updated-readme
+    Pushing updated-readme:master
 
-    # It will fail at push as you are not a committer, but the change was committed to branch, and then merged into master.
+    # It will fail at push as you are not a committer, but the change was committed to branch,
+    # and then merged into its parent branch (master).
 
 Or simply push the change in your current branch::
 
-    wst push
+    wst push --merge
 
-    # This will update master, rebase branch with master and merge into master if on branch, and then push.
-    # Upon success, it will remove the branch if pushing from branch.
+    # This will update its parent branch (master), rebase branch with parent branch and merge into
+    # parent branch if on child branch (child:parent) and then push.
+    # Upon success, it will remove the local and remote branch if pushing from child branch.
 
 If you have pinned your dependency requirements and want to update to latest version::
 
@@ -199,15 +199,12 @@ Now you are ready to try out the other commands yourself::
                             out changelog, builds a source distribution, and
                             uploads with twine.
         push                Push changes for branch
-        review (rb)         Create or update a ReviewBoard.
         setup               Optional (refer to setup --help). Setup workspace
                             environment. Run from primary workspace directory.
         status (st)         Show status on current product or all products in
                             workspace
         test                Run tests and manage test environments for product.
         update (up)         Update current product or all products in workspace
-        wait (w8)           Wait for an event to be completed and optionally start
-                            background/waiting tasks.
 
 Links & Contact Info
 ====================

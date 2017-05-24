@@ -44,9 +44,6 @@ class Commit(AbstractCommand):
         cls.make_args('-b', '--branch', help=docs['branch'])
       ], [
         cls.make_args('-t', '--test', action='count', help=docs['test']),
-        cls.make_args('-r', '--rb', action='store_true',
-                      help='Create or update existing RB after commit. Existing RB is looked up in .git/config. '
-                           'Use -rt to run / post the test results. Repeat twice to test dependents too (-rtt)'),
         cls.make_args('-p', '--push', action='store_true', help=docs['push'])
       ])
 
@@ -105,23 +102,19 @@ class Commit(AbstractCommand):
           self.commander.run('test', env_or_file=['style'], silent=2)
 
         log.info('Running tests')
-        test_output = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
-
-        if self.rb:
-          success, _ = self.commander.command('test').summarize(test_output)
-
-          if not success:
-            sys.exit(1)
+        test_output = self.commander.run('test', return_output=False, test_dependents=self.test > 1)
 
       branches = all_branches()
       cur_branch = branches and branches[0]
 
-      if (not (not self.rb and self.push or self.amend) and config.commit.commit_branch_indicator not in cur_branch and not self.branch and self.msg and
+      if (not (self.push or self.amend) and config.commit.commit_branch_indicator not in cur_branch and not self.branch and self.msg and
          config.commit.auto_branch_from_commit_words):
-        self.branch = '{}@{}'.format(
-            self._branch_for_msg(self.msg, words=config.commit.auto_branch_from_commit_words,
-                                 branches=branches),
-            cur_branch)
+        self.branch = self._branch_for_msg(
+                        self.msg,
+                        words=config.commit.auto_branch_from_commit_words,
+                        branches=branches)
+        if cur_branch:
+          self.branch = '{}@{}'.format(self.branch, cur_branch)
 
       if self.branch:
         if branches:
@@ -144,26 +137,10 @@ class Commit(AbstractCommand):
           self.commander.run('test', env_or_file=['style'], silent=2)
 
         log.info('Running tests')
-        test_output = self.commander.run('test', return_output=self.rb, test_dependents=self.test > 1)
-
-        if self.rb:
-          success, _ = self.commander.command('test').summarize(test_output)
-
-          if not success:
-            sys.exit(1)
-
-      if self.rb:
-        publish = self.push and (self.amend or test_output)
-        self.commander.run('review', publish=publish, test=test_output, skip_prereview=self.test)
-
-        if self.push:
-          if not publish:
-            log.info("Review was not published as there is no testing done. Please update testing done and then publish")
-          self.branch = current_branch()  # Ensure branch is set for push as it could change while waiting
-          self.commander.run('wait', review=True, in_background=True)
+        test_output = self.commander.run('test', return_output=False, test_dependents=self.test > 1)
 
       if self.push:
-        self.commander.run('push', branch=self.branch, skip_precommit=self.rb, force=self.amend)
+        self.commander.run('push', branch=self.branch, force=self.amend)
 
       return test_output
 

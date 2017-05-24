@@ -24,10 +24,6 @@ def test_sanity(run, command, exception):
 
 
 def test_bump(run, monkeypatch):
-  monkeypatch.setattr('workspace.commands.review.Review.reviewers_for_product', Mock(return_value=(None, None)))
-  monkeypatch.setattr('workspace.commands.review.Review.id_for_branch', Mock(return_value=None))
-  monkeypatch.setattr('workspace.commands.review.Review.create', Mock())
-
   with temp_dir():
     with pytest.raises(SystemExit):
       run('bump')
@@ -48,10 +44,10 @@ def test_bump(run, monkeypatch):
     with open('requirements.txt', 'w') as fp:
       fp.write('# Comment for localconfig\nlocalconfig==0.0.1\n# Comment for requests\nrequests<0.1')
     msgs, commit_msg, bumps = run('bump')
-    file, msg = msgs.items()[0]
-    version = PyPI.latest_package_version('localconfig')
+    file, msg = list(msgs.items())[0]
     assert 'requirements.txt' == file
 
+    version = PyPI.latest_package_version('localconfig')
     expected_msg = 'Require localconfig==%s' % version
     assert expected_msg == msg[:len(expected_msg)]
     assert expected_msg == commit_msg[:len(expected_msg)]
@@ -81,7 +77,7 @@ def test_commit(run):
 
     run('commit "Add new file" --branch master')
 
-    assert 'working directory clean' in stat_repo(return_output=True)
+    assert 'working tree clean' in stat_repo(return_output=True)
     assert 'Hello World' == open('new_file').read()
 
     with open('new_file', 'w') as fp:

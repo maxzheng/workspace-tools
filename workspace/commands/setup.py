@@ -116,10 +116,8 @@ COMMANDS = {
   'co': 'checkout',
   'ci': 'commit',
   'di': '_diff',
-  'rb': 'review',
   'st': 'status',
   'up': 'update',
-  'w8': '_wait',
 
   '_bu': 'bump',
   '_cl': 'clean',
