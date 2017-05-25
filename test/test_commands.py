@@ -83,17 +83,23 @@ def test_commit(run):
     with open('new_file', 'w') as fp:
       fp.write('New World')
 
-    run('commit "Update file" --branch updated')
+    run('commit "Update file"')
 
-    assert ['updated', 'master'] == all_branches()
+    assert ['update-file@master', 'master'] == all_branches()
 
-    run('commit --move moved')
+    run('commit --move release')
 
-    assert ['updated', 'master', 'moved'] == all_branches()
+    assert ['update-file@master', 'master', 'release'] == all_branches()
 
     run('commit --discard')
 
-    assert ['master', 'moved'] == all_branches()
+    assert ['master', 'release'] == all_branches()
+
+    run('checkout release')
+
+    run('commit --discard')
+
+    assert ['release', 'master'] == all_branches()
 
     logs = commit_logs()
     assert 'new file' in logs
@@ -127,7 +133,8 @@ def test_test(run):
     with pytest.raises(SystemExit):
       run('test')
 
-    assert 'test' in run('test test/test_pass.py')
+    output = run('test test/test_pass.py')
+    assert 'test' in output
 
     os.utime('requirements.txt', None)
     assert 'test' in run('test -k test_pass')
@@ -139,17 +146,18 @@ def test_test(run):
     assert 'style' in run('test style')
 
     os.unlink('test/test_fail.py')
-    assert 'cover' in run('test coverage')
+    assert 'cover' in run('test cover')
     assert os.path.exists('coverage.xml')
     assert os.path.exists('htmlcov/index.html')
 
 
-@patch('workspace.commands.push.push_repo')
-def test_push(push_repo, run):
+def test_push_without_repo(run):
   with temp_dir():
     with pytest.raises(SystemExit):
       run('push')
 
+@patch('workspace.commands.push.push_repo')
+def test_push(push_repo, run):
   with temp_remote_git_repo():
     run('push')
 
@@ -157,9 +165,14 @@ def test_push(push_repo, run):
       fp.write('Hello World')
     assert 'new_file' in stat_repo(return_output=True)
 
-    run('commit "Add new file" --branch=new_file')
+    run('commit "Add new file"')
 
     run('push')
 
+    assert ['add-new@master', 'master'] == all_branches()
+
+    run('push --merge')
+
     assert ['master'] == all_branches()
+
     assert "ahead of 'origin/master' by 1 commit." in stat_repo(return_output=True)

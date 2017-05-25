@@ -60,9 +60,6 @@ class Bump(AbstractCommand):
 
     self.commander.run('update')
 
-    if not self.msg:
-      config.commit.auto_branch_from_commit_words = 1
-
     if not self.names:
       self.names = []
 
@@ -96,9 +93,12 @@ class Bump(AbstractCommand):
 
         if self.msg:
           commit_msg = self.msg + '\n\n' + commit_msg
+        else:
+          config.commit.auto_branch_from_commit_words = 1
 
         if not self.dry_run:
           self.commander.run('commit', msg=commit_msg, files=list(messages.keys()))
+          config.commit.auto_branch_from_commit_words = 2  # Restore it for unit tests
 
     except Exception:
       bumper.reverse()

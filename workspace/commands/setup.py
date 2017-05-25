@@ -189,7 +189,7 @@ envdir = {toxworkdir}/%s
 
 [testenv:test]
 commands =
-    py.test {env:PYTESTARGS:} test
+    py.test {env:PYTESTARGS:}
 
 [testenv:style]
 commands =
@@ -197,7 +197,7 @@ commands =
 
 [testenv:cover]
 commands =
-    py.test {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term test
+    py.test {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term
 
 [flake8]
 exclude = .git,.tox,__pycache__,docs,build,dist
@@ -266,10 +266,10 @@ README_TMPL = """\
 COVERAGERC_TMPL = """\
 [run]
 omit =
-    docs/*
-    setup.py
     .git/*
     .tox/*
+    docs/*
+    setup.py
     test/*
 """
 
@@ -429,10 +429,9 @@ class Setup(AbstractCommand):
       log.info('Created %s %s', self._relative_path(readme_file), placeholder_info)
 
     coveragerc_file = os.path.join(project_path, '.coveragerc')
-    if not os.path.exists(coveragerc_file):
-      with open(coveragerc_file, 'w') as fp:
-        fp.write(COVERAGERC_TMPL)
-      log.info('Created %s', self._relative_path(coveragerc_file))
+    with open(coveragerc_file, 'w') as fp:
+      fp.write(COVERAGERC_TMPL)
+    log.info('Created %s', self._relative_path(coveragerc_file))
 
     setup_py_file = os.path.join(project_path, 'setup.py')
     if not os.path.exists(setup_py_file):

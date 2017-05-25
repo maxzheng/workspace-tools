@@ -90,7 +90,7 @@ To install your test environment and test your change (with tox/py.test)::
     #
     # To check style or generate coverage report, run (using 'test' alias from setup):
     # test style
-    # test coverage
+    # test cover
 
 See status for all of your repos::
 

@@ -66,6 +66,20 @@ class Test(AbstractCommand):
     super(Test, self).__init__(*args, **kwargs)
 
   @classmethod
+  def arguments(cls):
+    _, docs = cls.docs()
+    return [
+      cls.make_args('env_or_file', nargs='*', help=docs['env_or_file']),
+      cls.make_args('-k', metavar='NAME_PATTERN', dest='match_test', help=docs['match_test']),
+      cls.make_args('-n', metavar='NUM_PROCESSES', type=int, dest='num_processes', help=docs['num_processes']),
+      cls.make_args('-d', '--show-dependencies', metavar='FILTER', action='store', nargs='?', help=docs['show_dependencies'], const=True),
+      cls.make_args('-t', '--test-dependents', action='store_true', help=docs['test_dependents']),
+      cls.make_args('-r', '--redevelop', action='count', help=docs['redevelop']),
+      cls.make_args('-o', action='store_true', dest='install_only', help=argparse.SUPPRESS),
+      cls.make_args('-e', '--install-editable', nargs='+', help=docs['install_editable'])
+    ]
+
+  @classmethod
   def supports_style_check(cls, repo=None):
     try:
       if not repo:
@@ -132,20 +146,6 @@ class Test(AbstractCommand):
           success = False
 
     return success, summaries if isinstance(tests, dict) else summaries[0]
-
-  @classmethod
-  def arguments(cls):
-    _, docs = cls.docs()
-    return [
-      cls.make_args('env_or_file', nargs='*', help=docs['env_or_file']),
-      cls.make_args('-k', metavar='NAME_PATTERN', dest='match_test', help=docs['match_test']),
-      cls.make_args('-n', metavar='NUM_PROCESSES', type=int, dest='num_processes', help=docs['num_processes']),
-      cls.make_args('-d', '--show-dependencies', metavar='FILTER', action='store', nargs='?', help=docs['show_dependencies'], const=True),
-      cls.make_args('-t', '--test-dependents', action='store_true', help=docs['test_dependents']),
-      cls.make_args('-r', '--redevelop', action='count', help=docs['redevelop']),
-      cls.make_args('-o', action='store_true', dest='install_only', help=argparse.SUPPRESS),
-      cls.make_args('-e', '--install-editable', nargs='+', help=docs['install_editable'])
-    ]
 
   def run(self):
     if self.test_dependents:
@@ -487,7 +487,7 @@ else:
         run([pip, 'uninstall', lib, '-y'], raises=False, silent=not self.debug)
 
         lib_path = product_path(lib)
-        if os.path.exists(os.path.join(lib_path, lib)):
+        if os.path.exists(os.path.join(lib_path, lib, 'setup.py')):
           lib_path = os.path.join(lib_path, lib)
         run([pip, 'install', '--editable', lib_path], silent=not self.debug)
 
