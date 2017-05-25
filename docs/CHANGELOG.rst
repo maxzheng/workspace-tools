@@ -1,3 +1,19 @@
+Version 3.0.0
+================================================================================
+
+* Fix tests and bugs
+* Remove review and wait commands.
+  
+  They are not easy to implement and does not provide that much value. Maybe later.
+* Only delete child branches
+* Many improvements for working with multiple branches
+* Use autostash when doing update (git pull)
+* Migrate to Python 3.x and add support for multiple projects per repo.
+  
+  And remove support for svn, git-svn.
+* Add .eggs to .gitignore
+* Sync / update
+
 Version 1.0.11
 ================================================================================
 
