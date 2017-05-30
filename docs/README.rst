@@ -9,8 +9,8 @@ and less repetive experience when working with one or more repositories. Feature
 limited to what the author uses as, currently, it is foremost a personal tool to enhance the
 author's own productivity, but sharing it as others might find it useful.
 
-Feature Summary
-===============
+Overview
+========
 
 * One tool to seamlessly manage / integrate all workspace tools, from setup to publish.
 * Simplified command execution for common workflow - just run one command, instead of many individual native ones.
@@ -215,6 +215,7 @@ Links & Contact Info
 | GitHub Source: https://github.com/maxzheng/workspace-tools
 | Report Issues/Bugs: https://github.com/maxzheng/workspace-tools/issues
 |
+| Follow: https://twitter.com/MaxZhengX
 | Connect: https://www.linkedin.com/in/maxzheng
 | Contact: maxzheng.os @t gmail.com
 
