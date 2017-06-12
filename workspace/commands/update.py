@@ -12,63 +12,63 @@ log = logging.getLogger(__name__)
 
 
 class Update(AbstractCommand):
-  """
-  Update current product or all products in workspace
+    """
+    Update current product or all products in workspace
 
-  :param list products: When updating all products, filter by these products or product groups
-  """
-  alias = 'up'
+    :param list products: When updating all products, filter by these products or product groups
+    """
+    alias = 'up'
 
-  def __init__(self, *args, **kwargs):
-    kwargs.setdefault('raises', True)
-    super(Update, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('raises', True)
+        super(Update, self).__init__(*args, **kwargs)
 
-  @classmethod
-  def arguments(cls):
-    _, docs = cls.docs()
-    return [cls.make_args('products', nargs='*', help=docs['products'])]
+    @classmethod
+    def arguments(cls):
+        _, docs = cls.docs()
+        return [cls.make_args('products', nargs='*', help=docs['products'])]
 
-  def run(self):
+    def run(self):
 
-    if self.products:
-      self.products = expand_product_groups(self.products)
+        if self.products:
+            self.products = expand_product_groups(self.products)
 
-    select_repos = [repo for repo in repos() if not self.products or self.products and product_name(repo) in self.products]
+        select_repos = [repo for repo in repos() if not self.products or self.products and product_name(repo) in self.products]
 
-    if not select_repos:
-      log.info('No product found')
+        if not select_repos:
+            log.info('No product found')
 
-    elif len(select_repos) == 1:
-      _update_repo(select_repos[0], raises=self.raises, quiet=self.quiet)
+        elif len(select_repos) == 1:
+            _update_repo(select_repos[0], raises=self.raises, quiet=self.quiet)
 
-    else:
-      if not all(parallel_call(_update_repo, select_repos).values()):
-        sys.exit(1)
+        else:
+            if not all(parallel_call(_update_repo, select_repos).values()):
+                sys.exit(1)
 
 
 def _update_repo(repo, raises=False, quiet=False):
-  name = product_name(repo)
+    name = product_name(repo)
 
-  if not quiet:
-    log.info('Updating %s', name)
+    if not quiet:
+        log.info('Updating %s', name)
 
-  try:
-    branch = current_branch(repo)
-    parent = parent_branch(branch)
-    if parent:
-      checkout_branch(parent, repo)
+    try:
+        branch = current_branch(repo)
+        parent = parent_branch(branch)
+        if parent:
+            checkout_branch(parent, repo)
 
-    update_repo(repo)
+        update_repo(repo)
 
-    if parent:
-      log.info('Rebasing %s', branch)
-      checkout_branch(branch, repo_path=repo)
-      update_branch(repo=repo, parent=parent)
+        if parent:
+            log.info('Rebasing %s', branch)
+            checkout_branch(branch, repo_path=repo)
+            update_branch(repo=repo, parent=parent)
 
-    return True
-  except Exception as e:
-    if raises:
-      raise
-    else:
-      log.error('%s: %s', name, e)
-      return False
+        return True
+    except Exception as e:
+        if raises:
+            raise
+        else:
+            log.error('%s: %s', name, e)
+            return False

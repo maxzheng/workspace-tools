@@ -5,7 +5,7 @@ import setuptools
 
 
 def find_files(path):
-  return [os.path.join(path, f) for f in os.listdir(path)]
+    return [os.path.join(path, f) for f in os.listdir(path)]
 
 
 setuptools.setup(

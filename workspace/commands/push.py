@@ -10,54 +10,54 @@ log = logging.getLogger(__name__)
 
 
 class Push(AbstractCommand):
-  """
-    Push changes for branch
+    """
+      Push changes for branch
 
-    :param bool all: Push change to all remotes
-    :param bool push: The branch to push. Defaults to current branch.
-    :param bool merge: Merge the branch into its parent branch before push
-    :param bool force: Force the push
-  """
-  @classmethod
-  def arguments(cls):
-    _, docs = cls.docs()
-    return [
-      cls.make_args('branch', nargs='?', help=docs['push']),
-      cls.make_args('-a', '--all', action='store_true', help=docs['all']),
-      cls.make_args('-m', '--merge', action='store_true', help=docs['merge']),
-      cls.make_args('-f', '--force', action='store_true', help=docs['force'])
-    ]
+      :param bool all: Push change to all remotes
+      :param bool push: The branch to push. Defaults to current branch.
+      :param bool merge: Merge the branch into its parent branch before push
+      :param bool force: Force the push
+    """
+    @classmethod
+    def arguments(cls):
+        _, docs = cls.docs()
+        return [
+          cls.make_args('branch', nargs='?', help=docs['push']),
+          cls.make_args('-a', '--all', action='store_true', help=docs['all']),
+          cls.make_args('-m', '--merge', action='store_true', help=docs['merge']),
+          cls.make_args('-f', '--force', action='store_true', help=docs['force'])
+        ]
 
-  def run(self):
+    def run(self):
 
-    current = current_branch()
+        current = current_branch()
 
-    if not self.branch:
-        self.branch = current
-    elif self.branch != current:
-        checkout_branch(self.branch)
+        if not self.branch:
+            self.branch = current
+        elif self.branch != current:
+            checkout_branch(self.branch)
 
-    log.info('Pushing %s', self.branch)
+        log.info('Pushing %s', self.branch)
 
-    if self.merge:
-      parent = parent_branch(self.branch)
-      if parent:
-        checkout_branch(parent)
-      else:
-        self.merge = False
-        log.info('Ignoring merge request as there is no parent branch')
+        if self.merge:
+            parent = parent_branch(self.branch)
+            if parent:
+                checkout_branch(parent)
+            else:
+                self.merge = False
+                log.info('Ignoring merge request as there is no parent branch')
 
-    if not self.force:
-      self.commander.run('update', quiet=True)
+        if not self.force:
+            self.commander.run('update', quiet=True)
 
-    if self.merge:
-      checkout_branch(self.branch)
-      update_branch(parent=parent)  # Failed rebase can be continued easily than failed merge
+        if self.merge:
+            checkout_branch(self.branch)
+            update_branch(parent=parent)  # Failed rebase can be continued easily than failed merge
 
-      checkout_branch(parent)
-      merge_branch(self.branch)
+            checkout_branch(parent)
+            merge_branch(self.branch)
 
-    push_repo(force=self.force)
+        push_repo(force=self.force)
 
-    if self.merge:
-      remove_branch(self.branch, remote=True)
+        if self.merge:
+            remove_branch(self.branch, remote=True)

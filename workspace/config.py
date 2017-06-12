@@ -75,5 +75,5 @@ config.read(__doc__.replace('\n  ', '\n'))
 
 
 def product_groups():
-  """ Returns a dict with product group name mapped to products """
-  return dict((group, names.split()) for group, names in config.product_groups)
+    """ Returns a dict with product group name mapped to products """
+    return dict((group, names.split()) for group, names in config.product_groups)
