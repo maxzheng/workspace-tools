@@ -210,7 +210,6 @@ def remove_branch(branch, raises=False, remote=False, force=False):
         silent_run(['git', 'push', default_remote(), '--delete', branch], raises=raises)
 
 
-
 def rename_branch(branch, new_branch):
     silent_run(['git', 'branch', '-m', branch, new_branch])
 
@@ -245,6 +244,7 @@ def all_remotes(repo=None):
 def default_remote(repo=None):
     return all_remotes(repo=repo)[0]
 
+
 def remote_tracking_branch(repo=None):
     remote_output = silent_run('git rev-parse --abbrev-ref --symbolic-full-name @{u}', cwd=repo, return_output=True)
 
@@ -276,6 +276,7 @@ def master_branch(repo=None):
     else:
         return 'master'
 
+
 def current_branch(repo=None):
     return all_branches(repo)[0]
 
@@ -298,7 +299,7 @@ def update_repo(path=None):
         silent_run('git pull {} {}'.format(remote, branch), cwd=path)
 
 
-def push_repo(path=None, force=False):
+def push_repo(path=None, force=False, remote=None, branch=None):
     push_opts = []
 
     if force:
@@ -307,7 +308,14 @@ def push_repo(path=None, force=False):
     if not remote_tracking_branch(repo=path):
         push_opts.append('--set-upstream {} {}'.format(default_remote(repo=path), current_branch(repo=path)))
 
+    if remote:
+        push_opts.append(remote)
+
+    if branch:
+        push_opts.append(branch)
+
     silent_run('git push ' + ' '.join(push_opts))
+
 
 def stat_repo(path=None, return_output=False):
     cmd = 'git status'
@@ -366,7 +374,8 @@ def checkout_product(product_url, checkout_path):
             product_url = results[0]['ssh_url']
             log.info('Using repo url %s', product_url)
         except Exception as e:
-            log.error('Could not find repo for %s using %s due to error: ', product_url, config.checkout.search_api_url, e)
+            log.error('Could not find repo for %s using %s due to error: ', product_url,
+                      config.checkout.search_api_url, e)
             sys.exit(1)
 
     elif USER_REPO_REFERENCE_RE.match(product_url):
@@ -378,6 +387,7 @@ def checkout_product(product_url, checkout_path):
 def checkout_files(files, repo_path=None):
     """ Checks out the given list of files. Raises on error. """
     silent_run(['git', 'checkout'] + files, cwd=repo_path)
+
 
 def hard_reset(to_commit):
     run(['git', 'reset', '--hard', to_commit])
