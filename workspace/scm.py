@@ -94,7 +94,7 @@ def commit_logs(limit=None, repo=None, diff=False, show_revision=None, extra_arg
   if limit:
     cmd.append('-%d' % limit)
   if diff:
-    cmd.append('-p')
+    cmd.append('-c')
   if extra_args:
     cmd.extend(extra_args)
 
@@ -204,7 +204,7 @@ def update_branch(repo=None, parent='master'):
 
 def remove_branch(branch, raises=False, remote=False, force=False):
   """ Removes branch """
-  silent_run(['git', 'branch', '-D' if force else '-d', branch], raises=raises)
+  run(['git', 'branch', '-D' if force else '-d', branch], raises=raises)
 
   if remote:
     silent_run(['git', 'push', default_remote(), '--delete', branch], raises=raises)

@@ -2,10 +2,8 @@ from __future__ import absolute_import
 import logging
 
 from workspace.commands import AbstractCommand
-from workspace.config import config
-from workspace.scm import (checkout_branch, remove_branch, current_branch, update_repo,
+from workspace.scm import (checkout_branch, remove_branch, current_branch,
                            push_repo, merge_branch, update_branch, parent_branch)
-from workspace.utils import run
 
 
 log = logging.getLogger(__name__)
@@ -15,6 +13,7 @@ class Push(AbstractCommand):
   """
     Push changes for branch
 
+    :param bool all: Push change to all remotes
     :param bool push: The branch to push. Defaults to current branch.
     :param bool merge: Merge the branch into its parent branch before push
     :param bool force: Force the push
@@ -22,9 +21,11 @@ class Push(AbstractCommand):
   @classmethod
   def arguments(cls):
     _, docs = cls.docs()
-    return [cls.make_args('branch', nargs='?', help=docs['push']),
-            cls.make_args('-m', '--merge', action='store_true', help=docs['merge']),
-            cls.make_args('-f', '--force', action='store_true', help=docs['force'])
+    return [
+      cls.make_args('branch', nargs='?', help=docs['push']),
+      cls.make_args('-a', '--all', action='store_true', help=docs['all']),
+      cls.make_args('-m', '--merge', action='store_true', help=docs['merge']),
+      cls.make_args('-f', '--force', action='store_true', help=docs['force'])
     ]
 
   def run(self):
@@ -32,7 +33,9 @@ class Push(AbstractCommand):
     current = current_branch()
 
     if not self.branch:
-      self.branch = current
+        self.branch = current
+    elif self.branch != current:
+        checkout_branch(self.branch)
 
     log.info('Pushing %s', self.branch)
 
@@ -44,7 +47,8 @@ class Push(AbstractCommand):
         self.merge = False
         log.info('Ignoring merge request as there is no parent branch')
 
-    self.commander.run('update', quiet=True)
+    if not self.force:
+      self.commander.run('update', quiet=True)
 
     if self.merge:
       checkout_branch(self.branch)
