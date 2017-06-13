@@ -1,5 +1,14 @@
-Version 3.0.1
+Version 3.0.2
 ================================================================================
+
+* Set upstream or remote but not both when pushing
+* Add merge command with option to merge to a list of user configured branches
+* Add push --all-remotes option
+* Reindent to use 4 spaces
+* Some minor changes
+
+Version 3.0.1
+--------------------------------------------------------------------------------
 
 * Add follow link
 
