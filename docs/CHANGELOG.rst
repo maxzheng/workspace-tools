@@ -1,5 +1,10 @@
-Version 3.0.2
+Version 3.0.3
 ================================================================================
+
+* Add merge doc
+
+Version 3.0.2
+--------------------------------------------------------------------------------
 
 * Set upstream or remote but not both when pushing
 * Add merge command with option to merge to a list of user configured branches
