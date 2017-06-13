@@ -9,14 +9,15 @@ from workspace.commands.bump import Bump
 from workspace.commands.checkout import Checkout
 from workspace.commands.clean import Clean
 from workspace.commands.commit import Commit
-from workspace.commands.test import Test
 from workspace.commands.diff import Diff
 from workspace.commands.log import Log
+from workspace.commands.merge import Merge
 from workspace.commands.publish import Publish
 from workspace.commands.push import Push
 from workspace.commands.update import Update
 from workspace.commands.status import Status
 from workspace.commands.setup import Setup
+from workspace.commands.test import Test
 from workspace.utils import log_exception
 
 
@@ -45,7 +46,7 @@ class Commander(object):
           Map of command name to command classes.
           Override commands to replace any command name with another class to customize the command.
         """
-        cs = [Bump, Checkout, Clean, Commit, Diff, Log, Publish, Push, Setup, Status, Test, Update]
+        cs = [Bump, Checkout, Clean, Commit, Diff, Log, Merge, Publish, Push, Setup, Status, Test, Update]
         return dict((c.name(), c) for c in cs)
 
     @classmethod

@@ -122,6 +122,7 @@ COMMANDS = {
   '_bu': 'bump',
   '_cl': 'clean',
   '_lo': 'log',
+  '_mg': 'merge',
   '_pu': 'push',
   '_pb': 'publish',
   '_te': 'test',

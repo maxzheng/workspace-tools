@@ -57,6 +57,15 @@
   # When auto branching from commit words, this is the indicator that will be used to
   # separate the commit branch from the parent branch, like commit_branch@parent_branch.
   commit_branch_indicator = @
+
+
+  ###########################################################################################################
+  # Settings for merge command
+  ###########################################################################################################
+  [merge]
+
+  # Branches to merge
+  branches =
 """
 from __future__ import absolute_import
 
