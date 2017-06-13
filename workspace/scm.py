@@ -306,15 +306,14 @@ def push_repo(path=None, force=False, remote=None, branch=None):
         push_opts.append('--force')
 
     if not remote_tracking_branch(repo=path):
-        push_opts.append('--set-upstream {} {}'.format(default_remote(repo=path), current_branch(repo=path)))
-
-    if remote:
+        push_opts.append('--set-upstream ' + remote)
+    elif remote:
         push_opts.append(remote)
 
     if branch:
         push_opts.append(branch)
 
-    silent_run('git push ' + ' '.join(push_opts))
+    silent_run('git push ' + ' '.join(push_opts), cwd=path)
 
 
 def stat_repo(path=None, return_output=False):
