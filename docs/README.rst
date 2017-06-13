@@ -156,6 +156,17 @@ Or simply push the change in your current branch::
     # parent branch if on child branch (child:parent) and then push.
     # Upon success, it will remove the local and remote branch if pushing from child branch.
 
+If you have multiple upstream branches (defined by config [merge] branches) that you need to merge your change into, use auto merge::
+
+    # Assuming you are currently on 3.2.x branch and have these branches: 3.3.x, master
+    wst merge --all
+
+    [INFO] Merging 3.2.x into 3.3.x
+    [INFO] Pushing 3.3.x
+    [INFO] Merging 3.3.x into master
+    [INFO] Pushing master
+
+
 If you have pinned your dependency requirements and want to update to latest version::
 
     $ wst bump
@@ -195,6 +206,7 @@ Now you are ready to try out the other commands yourself::
         diff (di)           Show diff on current product or all products in
                             workspace
         log                 Show commit logs
+        merge               Merge changes from branch to current branch
         publish             Bumps version in setup.py (defaults to patch), writes
                             out changelog, builds a source distribution, and
                             uploads with twine.
