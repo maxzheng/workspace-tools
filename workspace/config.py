@@ -64,7 +64,7 @@
   ###########################################################################################################
   [merge]
 
-  # Branches to merge
+  # Branches to merge separated by space (i.e. 3.2.x 3.3.x master)
   branches =
 """
 from __future__ import absolute_import
