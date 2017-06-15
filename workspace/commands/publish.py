@@ -5,6 +5,8 @@ import os
 import re
 import sys
 
+import click
+
 from localconfig import LocalConfig
 from workspace.commands import AbstractCommand
 from workspace.scm import repo_check, repo_path, commit_logs, extract_commit_msgs
@@ -20,7 +22,8 @@ IGNORE_CHANGE_RE = re.compile('^(?:Update changelog|Fix tests?)\s*$', flags=re.I
 
 class Publish(AbstractCommand):
     """
-      Bumps version in setup.py (defaults to patch), writes out changelog, builds a source distribution, and uploads with twine.
+      Bumps version in setup.py (defaults to patch), writes out changelog, builds a source distribution,
+      and uploads with twine.
 
       :param bool minor: Perform a minor publish by bumping the minor version
       :param bool major: Perform a major publish by bumping the major version
@@ -60,7 +63,7 @@ class Publish(AbstractCommand):
         changes = self.changes_since_last_publish()
 
         if not changes:
-            log.info('There are no changes since last publish')
+            click.echo('There are no changes since last publish')
             sys.exit(0)
 
         silent_run('rm -rf dist/*', shell=True, cwd=repo_path())
@@ -70,12 +73,13 @@ class Publish(AbstractCommand):
 
         self.commander.run('commit', msg=PUBLISH_VERSION_PREFIX + new_version, push=True)
 
-        log.info('Building source distribution')
+        click.echo('Building source distribution')
         silent_run('python setup.py sdist', cwd=repo_path())
 
-        log.info('Uploading')
+        click.echo('Uploading')
 
-        silent_run('twine upload -u "{username}" -p "{password}" dist/*'.format(**dict(list(pypirc.pypi))), shell=True, cwd=repo_path())
+        silent_run('twine upload -u "{username}" -p "{password}" dist/*'.format(
+            **dict(list(pypirc.pypi))), shell=True, cwd=repo_path())
 
     def changes_since_last_publish(self):
         commit_msgs = extract_commit_msgs(commit_logs(limit=100, repo=repo_path()), True)

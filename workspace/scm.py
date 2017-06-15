@@ -4,6 +4,7 @@ import os
 import re
 import sys
 
+import click
 import requests
 
 from workspace.config import config
@@ -336,7 +337,7 @@ def diff_repo(path=None, branch=None, context=None, return_output=False, name_on
 def commit_changes(msg):
     """ Commits any modified or new files with given message. Raises on error """
     silent_run(['git', 'commit', '-am', msg])
-    log.info('Committed change.')
+    click.echo('Committed change.')
 
 
 def local_commit(msg=None, amend=False, empty=False):
@@ -371,7 +372,8 @@ def checkout_product(product_url, checkout_path):
                 log.error('No repo matching "%s" found.', product_url)
                 sys.exit(1)
             product_url = results[0]['ssh_url']
-            log.info('Using repo url %s', product_url)
+            click.echo('Using repo url ' + product_url)
+
         except Exception as e:
             log.error('Could not find repo for %s using %s due to error: ', product_url,
                       config.checkout.search_api_url, e)

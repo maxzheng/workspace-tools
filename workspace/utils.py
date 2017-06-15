@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 
+import click
 import psutil
 from setproctitle import setproctitle
 import six
@@ -304,7 +305,7 @@ def run_in_background(title, repo=None, info_suffix='[To check, run: {prog} wait
             return re.sub('[^a-zA-Z0-9]', '_', s)
         log_file = os.path.join(tempfile.gettempdir(), 'wait-{0}-{1}.out'.format(rs(os.path.basename(repo or os.getcwd())), rs(title)))
 
-    log.info('%s %s' % (title, info_suffix.format(prog=prog)))
+    click.echo('{} {}'.format(title, info_suffix.format(prog=prog)))
     log.debug('Log file: %s', log_file)
 
     try:

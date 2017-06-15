@@ -2,6 +2,8 @@ from __future__ import absolute_import
 import logging
 import sys
 
+import click
+
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
 from workspace.scm import checkout_branch, update_repo, repos, product_name, current_branch,\
@@ -33,10 +35,11 @@ class Update(AbstractCommand):
         if self.products:
             self.products = expand_product_groups(self.products)
 
-        select_repos = [repo for repo in repos() if not self.products or self.products and product_name(repo) in self.products]
+        select_repos = [repo for repo in repos() if not self.products or self.products and product_name(repo)
+                        in self.products]
 
         if not select_repos:
-            log.info('No product found')
+            click.echo('No product found')
 
         elif len(select_repos) == 1:
             _update_repo(select_repos[0], raises=self.raises, quiet=self.quiet)
@@ -50,7 +53,7 @@ def _update_repo(repo, raises=False, quiet=False):
     name = product_name(repo)
 
     if not quiet:
-        log.info('Updating %s', name)
+        click.echo('Updating ' + name)
 
     try:
         branch = current_branch(repo)
@@ -61,7 +64,7 @@ def _update_repo(repo, raises=False, quiet=False):
         update_repo(repo)
 
         if parent:
-            log.info('Rebasing %s', branch)
+            click.echo('Rebasing ' + branch)
             checkout_branch(branch, repo_path=repo)
             update_branch(repo=repo, parent=parent)
 

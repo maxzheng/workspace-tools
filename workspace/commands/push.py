@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 import logging
 
+import click
+
 from workspace.commands import AbstractCommand
 from workspace.scm import (checkout_branch, remove_branch, current_branch, all_remotes,
                            push_repo, merge_branch, update_branch, parent_branch, default_remote)
@@ -37,7 +39,7 @@ class Push(AbstractCommand):
         elif self.branch != current:
             checkout_branch(self.branch)
 
-        log.info('Pushing %s', self.branch)
+        click.echo('Pushing ' + self.branch)
 
         if self.merge:
             parent = parent_branch(self.branch)
@@ -45,7 +47,7 @@ class Push(AbstractCommand):
                 checkout_branch(parent)
             else:
                 self.merge = False
-                log.info('Ignoring merge request as there is no parent branch')
+                click.echo('Ignoring merge request as there is no parent branch')
 
         if not self.force:
             self.commander.run('update', quiet=True)

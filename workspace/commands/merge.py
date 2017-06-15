@@ -2,6 +2,8 @@ from __future__ import absolute_import
 import logging
 import sys
 
+import click
+
 from workspace.config import config
 from workspace.commands import AbstractCommand
 from workspace.scm import checkout_branch, current_branch, merge_branch
@@ -36,7 +38,7 @@ class Merge(AbstractCommand):
             sys.exit(1)
 
         if self.branch:
-            log.info('Merging %s into %s', self.branch, current)
+            click.echo('Merging {} into {}'.format(self.branch, current))
             self.commander.run('update', quiet=True)
             merge_branch(self.branch)
 
@@ -53,7 +55,7 @@ class Merge(AbstractCommand):
 
             last = current
             for branch in branches[branches.index(last)+1:]:
-                log.info('Merging %s into %s', last, branch)
+                click.echo('Merging {} into {}'.format(last, branch))
                 checkout_branch(branch)
                 self.commander.run('update', quiet=True)
                 merge_branch(last)

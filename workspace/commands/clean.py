@@ -4,6 +4,8 @@ import os
 import shutil
 from time import time
 
+import click
+
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
 from workspace.config import config
@@ -20,26 +22,26 @@ class Clean(AbstractCommand):
 
         repo = repo_path()
         if repo:
-            log.info('Removing build/dist folders')
+            click.echo('Removing build/dist folders')
             silent_run("rm -rf build dist docs/_build */activate", cwd=repo, shell=True)
 
-            log.info('Removing *.pyc files')
+            click.echo('Removing *.pyc files')
             silent_run("find . -type d \( -path '*/.tox' -o -path '*/mppy-*' \) -prune -o -name *.pyc -exec rm {} \;", cwd=repo, shell=True)
 
         else:
             path = workspace_path()
-            log.info('Cleaning %s', path)
+            click.echo('Cleaning {}'.format(path))
 
             if config.clean.remove_products_older_than_days or config.clean.remove_all_products_except:
                 keep_time = 0
                 keep_products = []
 
                 if config.clean.remove_all_products_except:
-                    log.info('Removing all products except: %s', config.clean.remove_all_products_except)
+                    click.echo('Removing all products except: %s' % config.clean.remove_all_products_except)
                     keep_products = expand_product_groups(config.clean.remove_all_products_except.split())
 
                 if config.clean.remove_products_older_than_days:
-                    log.info('Removing products older than %s days', config.clean.remove_products_older_than_days)
+                    click.echo('Removing products older than %s days' % config.clean.remove_products_older_than_days)
                     keep_time = time() - config.clean.remove_products_older_than_days * 86400
 
                 removed_products = []
@@ -53,7 +55,7 @@ class Clean(AbstractCommand):
                             shutil.rmtree(repo)
                             removed_products.append(name)
                         else:
-                            log.info('  - Skipping "%s" as it has changes that may not be committed', name)
+                            click.echo('  - Skipping "%s" as it has changes that may not be committed' % name)
 
                 if removed_products:
-                    log.info('Removed %s', ', '.join(removed_products))
+                    click.echo('Removed ' + ', '.join(removed_products))

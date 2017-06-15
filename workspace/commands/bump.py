@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 import logging
 
+import click
+
 from bumper import BumperDriver
 
 from workspace.commands import AbstractCommand
@@ -66,7 +68,7 @@ class Bump(AbstractCommand):
         filter_requirements = expand_product_groups(self.names)
 
         if self.show_filter and filter_requirements:
-            log.info('Only bumping: %s', ' '.join(filter_requirements))
+            click.echo('Only bumping: {}'.format(' '.join(filter_requirements)))
 
         if isinstance(self.file, list):
             requirement_files = self.file
@@ -106,7 +108,7 @@ class Bump(AbstractCommand):
 
         if bumps:
             if self.test:
-                log.info('Running tests')
+                click.echo('Running tests')
                 self.commander.run('test', return_output=False, test_dependents=self.test > 1)
 
             if not self.dry_run:

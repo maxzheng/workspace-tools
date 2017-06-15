@@ -1,4 +1,5 @@
 bumper-lib>=2
+click
 localconfig>=1
 psutil
 remoteconfig>=1

@@ -5,6 +5,8 @@ import os
 import re
 import sys
 
+import click
+
 from localconfig import LocalConfig
 from workspace.config import product_groups
 
@@ -331,7 +333,7 @@ class Setup(AbstractCommand):
             log.error('Product group "%s" is not defined in workspace.cfg', self.product_group)
             sys.exit(1)
 
-        log.info('Setting up %s products', self.product_group)
+        click.echo('Setting up {} products'.format(self.product_group))
 
         # Checkout product
         self.commander.run('checkout', target=[self.product_group])
@@ -340,7 +342,7 @@ class Setup(AbstractCommand):
         current_dir = os.getcwd()
 
         for product in expand_product_groups([self.product_group]):
-            log.info('Developing environment for %s', product)
+            click.echo('Developing environment for ' + product)
             try:
                 repo = product_path(product)
                 os.chdir(repo)
@@ -367,14 +369,14 @@ class Setup(AbstractCommand):
                 setup = LocalConfig(setup_cfg)
                 setup._parser.optionxform = str
                 if 'scripts' in setup or 'exports' in setup:
-                    log.info('Processing scripts/exports in setup.cfg for %s', product)
+                    click.echo('Processing scripts/exports in setup.cfg for ' + product)
 
                     if 'scripts' in setup:
                         cwd = os.getcwd()
                         try:
                             os.chdir(repo)
                             for name, script in setup.scripts:
-                                log.info('Running %s', name)
+                                click.echo('Running ' + name)
                                 run(['bash', '-c', '; '.join([_f for _f in script.split('\n') if _f])])
                         except Exception as e:
                             log.error('Error occurred running script: %s', e)
@@ -403,7 +405,8 @@ class Setup(AbstractCommand):
                 fp.write('  export PS1=${PS1/{%s\}/}\n' % self.product_group)
                 fp.write('  unset deactivate_%s\n' % self.product_group)
                 fp.write('}\n')
-            log.info('Created ./%s. To activate, run: source %s. To deactivate, run: deactivate_%s', activate_group, activate_group, self.product_group)
+            click.echo('Created ./{}. To activate, run: source {}. To deactivate, run: deactivate_{}'.format(
+                activate_group, activate_group, self.product_group))
 
     def setup_product(self):
         project_path = os.getcwd()
@@ -418,7 +421,7 @@ class Setup(AbstractCommand):
         with open(tox_ini_file, 'w') as fp:
             fp.write(tox_ini)
 
-        log.info('%s %s', tox_change_word, self._relative_path(tox_ini_file))
+        click.echo('{} {}'.format(tox_change_word, self._relative_path(tox_ini_file)))
 
         readme_files = glob(os.path.join(project_path, 'README*'))
         if readme_files:
@@ -427,12 +430,12 @@ class Setup(AbstractCommand):
             readme_file = os.path.join(project_path, 'README.rst')
             with open(readme_file, 'w') as fp:
                 fp.write(README_TMPL % name)
-            log.info('Created %s %s', self._relative_path(readme_file), placeholder_info)
+            click.echo('Created {} {}'.format(self._relative_path(readme_file), placeholder_info))
 
         coveragerc_file = os.path.join(project_path, '.coveragerc')
         with open(coveragerc_file, 'w') as fp:
             fp.write(COVERAGERC_TMPL)
-        log.info('Created %s', self._relative_path(coveragerc_file))
+        click.echo('Created ' + self._relative_path(coveragerc_file))
 
         setup_py_file = os.path.join(project_path, 'setup.py')
         if not os.path.exists(setup_py_file):
@@ -440,7 +443,7 @@ class Setup(AbstractCommand):
             if not os.path.exists(requirements_file):
                 with open(requirements_file, 'w') as fp:
                     pass
-                log.info('Created %s', self._relative_path(requirements_file))
+                click.echo('Created ' + self._relative_path(requirements_file))
 
             readme_name = os.path.basename(readme_file)
             requirements_name = os.path.basename(requirements_file)
@@ -448,14 +451,14 @@ class Setup(AbstractCommand):
             with open(setup_py_file, 'w') as fp:
                 fp.write(SETUP_PY_TMPL % (requirements_name, name, readme_name))
 
-            log.info('Created %s %s', self._relative_path(setup_py_file), placeholder_info)
+            click.echo('Created {} {}'.format(self._relative_path(setup_py_file), placeholder_info))
 
         package_dir = os.path.join(project_path, sanitized_name)
         if not os.path.exists(package_dir):
             os.makedirs(package_dir)
             init_file = os.path.join(package_dir, '__init__.py')
             open(init_file, 'w').close()
-            log.info('Created %s', self._relative_path(init_file))
+            click.echo('Created ' + self._relative_path(init_file))
 
         test_dir = os.path.join(project_path, 'test')
         if not os.path.exists(test_dir):
@@ -463,7 +466,7 @@ class Setup(AbstractCommand):
             test_file = os.path.join(test_dir, 'test_%s.py' % sanitized_name)
             with open(test_file, 'w') as fp:
                 fp.write('def test_{}():\n    """ Test is code\'s best friend. ^_^ """'.format(sanitized_name))
-            log.info('Created %s', self._relative_path(test_file))
+            click.echo('Created ' + self._relative_path(test_file))
 
     def setup_workspace(self):
         bashrc_content = None
@@ -499,15 +502,15 @@ class Setup(AbstractCommand):
             if self.uninstall:
                 if os.path.exists(wstrc_path):
                     os.unlink(wstrc_path)
-                log.info('Removed %s and its sourcing reference from %s', WSTRC_FILE, BASHRC_FILE)
-                log.info('Please restart your bash session for the change to take effect')
+                click.echo('Removed %s and its sourcing reference from %s'.format(WSTRC_FILE, BASHRC_FILE))
+                click.echo('Please restart your bash session for the change to take effect')
                 return
 
             fh.write('source %s\n' % WSTRC_FILE)
 
         with open(wstrc_path, 'w') as fh:
             fh.write(WS_FUNCTION_TEMPLATE % (os.path.realpath(sys.argv[0]), workspace_dir))
-            log.info('Added "ws" bash function with workspace directory set to %s', workspace_dir)
+            click.echo('Added "ws" bash function with workspace directory set to ' + workspace_dir)
 
             if self.additional_commands:
                 COMMANDS.update(self.additional_commands)
@@ -520,19 +523,22 @@ class Setup(AbstractCommand):
                 fh.write('\n')
                 for func in functions:
                     fh.write(COMMAND_FUNCTION_TEMPLATE % (func, func.lstrip('_')))
-                log.info('Added bash functions: %s', ', '.join([f for f in functions if not f.startswith('_')]))
+                click.echo('Added bash functions: ' + ', '.join([f for f in functions if not f.startswith('_')]))
 
             if self.commands_with_aliases:
                 fh.write('\n')
-                aliases = [item for item in sorted(list(COMMANDS.items()), key=lambda x: x[1].lstrip('_')) if not item[0].startswith('_')]
+                aliases = [item for item in sorted(list(COMMANDS.items()), key=lambda x: x[1].lstrip('_'))
+                           if not item[0].startswith('_')]
                 for alias, command in aliases:
                     fh.write(COMMAND_ALIAS_TEMPLATE % (alias, command.lstrip(' ')))
-                log.info('Added aliases: %s', ', '.join(["%s=%s" % (a, c.lstrip('_ ')) for a, c in aliases if not special(c)]))
-                log.info('Added special aliases: %s', ', '.join(["%s=%s" % (a, c.lstrip('_ ')) for a, c in aliases if special(c)]))
+                click.echo('Added aliases: ' + ', '.join(["%s=%s" % (a, c.lstrip('_ ')) for a, c in aliases
+                                                          if not special(c)]))
+                click.echo('Added special aliases: ' + ', '.join(["%s=%s" % (a, c.lstrip('_ '))
+                                                                  for a, c in aliases if special(c)]))
 
                 fh.write(AUTO_COMPLETE_TEMPLATE)
 
-        log.info('To use, run "source %s" or open a new shell.', WSTRC_FILE)
+        click.echo('To use, run "source {}" or open a new shell.'.format(WSTRC_FILE))
 
     def _relative_path(self, path):
         if path.startswith(os.getcwd() + os.path.sep):

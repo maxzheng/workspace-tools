@@ -8,6 +8,7 @@ import re
 import sys
 import tempfile
 
+import click
 import simplejson as json
 
 from workspace.commands import AbstractCommand
@@ -175,7 +176,7 @@ class Test(AbstractCommand):
                 success, summary = self.summarize(output)
 
                 if success:
-                    log.info('%s: %s', name, summary)
+                    click.echo('{}: {}'.format(name, summary))
 
                 else:
                     temp_output_file = os.path.join(tempfile.gettempdir(), 'test-%s.out' % name)
@@ -333,7 +334,8 @@ class Test(AbstractCommand):
                             else:
                                 full_command += ' ' + pytest_args
                         activate = '. ' + os.path.join(envdir, 'bin', 'activate')
-                        output = run(activate + '; ' + full_command, shell=True, cwd=self.repo, raises=False, silent=self.silent, return_output=self.return_output)
+                        output = run(activate + '; ' + full_command, shell=True, cwd=self.repo, raises=False, silent=self.silent,
+                                     return_output=self.return_output)
                         if not output:
                             if self.return_output:
                                 return False
@@ -463,11 +465,13 @@ else:
             product_dependencies[dep] = path
 
         available_products = [os.path.basename(r) for r in product_repos()]
-        libs = [d for d in editable_products if d in available_products and d in product_dependencies and tox.workdir in product_dependencies[d]]
+        libs = [d for d in editable_products if d in available_products and d in product_dependencies and
+                tox.workdir in product_dependencies[d]]
 
-        already_editable = [d for d in editable_products if d in product_dependencies and tox.workdir not in product_dependencies[d]]
+        already_editable = [d for d in editable_products if d in product_dependencies and
+                            tox.workdir not in product_dependencies[d]]
         for lib in already_editable:
-            log.info('%s is already installed in editable mode.', lib)
+            click.echo('{} is already installed in editable mode.'.format(lib))
 
         not_dependent = [d for d in editable_products if d not in product_dependencies]
         for lib in not_dependent:
@@ -475,13 +479,13 @@ else:
 
         not_available = [d for d in editable_products if d not in not_dependent and d not in available_products]
         for lib in not_available:
-            log.info('%s is a dependency but not checked out in workspace, and so can not be installed in editable mode.', lib)
+            click.echo('{} is a dependency but not checked out in workspace, and so can not be installed in editable mode.'.format(lib))
 
         pip = tox.bindir(env, 'pip')
 
         for lib in libs:
             if not self.silent or self.debug:
-                log.info('%s: Installing %s in editable mode' % (env, lib))
+                click.echo('{}: Installing {} in editable mode'.format(env, lib))
 
             with log_exception('An error occurred when installing %s in editable mode' % lib):
                 run([pip, 'uninstall', lib, '-y'], raises=False, silent=not self.debug)
@@ -510,6 +514,6 @@ def test_repo(repo, test_args, test_class):
 
     branch = current_branch(repo)
     on_branch = '#' + branch if branch != 'master' else ''
-    log.info('Testing %s %s', name, on_branch)
+    click.echo('Testing {} {}'.format(name, on_branch))
 
     return name, test_class(repo=repo, **dict(test_args)).run()

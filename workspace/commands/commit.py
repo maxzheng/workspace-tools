@@ -3,11 +3,13 @@ import logging
 import re
 import sys
 
+import click
+
 from workspace.commands import AbstractCommand
 from workspace.config import config
 from workspace.scm import local_commit, add_files, checkout_branch,\
     create_branch, all_branches, diff_branch, current_branch, remove_branch, hard_reset, \
-    commit_logs, master_branch, parent_branch
+    commit_logs, parent_branch
 from workspace.utils import prompt_with_editor
 
 log = logging.getLogger(__name__)
@@ -58,7 +60,8 @@ class Commit(AbstractCommand):
             is_child_branch = base_branch = parent_branch(self.branch)
 
             if self.discard:
-                changes = commit_logs(self.discard) if not is_child_branch else diff_branch(self.branch, left_branch=base_branch)
+                changes = commit_logs(self.discard) if not is_child_branch else diff_branch(self.branch,
+                                                                                            left_branch=base_branch)
             else:
                 changes = commit_logs(1)
             changes = [_f for _f in changes.split('commit ') if _f]
@@ -66,7 +69,7 @@ class Commit(AbstractCommand):
             if self.discard and len(changes) <= self.discard and is_child_branch:
                 checkout_branch(base_branch)
                 remove_branch(self.branch, raises=True, force=True)
-                log.info('Deleted branch %s', self.branch)
+                click.echo('Deleted branch ' + self.branch)
 
             else:
                 match = re.match('([a-f0-9]+)(?: \(.*\))\n', changes[0])
@@ -78,7 +81,7 @@ class Commit(AbstractCommand):
                         cur_branch = current_branch()
                         create_branch(self.branch)
                         checkout_branch(cur_branch)
-                        log.info('Moved %s to %s', last_commit[:7], self.branch)
+                        click.echo('Moved {} to {}'.format(last_commit[:7], self.branch))
                         hard_reset(last_commit + '~1')
 
                     else:
@@ -98,21 +101,20 @@ class Commit(AbstractCommand):
 
             if not self.amend and self.test:
                 if self.commander.command('test').supports_style_check():
-                    log.info('Running style check')
+                    click.echo('Running style check')
                     self.commander.run('test', env_or_file=['style'], silent=2)
 
-                log.info('Running tests')
+                click.echo('Running tests')
                 test_output = self.commander.run('test', return_output=False, test_dependents=self.test > 1)
 
             branches = all_branches()
             cur_branch = branches and branches[0]
 
-            if (not (self.push or self.amend) and config.commit.commit_branch_indicator not in cur_branch and not self.branch and self.msg and
-               config.commit.auto_branch_from_commit_words):
-                self.branch = self._branch_for_msg(
-                                self.msg,
-                                words=config.commit.auto_branch_from_commit_words,
-                                branches=branches)
+            if (not (self.push or self.amend) and config.commit.commit_branch_indicator not in cur_branch and
+                    not self.branch and self.msg and config.commit.auto_branch_from_commit_words):
+                self.branch = self._branch_for_msg(self.msg,
+                                                   words=config.commit.auto_branch_from_commit_words,
+                                                   branches=branches)
                 if cur_branch:
                     self.branch = '{}@{}'.format(self.branch, cur_branch)
 
@@ -133,10 +135,10 @@ class Commit(AbstractCommand):
 
             if self.amend and self.test:
                 if self.commander.command('test').supports_style_check():
-                    log.info('Running style check')
+                    click.echo('Running style check')
                     self.commander.run('test', env_or_file=['style'], silent=2)
 
-                log.info('Running tests')
+                click.echo('Running tests')
                 test_output = self.commander.run('test', return_output=False, test_dependents=self.test > 1)
 
             if self.push:
@@ -170,7 +172,8 @@ class Commit(AbstractCommand):
         if not branch_name:
             raise Exception('No words found in commit msg to create branch name')
 
-        has_ignored_or_short_name = branch_name[-1] in ignored_words or not ignored_num_re.match(word) and len(branch_name[-1]) <= ignored_word_length
+        has_ignored_or_short_name = branch_name[-1] in ignored_words or not ignored_num_re.match(word) \
+            and len(branch_name[-1]) <= ignored_word_length
         no_name_conflict = not branches or '-'.join(branch_name[:-1]) not in branches
         if has_ignored_or_short_name and no_name_conflict:
             branch_name = branch_name[:-1]
@@ -178,7 +181,7 @@ class Commit(AbstractCommand):
         branch_name = '-'.join(branch_name)
 
         if branches and branch_name in branches:
-            raise Exception('Branch "%s" already exist.\n\tPlease use a more unique commit message or specify branch with -b. Or '
-                            'to amend an existing commit, use -a' % branch_name)
+            raise Exception('Branch "%s" already exist.\n\tPlease use a more unique commit message or specify '
+                            'branch with -b. Or to amend an existing commit, use -a' % branch_name)
 
         return branch_name
