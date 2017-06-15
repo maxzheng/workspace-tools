@@ -492,7 +492,7 @@ else:
                 run([pip, 'install', '--editable', lib_path], silent=not self.debug)
 
     def product_depends_on(self, path, name):
-        for req_file in config.bump.requirement_files:
+        for req_file in config.bump.requirement_files.split():
             req_path = os.path.join(path, req_file)
             if os.path.exists(req_path):
                 with open(req_path) as fp:

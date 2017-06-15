@@ -73,10 +73,9 @@ class Bump(AbstractCommand):
         elif self.file:
             requirement_files = [self.file]
         else:
-            requirement_files = config.bump.requirement_files
+            requirement_files = config.bump.requirement_files.strip().split()
 
-        bumper = BumperDriver(requirement_files, bumper_models=self.bumper_models, full_throttle=self.force,
-                              detail=True, test_drive=self.dry_run)
+        bumper = BumperDriver(requirement_files, bumper_models=self.bumper_models, full_throttle=self.force, detail=True, test_drive=self.dry_run)
         messages, bumps = bumper.bump(filter_requirements, required=self.add, show_summary=False)
         commit_msg = None
 
