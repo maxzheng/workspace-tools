@@ -24,7 +24,8 @@ class Clean(AbstractCommand):
             silent_run("rm -rf build dist docs/_build */activate", cwd=repo, shell=True)
 
             log.info('Removing *.pyc files')
-            silent_run("find . -type d \( -path '*/.tox' -o -path '*/mppy-*' \) -prune -o -name *.pyc -exec rm {} \;", cwd=repo, shell=True)
+            silent_run("find . -type d \( -path '*/.tox' -o -path '*/mppy-*' \) -prune -o -name *.pyc "
+                       "-exec rm {} \;", cwd=repo, shell=True)
 
         else:
             path = workspace_path()
@@ -36,7 +37,7 @@ class Clean(AbstractCommand):
 
                 if config.clean.remove_all_products_except:
                     log.info('Removing all products except: %s', config.clean.remove_all_products_except)
-                    keep_products = expand_product_groups(config.clean.remove_all_products_except.split())
+                    keep_products = expand_product_groups(config.clean.remove_all_products_except)
 
                 if config.clean.remove_products_older_than_days:
                     log.info('Removing products older than %s days', config.clean.remove_products_older_than_days)

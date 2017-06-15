@@ -83,6 +83,22 @@ config = RemoteConfig(USER_CONFIG_FILE, cache_duration=60)
 config.read(__doc__.replace('\n  ', '\n'))
 
 
+if config.bump.requirement_files:
+    config.bump.requirement_files = config.bump.requirement_files.strip().split()
+else:
+    config.bump.requirement_files = []
+
+if config.clean.remove_all_products_except:
+    config.clean.remove_all_products_except = config.clean.remove_all_products_except.split()
+else:
+    config.clean.remove_all_products_except = []
+
+if config.merge.branches:
+    config.merge.branches = config.merge.branches.split()
+else:
+    config.merge.branches = []
+
+
 def product_groups():
     """ Returns a dict with product group name mapped to products """
     return dict((group, names.split()) for group, names in config.product_groups)

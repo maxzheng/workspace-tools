@@ -45,7 +45,7 @@ class Merge(AbstractCommand):
                 log.error('Config merge.branches must be configured with a list of branches to merge to')
                 sys.exit(1)
 
-            branches = config.merge.branches.split()
+            branches = config.merge.branches
 
             if current not in branches:
                 log.error('Current branch %s not found in config merge.branches (%s)', current, config.merge.branches)
