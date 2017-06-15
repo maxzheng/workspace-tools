@@ -1,5 +1,14 @@
-Version 3.0.4
+Version 3.0.5
 ================================================================================
+
+* Switch to use click.echo instead of log.info
+* Revert "Split config lists early"
+  
+  This reverts commit 1b2867dc2c5c33ecdc2c5c6e70e8a8f874e6ced1.
+* Fix indent for dependency script
+
+Version 3.0.4
+--------------------------------------------------------------------------------
 
 * Split config lists early
 * Add more info on merge.branch config
