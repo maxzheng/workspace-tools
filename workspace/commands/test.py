@@ -384,50 +384,50 @@ class Test(AbstractCommand):
 
     def show_installed_dependencies(self, tox, env, return_output=False, filter_name=None):
         script_template = """
-    import json
-    import os
-    import pip
-    import sys
+import json
+import os
+import pip
+import sys
 
-    # Required params to run this script
-    package = '%s'
-    json_output = %s
-    env = '%s'
-    filter_name = '%s'
+# Required params to run this script
+package = '%s'
+json_output = %s
+env = '%s'
+filter_name = '%s'
 
-    cwd = os.getcwd()
-    workspace_dir = os.path.dirname(cwd)
+cwd = os.getcwd()
+workspace_dir = os.path.dirname(cwd)
 
-    try:
-      libs = [(p.key, p.version, p.location) for p in pip.get_installed_distributions()]
-    except Exception as e:
-      print(e)
-      sys.exit(1)
+try:
+  libs = [(p.key, p.version, p.location) for p in pip.get_installed_distributions()]
+except Exception as e:
+  print(e)
+  sys.exit(1)
 
-    output = []
+output = []
 
-    if not json_output:
-      print(env + ':')
+if not json_output:
+  print(env + ':')
 
-    def strip_cwd(dir):
-      if dir.startswith(cwd + '/'):
-        dir = dir[len(cwd):].lstrip('/')
-      elif dir.startswith(workspace_dir):
-        dir = os.path.join('..', dir[len(workspace_dir):].lstrip('/'))
-      return dir
+def strip_cwd(dir):
+  if dir.startswith(cwd + '/'):
+    dir = dir[len(cwd):].lstrip('/')
+  elif dir.startswith(workspace_dir):
+    dir = os.path.join('..', dir[len(workspace_dir):].lstrip('/'))
+  return dir
 
-    for lib, version, location in sorted(libs):
-      if filter_name and filter_name not in lib:
-        continue
-      if json_output:
-        output.append((lib, version, location))
-      else:
-        output.append('  %%-25s %%-10s  %%s' %% (lib, version, strip_cwd(location)))
+for lib, version, location in sorted(libs):
+  if filter_name and filter_name not in lib:
+    continue
+  if json_output:
+    output.append((lib, version, location))
+  else:
+    output.append('  %%-25s %%-10s  %%s' %% (lib, version, strip_cwd(location)))
 
-    if json_output:
-      print(json.dumps(output))
-    else:
-      print('\\n'.join(output))
+if json_output:
+  print(json.dumps(output))
+else:
+  print('\\n'.join(output))
     """
 
         name = product_name(tox.path)
