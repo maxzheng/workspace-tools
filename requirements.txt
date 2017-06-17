@@ -1,5 +1,6 @@
 bumper-lib>=2
 click
+GitPython
 localconfig>=1
 psutil
 remoteconfig>=1

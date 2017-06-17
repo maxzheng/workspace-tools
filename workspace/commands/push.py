@@ -61,6 +61,8 @@ class Push(AbstractCommand):
 
         remotes = all_remotes() if self.all_remotes else [default_remote()]
         for remote in remotes:
+            if len(remotes) > 1:
+                click.echo('    ... to ' + remote)
             push_repo(force=self.force, remote=remote, branch=current_branch())
 
         if self.merge:
