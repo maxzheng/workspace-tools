@@ -1,5 +1,10 @@
-Version 3.0.5
+Version 3.0.6
 ================================================================================
+
+* Change option name to merge --downstreams and add more validation
+
+Version 3.0.5
+--------------------------------------------------------------------------------
 
 * Switch to use click.echo instead of log.info
 * Revert "Split config lists early"
