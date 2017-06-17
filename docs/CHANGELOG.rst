@@ -1,5 +1,10 @@
-Version 3.0.6
+Version 3.0.7
 ================================================================================
+
+* Check for any merge changes before pushing
+
+Version 3.0.6
+--------------------------------------------------------------------------------
 
 * Change option name to merge --downstreams and add more validation
 
