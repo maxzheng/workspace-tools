@@ -32,12 +32,13 @@ class Merge(AbstractCommand):
 
     def run(self):
         current = current_branch()
+        repo = git.Repo()
 
         if self.branch and self.downstreams:
             log.error('Branch and --downstreams are mutually exclusive. Please use one or the other.')
             sys.exit(1)
 
-        if git.Repo().is_dirty(untracked_files=True):
+        if repo.is_dirty(untracked_files=True):
             log.error('Your repo has untracked or modified files in working dir or in staging index. Please cleanup before doing merge')
             sys.exit(1)
 
@@ -73,10 +74,14 @@ class Merge(AbstractCommand):
                 checkout_branch(branch)
                 self.commander.run('update', quiet=True)
                 merge_branch(last)
-                self.commander.run('push', all_remotes=True)
+
+                if repo.branches[branch].commit != repo.remotes.origin.refs[branch].commit:
+                    self.commander.run('push', all_remotes=True)
+                else:
+                    click.echo('Already up-to-date.')
+
                 last = branch
 
         else:
             log.error('Please specify either a branch to merge from or --downstreams to merge to all downstream branches')
             sys.exit(1)
-
