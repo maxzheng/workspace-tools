@@ -64,7 +64,8 @@ def _update_repo(repo, raises=False, verbose=1):
         update_repo(repo, quiet=verbose != 2)
 
         if parent:
-            click.echo('Rebasing ' + branch)
+            if verbose == 2:
+                click.echo('Rebasing ' + branch)
             checkout_branch(branch, repo_path=repo)
             update_branch(repo=repo, parent=parent)
 
