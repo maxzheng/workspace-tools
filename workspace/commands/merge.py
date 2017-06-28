@@ -7,7 +7,7 @@ import git
 
 from workspace.config import config
 from workspace.commands import AbstractCommand
-from workspace.scm import checkout_branch, current_branch, merge_branch, diff_repo
+from workspace.scm import checkout_branch, current_branch, merge_branch
 
 
 log = logging.getLogger(__name__)
@@ -65,9 +65,6 @@ class Merge(AbstractCommand):
                 click.echo('You are currently on the last branch, so no downstream branches to merge.')
                 click.echo('Switch to the branch that you want to merge from first, and then re-run')
                 sys.exit(0)
-
-            if len(downstream_branches) > 1:
-                click.echo('Merging to downstream branches: ' + ', '.join(downstream_branches))
 
             for branch in downstream_branches:
                 click.echo('Merging {} into {}'.format(last, branch))
