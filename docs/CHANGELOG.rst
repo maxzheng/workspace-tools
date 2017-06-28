@@ -1,5 +1,10 @@
-Version 3.0.9
+Version 3.0.10
 ================================================================================
+
+* Skip printing about merging to downstream branches
+
+Version 3.0.9
+--------------------------------------------------------------------------------
 
 * Show parent branch when merging during push
 * Show rebase message only if verbose
