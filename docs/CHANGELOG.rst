@@ -1,5 +1,10 @@
-Version 3.0.7
+Version 3.0.8
 ================================================================================
+
+* Show branch and remotes being pulled from
+
+Version 3.0.7
+--------------------------------------------------------------------------------
 
 * Check for any merge changes before pushing
 
