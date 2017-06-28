@@ -66,4 +66,4 @@ class Push(AbstractCommand):
             push_repo(force=self.force, remote=remote, branch=current_branch())
 
         if self.merge:
-            remove_branch(self.branch, remote=True)
+            remove_branch(self.branch, remote=True, force=True)

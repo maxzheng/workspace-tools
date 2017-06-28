@@ -289,14 +289,20 @@ def parent_branch(branch):
         return parent
 
 
-def update_repo(path=None):
+def update_repo(path=None, quiet=False):
     """ Updates given or current repo to HEAD """
     if not remote_tracking_branch(repo=path):
         return
 
     branch = current_branch(repo=path)
 
-    for remote in all_remotes(repo=path):
+    if not quiet:
+        click.echo('Updating ' + branch)
+
+    remotes = all_remotes(repo=path)
+    for remote in remotes:
+        if len(remotes) > 1 and not quiet:
+            click.echo('    ... from ' + remote)
         silent_run('git pull {} {}'.format(remote, branch), cwd=path)
 
 
@@ -358,7 +364,7 @@ def checkout_product(product_url, checkout_path):
     prod_name = product_name(product_url)
 
     if os.path.exists(checkout_path):
-        log.debug('%s is already checked out. Updating...', prod_name)
+        log.debug('%s is already checked out.', prod_name)
         checkout_branch('master', checkout_path)
         return update_repo(checkout_path)
 

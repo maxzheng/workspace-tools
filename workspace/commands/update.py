@@ -42,26 +42,26 @@ class Update(AbstractCommand):
             click.echo('No product found')
 
         elif len(select_repos) == 1:
-            _update_repo(select_repos[0], raises=self.raises, quiet=self.quiet)
+            _update_repo(select_repos[0], raises=self.raises, verbose=0 if self.quiet else 2)
 
         else:
             if not all(parallel_call(_update_repo, select_repos).values()):
                 sys.exit(1)
 
 
-def _update_repo(repo, raises=False, quiet=False):
+def _update_repo(repo, raises=False, verbose=1):
     name = product_name(repo)
 
-    if not quiet:
-        click.echo('Updating ' + name)
-
     try:
+        if verbose == 1:
+            click.echo('Updating ' + name)
+
         branch = current_branch(repo)
         parent = parent_branch(branch)
         if parent:
             checkout_branch(parent, repo)
 
-        update_repo(repo)
+        update_repo(repo, quiet=verbose != 2)
 
         if parent:
             click.echo('Rebasing ' + branch)
