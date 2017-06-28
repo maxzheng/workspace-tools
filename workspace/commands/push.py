@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import logging
+import sys
 
 import click
 
@@ -39,15 +40,20 @@ class Push(AbstractCommand):
         elif self.branch != current:
             checkout_branch(self.branch)
 
-        click.echo('Pushing ' + self.branch)
-
         if self.merge:
             parent = parent_branch(self.branch)
+
             if parent:
                 checkout_branch(parent)
+                click.echo('Merging {} into {}'.format(self.branch, parent))
+
             else:
                 self.merge = False
-                click.echo('Ignoring merge request as there is no parent branch')
+                log.error('Can not merge as there is no parent branch')
+                sys.exit(1)
+
+        else:
+            click.echo('Pushing ' + self.branch)
 
         if not self.force:
             self.commander.run('update', quiet=True)
@@ -58,6 +64,8 @@ class Push(AbstractCommand):
 
             checkout_branch(parent)
             merge_branch(self.branch)
+
+            click.echo('Pushing ' + parent)
 
         remotes = all_remotes() if self.all_remotes else [default_remote()]
         for remote in remotes:
