@@ -1,5 +1,11 @@
-Version 3.0.8
+Version 3.0.9
 ================================================================================
+
+* Show parent branch when merging during push
+* Show rebase message only if verbose
+
+Version 3.0.8
+--------------------------------------------------------------------------------
 
 * Show branch and remotes being pulled from
 
