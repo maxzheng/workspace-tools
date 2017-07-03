@@ -12,7 +12,7 @@ from workspace.config import product_groups
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
-from workspace.scm import is_repo, repo_check, product_name, repo_path, product_path
+from workspace.scm import is_repo, product_name, product_path
 from workspace.utils import run
 
 
@@ -274,6 +274,7 @@ omit =
     docs/*
     setup.py
     test/*
+    tests/*
 """
 
 
@@ -308,7 +309,8 @@ class Setup(AbstractCommand):
         ]
 
     def run(self):
-        num_options = len([_f for _f in [self.product_group, self.product, self.commands, self.commands_with_aliases, self.uninstall] if _f])
+        num_options = len([_f for _f in [self.product_group, self.product, self.commands, self.commands_with_aliases, self.uninstall]
+                          if _f])
         if num_options > 1:
             log.error('Only one setup option can be selected at a time.')
             sys.exit(1)
@@ -460,7 +462,7 @@ class Setup(AbstractCommand):
             open(init_file, 'w').close()
             click.echo('Created ' + self._relative_path(init_file))
 
-        test_dir = os.path.join(project_path, 'test')
+        test_dir = os.path.join(project_path, 'tests')
         if not os.path.exists(test_dir):
             os.makedirs(test_dir)
             test_file = os.path.join(test_dir, 'test_%s.py' % sanitized_name)
