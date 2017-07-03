@@ -166,12 +166,10 @@ TOX_INI_TMPL = """\
 envlist = test
 
 [testenv]
-# Consolidate all deps here instead of cleanly/separately in test/style/cover so we
+# Consolidate all deps here instead of separately in test/style/cover so we
 # have a single env to work with, which makes debugging easier (like which env?).
 # Not as clean but easier to work with during development, which is better.
-# -rrequirements.txt is to allow local package paths to work.
 deps =
-    -rrequirements.txt
     flake8
     mock
     pytest
