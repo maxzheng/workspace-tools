@@ -92,6 +92,10 @@ class Commit(AbstractCommand):
                     log.error('Odd. No commit hash found in: %s', changes[0])
 
         else:
+            if (self.test or self.push) and self.commander.command('test').supports_style_check():
+                click.echo('Checking style')
+                self.commander.run('test', env_or_file=['style'], silent=2)
+
             test_output = None
 
             if not (self.msg or self.amend):
@@ -100,10 +104,6 @@ class Commit(AbstractCommand):
                     sys.exit()
 
             if not self.amend and self.test:
-                if self.commander.command('test').supports_style_check():
-                    click.echo('Running style check')
-                    self.commander.run('test', env_or_file=['style'], silent=2)
-
                 click.echo('Running tests')
                 test_output = self.commander.run('test', return_output=False, test_dependents=self.test > 1)
 
@@ -142,7 +142,7 @@ class Commit(AbstractCommand):
                 test_output = self.commander.run('test', return_output=False, test_dependents=self.test > 1)
 
             if self.push:
-                self.commander.run('push', branch=self.branch, force=self.amend)
+                self.commander.run('push', branch=self.branch, force=self.amend, skip_style_check=True)
 
             return test_output
 

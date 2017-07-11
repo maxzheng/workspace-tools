@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from mock import patch, Mock
+from mock import patch
 
 from bumper.utils import PyPI
 
@@ -155,6 +155,7 @@ def test_push_without_repo(run):
     with temp_dir():
         with pytest.raises(SystemExit):
             run('push')
+
 
 @patch('workspace.commands.push.push_repo')
 def test_push(push_repo, run):

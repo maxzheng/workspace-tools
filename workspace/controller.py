@@ -103,7 +103,8 @@ class Commander(object):
 
           To show version of your customized wst package when --version is invoked, set cls.package_name to your package name.
         """
-        self.parser = argparse.ArgumentParser(description=textwrap.dedent(self.__doc__), formatter_class=argparse.RawDescriptionHelpFormatter)
+        self.parser = argparse.ArgumentParser(description=textwrap.dedent(self.__doc__),
+                                              formatter_class=argparse.RawDescriptionHelpFormatter)
         self.parser.register('action', 'parsers', AliasedSubParsersAction)
 
         versions = []

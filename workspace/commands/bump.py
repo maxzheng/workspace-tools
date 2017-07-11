@@ -8,7 +8,7 @@ from bumper import BumperDriver
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
 from workspace.config import config
-from workspace.scm import repo_check, product_name, current_branch
+from workspace.scm import repo_check, current_branch
 
 
 log = logging.getLogger(__name__)
@@ -77,7 +77,8 @@ class Bump(AbstractCommand):
         else:
             requirement_files = config.bump.requirement_files.strip().split()
 
-        bumper = BumperDriver(requirement_files, bumper_models=self.bumper_models, full_throttle=self.force, detail=True, test_drive=self.dry_run)
+        bumper = BumperDriver(requirement_files, bumper_models=self.bumper_models, full_throttle=self.force, detail=True,
+                              test_drive=self.dry_run)
         messages, bumps = bumper.bump(filter_requirements, required=self.add, show_summary=False)
         commit_msg = None
 

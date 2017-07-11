@@ -73,7 +73,8 @@ class Test(AbstractCommand):
           cls.make_args('env_or_file', nargs='*', help=docs['env_or_file']),
           cls.make_args('-k', metavar='NAME_PATTERN', dest='match_test', help=docs['match_test']),
           cls.make_args('-n', metavar='NUM_PROCESSES', type=int, dest='num_processes', help=docs['num_processes']),
-          cls.make_args('-d', '--show-dependencies', metavar='FILTER', action='store', nargs='?', help=docs['show_dependencies'], const=True),
+          cls.make_args('-d', '--show-dependencies', metavar='FILTER', action='store', nargs='?', help=docs['show_dependencies'],
+                        const=True),
           cls.make_args('-t', '--test-dependents', action='store_true', help=docs['test_dependents']),
           cls.make_args('-r', '--redevelop', action='count', help=docs['redevelop']),
           cls.make_args('-o', action='store_true', dest='install_only', help=argparse.SUPPRESS),
@@ -86,7 +87,7 @@ class Test(AbstractCommand):
             if not repo:
                 repo = project_path()
             tox = ToxIni(repo)
-            return 'style' in tox.envlist
+            return 'testenv:style' in tox
 
         except Exception as e:
             log.debug(e)

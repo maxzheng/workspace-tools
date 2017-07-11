@@ -1,6 +1,3 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from glob import glob
 import logging
 import os
 import re
@@ -39,7 +36,7 @@ class ToxIni(LocalConfig):
         :raise IOError: if there is no tox.ini found
         """
 
-        tox_ini  = project_path(path=path)
+        tox_ini = project_path(path=path)
 
         if not tox_ini:
             raise IOError('No tox.ini found in %s. Please run "wst setup --product" first to setup tox.' % path)
@@ -59,7 +56,8 @@ class ToxIni(LocalConfig):
 
     def envdir(self, env):
         default_envdir = os.path.join(self.path, '.tox', env)
-        return self.expand_vars(self.get(self.envsection(env), 'envdir', self.get(self.envsection(), 'envdir', default_envdir)).replace('{toxworkdir}', self.workdir))
+        return self.expand_vars(self.get(self.envsection(env), 'envdir', self.get(self.envsection(),
+                                         'envdir', default_envdir)).replace('{toxworkdir}', self.workdir))
 
     def bindir(self, env, script=None):
         dir = os.path.join(self.envdir(env), 'bin')
