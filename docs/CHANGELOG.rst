@@ -1,5 +1,14 @@
-Version 3.0.10
+Version 3.0.11
 ================================================================================
+
+* Check code style before pushing
+* Change setup.py template to require Python 3.5+
+* Remove requirements.txt from tox.ini
+* Create example test in "tests" folder
+* Move tests to "tests" folder
+
+Version 3.0.10
+--------------------------------------------------------------------------------
 
 * Skip printing about merging to downstream branches
 
