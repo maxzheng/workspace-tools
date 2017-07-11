@@ -49,5 +49,5 @@ setuptools.setup(
     'Programming Language :: Python :: 2.7',
   ],
 
-  keywords='workspace multiple repositories git scm abstraction development tools',
+  keywords='workspace multiple repositories git tox wrapper development tools',
 )
