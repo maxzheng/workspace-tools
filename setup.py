@@ -13,7 +13,7 @@ setuptools.setup(
   version='3.0.10',
 
   author='Max Zheng',
-  author_email='maxzheng.os @t gmail.com',
+  author_email='maxzheng.os@gmail.com',
 
   description='Convenience wrapper for git/tox to simplify local development',
   long_description=open('README.rst').read(),
