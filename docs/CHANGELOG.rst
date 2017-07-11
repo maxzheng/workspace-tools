@@ -1,5 +1,11 @@
-Version 3.0.11
+Version 3.0.12
 ================================================================================
+
+* Merge branch 'master' of github.com:maxzheng/workspace-tools
+* Use proper email format for author
+
+Version 3.0.11
+--------------------------------------------------------------------------------
 
 * Check code style before pushing
 * Change setup.py template to require Python 3.5+
