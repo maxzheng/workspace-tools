@@ -203,7 +203,7 @@ commands =
 [flake8]
 exclude = .git,.tox,__pycache__,docs,build,dist
 ignore = E111,E121,W292,E123,E226
-max-line-length = 120
+max-line-length = 140
 
 [pytest]
 addopts = -n 4
