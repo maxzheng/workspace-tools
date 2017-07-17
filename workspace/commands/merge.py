@@ -7,7 +7,7 @@ import git
 
 from workspace.config import config
 from workspace.commands import AbstractCommand
-from workspace.scm import checkout_branch, current_branch, merge_branch
+from workspace.scm import checkout_branch, current_branch, merge_branch, repo_path
 
 
 log = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class Merge(AbstractCommand):
 
     def run(self):
         current = current_branch()
-        repo = git.Repo()
+        repo = git.Repo(path=repo_path())
 
         if self.branch and self.downstreams:
             log.error('Branch and --downstreams are mutually exclusive. Please use one or the other.')
