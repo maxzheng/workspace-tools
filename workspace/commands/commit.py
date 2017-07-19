@@ -24,7 +24,7 @@ class Commit(AbstractCommand):
       :param str branch: Use specified branch for commit instead of auto-computing the branch from commit msg.
       :param bool amend: Amend last commit with any new changes made
       :param bool test: Run tests. Repeat twice (-tt) to test dependents too.
-      :param bool push: Push the current branch after commit
+      :param bool|int push: Push the current branch after commit. Repeat twice (-pp) to push to all remotes.
       :param int discard: Discard last commit, or branch (child only) if there are no more commits.
                           Use multiple times to discard multiple commits.
                           Other options are ignored. Any local changes may be discarded (hard reset)
@@ -46,7 +46,7 @@ class Commit(AbstractCommand):
             cls.make_args('-b', '--branch', help=docs['branch'])
           ], [
             cls.make_args('-t', '--test', action='count', help=docs['test']),
-            cls.make_args('-p', '--push', action='store_true', help=docs['push'])
+            cls.make_args('-p', '--push', action='count', help=docs['push'])
           ])
 
     def run(self):
@@ -142,7 +142,7 @@ class Commit(AbstractCommand):
                 test_output = self.commander.run('test', return_output=False, test_dependents=self.test > 1)
 
             if self.push:
-                self.commander.run('push', branch=self.branch, force=self.amend, skip_style_check=True)
+                self.commander.run('push', branch=self.branch, force=self.amend, skip_style_check=True, all_remotes=int(self.push) > 1)
 
             return test_output
 
