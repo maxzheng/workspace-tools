@@ -1,5 +1,15 @@
-Version 3.0.12
+Version 3.0.13
 ================================================================================
+
+* Fix repo title
+* Support multiple repositories in publish
+* Use multiple push flags to indicate pushing to all remotes during commit
+* Use git checkout path for git.Repo so it works from child dirs
+* Set default max-line-length to 140
+* Update keywords
+
+Version 3.0.12
+--------------------------------------------------------------------------------
 
 * Merge branch 'master' of github.com:maxzheng/workspace-tools
 * Use proper email format for author
