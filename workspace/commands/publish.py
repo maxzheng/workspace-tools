@@ -49,7 +49,7 @@ class Publish(AbstractCommand):
         repository = pypirc.get(self.repo, 'repository')
         username = pypirc.get(self.repo, 'username')
         password = pypirc.get(self.repo, 'password')
-        repo_title = ('PyPI' if self.repo == 'pypi' else self.repo).capitalize()
+        repo_title = 'PyPI' if self.repo == 'pypi' else self.repo.title()
 
         if not repository:
             log.error('Please add repository / username to [%s] section in ~/.pypirc', self.repo)
