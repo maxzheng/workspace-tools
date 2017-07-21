@@ -78,7 +78,8 @@ class Publish(AbstractCommand):
         new_version, setup_file = self.bump_version()
         changelog_file = self.update_changelog(new_version, changes, self.minor or self.major)
 
-        self.commander.run('commit', msg=PUBLISH_VERSION_PREFIX + new_version, push=2, files=[setup_file, changelog_file])
+        self.commander.run('commit', msg=PUBLISH_VERSION_PREFIX + new_version, push=2, files=[setup_file, changelog_file],
+                           skip_style_check=True)
 
         click.echo('Building source distribution')
         silent_run('python setup.py sdist', cwd=repo_path())
