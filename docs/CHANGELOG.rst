@@ -1,5 +1,10 @@
-Version 3.0.13
+Version 3.0.14
 ================================================================================
+
+* Limit publish to commit setup.py/changelog files only
+
+Version 3.0.13
+--------------------------------------------------------------------------------
 
 * Fix repo title
 * Support multiple repositories in publish
