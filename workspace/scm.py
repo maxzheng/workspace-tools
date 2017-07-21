@@ -105,10 +105,11 @@ def commit_logs(limit=None, repo=None, diff=False, show_revision=None, extra_arg
 def add_files(files=None):
     if files:
         files = ' '.join(files)
+        silent_run('git add --all ' + files)
+
     else:
         files = '.'
-
-    silent_run('git add --all ' + files)
+        silent_run('git add --all ' + files, cwd=repo_path())
 
 
 def repo_check():

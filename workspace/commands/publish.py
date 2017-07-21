@@ -75,10 +75,10 @@ class Publish(AbstractCommand):
 
         silent_run('rm -rf dist/*', shell=True, cwd=repo_path())
 
-        new_version = self.bump_version()
-        self.update_changelog(new_version, changes, self.minor or self.major)
+        new_version, setup_file = self.bump_version()
+        changelog_file = self.update_changelog(new_version, changes, self.minor or self.major)
 
-        self.commander.run('commit', msg=PUBLISH_VERSION_PREFIX + new_version, push=2)
+        self.commander.run('commit', msg=PUBLISH_VERSION_PREFIX + new_version, push=2, files=[setup_file, changelog_file])
 
         click.echo('Building source distribution')
         silent_run('python setup.py sdist', cwd=repo_path())
@@ -104,6 +104,12 @@ class Publish(AbstractCommand):
         return changes
 
     def update_changelog(self, new_version, changes, skip_title_change=False):
+        """
+        :param str new_version: New version
+        :param list[str] changes: List of changes
+        :param bool skip_title_change: Skip title change
+        :returns: Path to changelog file
+        """
         docs_dir = os.path.join(repo_path(), 'docs')
         if not os.path.isdir(docs_dir):
             os.makedirs(docs_dir)
@@ -125,6 +131,8 @@ class Publish(AbstractCommand):
                 if not skip_title_change:
                     existing_changes = existing_changes.replace(major_title, minor_title, 1)
                 fp.write(existing_changes)
+
+        return changelog_file
 
     def bump_version(self):
         """
@@ -162,4 +170,4 @@ class Publish(AbstractCommand):
             log.error('Failed to find "version=" in setup.py to bump version')
             sys.exit(1)
 
-        return new_version
+        return new_version, setup_file
