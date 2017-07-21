@@ -1,5 +1,10 @@
-Version 3.0.14
+Version 3.0.15
 ================================================================================
+
+* Skip style check during publish
+
+Version 3.0.14
+--------------------------------------------------------------------------------
 
 * Limit publish to commit setup.py/changelog files only
 
