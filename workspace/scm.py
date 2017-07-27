@@ -187,9 +187,13 @@ def repos(dir=None):
     return repos
 
 
-def checkout_branch(branch, repo_path=None):
+def checkout_branch(branch, repo_path=None, name=None):
     """ Checks out the branch in the given or current repo. Raises on error. """
-    silent_run(['git', 'checkout', branch], cwd=repo_path)
+    cmd = ['git', 'checkout', branch]
+    if name:
+        cmd.extend(['-b', name])
+
+    silent_run(cmd, cwd=repo_path)
 
 
 def create_branch(branch, from_branch=None):
@@ -256,9 +260,13 @@ def remote_tracking_branch(repo=None):
         return remote_output
 
 
-def all_branches(repo=None):
+def all_branches(repo=None, remotes=False):
     """ Returns all branches. The first element is the current branch. """
-    branch_output = silent_run('git branch', cwd=repo, return_output=True)
+    cmd = ['git', 'branch']
+    if remotes:
+        cmd.append('--all')
+
+    branch_output = silent_run(cmd, cwd=repo, return_output=True)
     branches = []
 
     if branch_output:

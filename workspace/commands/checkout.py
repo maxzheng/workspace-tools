@@ -30,6 +30,10 @@ class Checkout(AbstractCommand):
             if len(self.target) == 1 and self.target[0] in all_branches():
                 checkout_branch(self.target[0])
                 click.echo('Switched to branch ' + self.target[0])
+            elif len(self.target) == 1 and 'remotes/{}'.format(self.target[0]) in all_branches(remotes=True) and '/' in self.target[0]:
+                name = self.target[0].split('/')[-1]
+                checkout_branch(self.target[0], name=name)
+                click.echo('Switched to branch ' + name)
             else:
                 checkout_files(self.target)
             return
