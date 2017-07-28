@@ -15,19 +15,22 @@ log = logging.getLogger(__name__)
 
 class Merge(AbstractCommand):
     """
-      Merge changes from branch to current branch
+    Merge changes from branch to current branch
 
-      :param str branch: The branch to merge from.
-      :param bool downstreams: Merge current branch to downstream branches defined in config merge.branches
-                       that are on the right side of the current branch value and pushes them to all remotes.
-                       Branches on the left side are ignored and not merged.
+    :param str branch: The branch to merge from.
+    :param bool downstreams: Merge current branch to downstream branches defined in config merge.branches
+                             that are on the right side of the current branch value and pushes them to all remotes.
+                             Branches on the left side are ignored and not merged.
+    :param bool dry_run: Print out what will happen without making changes.
+
     """
     @classmethod
     def arguments(cls):
         _, docs = cls.docs()
         return [
           cls.make_args('branch', nargs='?', help=docs['branch']),
-          cls.make_args('-d', '--downstreams', action='store_true', help=docs['downstreams'])
+          cls.make_args('-d', '--downstreams', action='store_true', help=docs['downstreams']),
+          cls.make_args('-n', '--dry-run', action='store_true', help=docs['dry_run']),
         ]
 
     def run(self):
@@ -46,7 +49,11 @@ class Merge(AbstractCommand):
 
         if self.branch:
             click.echo('Merging {} into {}'.format(self.branch, current))
-            merge_branch(self.branch)
+
+            if self.dry_run:
+                self.show_commit_diff(repo, current, self.branch)
+            else:
+                merge_branch(self.branch)
 
         elif self.downstreams:
             if not config.merge.branches:
@@ -70,15 +77,28 @@ class Merge(AbstractCommand):
                 click.echo('Merging {} into {}'.format(last, branch))
                 checkout_branch(branch)
                 self.commander.run('update', quiet=True)
-                merge_branch(last)
 
-                if repo.branches[branch].commit != repo.remotes.origin.refs[branch].commit:
-                    self.commander.run('push', all_remotes=True)
+                if self.dry_run:
+                    self.show_commit_diff(repo, branch, last)
+
                 else:
-                    click.echo('Already up-to-date.')
+                    merge_branch(last)
+
+                    if repo.branches[branch].commit != repo.remotes.origin.refs[branch].commit:
+                        self.commander.run('push', all_remotes=True)
+                    else:
+                        click.echo('Already up-to-date.')
 
                 last = branch
 
         else:
             log.error('Please specify either a branch to merge from or --downstreams to merge to all downstream branches')
             sys.exit(1)
+
+    def show_commit_diff(self, repo, branch, from_branch):
+        """ Show commit diffs between from_branch to branch """
+        commits = [c for c in repo.git.log('{}..{}'.format(branch, from_branch)).split('\n\n') if c.startswith('commit ')]
+        if commits:
+            click.echo('{} commit(s) would be merged'.format(len(commits)))
+        else:
+            click.echo('Already up-to-date.')
