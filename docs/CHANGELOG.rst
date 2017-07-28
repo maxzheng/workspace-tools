@@ -1,5 +1,11 @@
-Version 3.0.15
+Version 3.0.16
 ================================================================================
+
+* Add dry run option to merge
+* Support checking out remote branches
+
+Version 3.0.15
+--------------------------------------------------------------------------------
 
 * Skip style check during publish
 
