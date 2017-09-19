@@ -1,5 +1,10 @@
-Version 3.0.16
+Version 3.0.17
 ================================================================================
+
+* Add skip update flag for merge
+
+Version 3.0.16
+--------------------------------------------------------------------------------
 
 * Add dry run option to merge
 * Support checking out remote branches
