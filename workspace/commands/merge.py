@@ -45,7 +45,8 @@ class Merge(AbstractCommand):
             log.error('Your repo has untracked or modified files in working dir or in staging index. Please cleanup before doing merge')
             sys.exit(1)
 
-        self.commander.run('update', quiet=True)
+        if not self.skip_update:
+          self.commander.run('update', quiet=True)
 
         if self.branch:
             click.echo('Merging {} into {}'.format(self.branch, current))
@@ -76,7 +77,9 @@ class Merge(AbstractCommand):
             for branch in downstream_branches:
                 click.echo('Merging {} into {}'.format(last, branch))
                 checkout_branch(branch)
-                self.commander.run('update', quiet=True)
+
+                if not self.skip_update:
+                    self.commander.run('update', quiet=True)
 
                 if self.dry_run:
                     self.show_commit_diff(repo, branch, last)
