@@ -27,8 +27,9 @@ class Status(AbstractCommand):
                 nothing_to_commit = 'nothing to commit' in output and 'Your branch is ahead of' not in output
 
                 branches = all_branches(repo)
+                child_branches = [b for b in branches if '@' in b]
 
-                if len(branches) > 1:
+                if len(child_branches) > 1:
                     if nothing_to_commit:
                         output = '# Branches: %s' % ' '.join(branches)
                         nothing_to_commit = False
