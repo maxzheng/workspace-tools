@@ -69,7 +69,6 @@ class Commit(AbstractCommand):
             if self.discard and len(changes) <= self.discard and is_child_branch:
                 checkout_branch(base_branch)
                 remove_branch(self.branch, raises=True, force=True)
-                click.echo('Deleted branch ' + self.branch)
 
             else:
                 match = re.match('([a-f0-9]+)(?: \(.*\))\n', changes[0])
