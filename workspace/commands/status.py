@@ -29,7 +29,7 @@ class Status(AbstractCommand):
                 branches = all_branches(repo)
                 child_branches = [b for b in branches if '@' in b]
 
-                if len(child_branches) > 1 or len(scm_repos) == 1:
+                if len(child_branches) >= 1 or len(scm_repos) == 1:
                     if nothing_to_commit:
                         output = '# Branches: %s' % ' '.join(branches)
                         nothing_to_commit = False
