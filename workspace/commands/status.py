@@ -30,11 +30,12 @@ class Status(AbstractCommand):
                 child_branches = [b for b in branches if '@' in b]
 
                 if len(child_branches) >= 1 or len(scm_repos) == 1:
+                    show_branches = branches if len(scm_repos) == 1 else child_branches
                     if nothing_to_commit:
-                        output = '# Branches: %s' % ' '.join(branches)
+                        output = '# Branches: %s' % ' '.join(show_branches)
                         nothing_to_commit = False
-                    elif len(branches) > 1:
-                        output = '# Branches: %s\n#\n%s' % (' '.join(branches), output)
+                    elif len(show_branches) > 1:
+                        output = '# Branches: %s\n#\n%s' % (' '.join(show_branches), output)
 
                 if output and not nothing_to_commit:
                     pager.write(product_name(repo), output)
