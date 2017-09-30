@@ -122,18 +122,18 @@ def test_test(run):
         pass_test = 'def test_pass():\n  assert True'
         fail_test = 'def test_fail():\n  assert False'
 
-        with open('test/test_pass.py', 'w') as fp:
+        with open('tests/test_pass.py', 'w') as fp:
             fp.write(pass_test)
         commands = run('test')
         assert 'test' in commands
         assert 'tox' in commands['test']
 
-        with open('test/test_fail.py', 'w') as fp:
+        with open('tests/test_fail.py', 'w') as fp:
             fp.write(fail_test + '\n' + pass_test)
         with pytest.raises(SystemExit):
             run('test')
 
-        output = run('test test/test_pass.py')
+        output = run('test tests/test_pass.py')
         assert 'test' in output
 
         os.utime('requirements.txt', None)
@@ -141,11 +141,11 @@ def test_test(run):
 
         with pytest.raises(SystemExit):
             run('test style')
-        with open('test/test_fail.py', 'w') as fp:
+        with open('tests/test_fail.py', 'w') as fp:
             fp.write(fail_test + '\n\n\n' + pass_test)
         assert 'style' in run('test style')
 
-        os.unlink('test/test_fail.py')
+        os.unlink('tests/test_fail.py')
         assert 'cover' in run('test cover')
         assert os.path.exists('coverage.xml')
         assert os.path.exists('htmlcov/index.html')
