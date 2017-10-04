@@ -4,7 +4,7 @@ import logging
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import ProductPager
-from workspace.scm import stat_repo, repos, product_name, all_branches, is_repo
+from workspace.scm import stat_repo, repos, product_name, all_branches, is_repo, all_remotes
 
 log = logging.getLogger(__name__)
 
@@ -31,11 +31,14 @@ class Status(AbstractCommand):
 
                 if len(child_branches) >= 1 or len(scm_repos) == 1:
                     show_branches = branches if len(scm_repos) == 1 else child_branches
+                    remotes = all_remotes() if len(scm_repos) == 1 else []
+                    remotes = '\n# Remotes: {}'.format(' '.join(remotes)) if len(remotes) > 1 else ''
+
                     if nothing_to_commit:
-                        output = '# Branches: %s' % ' '.join(show_branches)
+                        output = '# Branches: {}{}'.format(' '.join(show_branches), remotes)
                         nothing_to_commit = False
                     elif len(show_branches) > 1:
-                        output = '# Branches: %s\n#\n%s' % (' '.join(show_branches), output)
+                        output = '# Branches: {}{}\n#\n{}' % (' '.join(show_branches), remotes, output)
 
                 if output and not nothing_to_commit:
                     pager.write(product_name(repo), output)
