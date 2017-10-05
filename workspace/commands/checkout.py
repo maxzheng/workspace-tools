@@ -7,7 +7,7 @@ import click
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
 from workspace.scm import (checkout_product, checkout_branch, all_branches, checkout_files, is_repo,
-                           product_checkout_path, product_name)
+                           product_checkout_path, product_name, upstream_remote)
 log = logging.getLogger(__name__)
 
 
@@ -30,10 +30,13 @@ class Checkout(AbstractCommand):
             if len(self.target) == 1 and self.target[0] in all_branches():
                 checkout_branch(self.target[0])
                 click.echo('Switched to branch ' + self.target[0])
-            elif len(self.target) == 1 and 'remotes/{}'.format(self.target[0]) in all_branches(remotes=True) and '/' in self.target[0]:
+            elif len(self.target) == 1 and '/' in self.target[0] and 'remotes/{}'.format(self.target[0]) in all_branches(remotes=True):
                 name = self.target[0].split('/')[-1]
                 checkout_branch(self.target[0], name=name)
                 click.echo('Switched to branch ' + name)
+            elif len(self.target) == 1 and 'remotes/{}/{}'.format(upstream_remote(), self.target[0]) in all_branches(remotes=True):
+                checkout_branch("{}/{}".format(upstream_remote(), self.target[0]), name=self.target[0])
+                click.echo('Switched to branch ' + self.target[0])
             else:
                 checkout_files(self.target)
             return

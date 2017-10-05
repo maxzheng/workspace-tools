@@ -14,6 +14,7 @@ from workspace.utils import run, silent_run, parent_path_with_dir, parent_path_w
 log = logging.getLogger(__name__)
 
 DEFAULT_REMOTE = 'origin'
+UPSTREAM_REMOTE = 'upstream'
 USER_REPO_REFERENCE_RE = re.compile('^[\w-]+/[\w-]+$')
 GITIGNORE_FILE = '.gitignore'
 GITIGNORE = """\
@@ -270,9 +271,19 @@ def _all_remotes(repo=None):
 
 
 def default_remote(repo=None, remotes=None):
+    """ Default remote to take action against, such as push """
     remotes = remotes or all_remotes(repo=repo)
     if len(remotes) > 1:
         return DEFAULT_REMOTE
+    else:
+        return remotes[0]
+
+
+def upstream_remote(repo=None, remotes=None):
+    """ Upstream remote to track against """
+    remotes = remotes or all_remotes(repo=repo)
+    if len(remotes) > 1:
+        return UPSTREAM_REMOTE
     else:
         return remotes[0]
 
