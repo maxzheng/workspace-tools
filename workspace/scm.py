@@ -13,6 +13,7 @@ from workspace.utils import run, silent_run, parent_path_with_dir, parent_path_w
 
 log = logging.getLogger(__name__)
 
+DEFAULT_REMOTE = 'origin'
 USER_REPO_REFERENCE_RE = re.compile('^[\w-]+/[\w-]+$')
 GITIGNORE_FILE = '.gitignore'
 GITIGNORE = """\
@@ -234,6 +235,16 @@ def diff_branch(right_branch, left_branch='master', path=None):
 
 
 def all_remotes(repo=None):
+    """ Return all remotes with default remote as the 1st """
+    remotes = _all_remotes(repo=repo)
+    if len(remotes) > 1:
+        default = default_remote(repo=repo, remotes=remotes)
+        return [default] + sorted(set(remotes) - set([default]))
+    else:
+        return remotes
+
+
+def _all_remotes(repo=None):
     """ Returns all remotes. """
     remotes_output = silent_run('git remote', cwd=repo, return_output=True)
     remotes = []
@@ -244,11 +255,26 @@ def all_remotes(repo=None):
                 remote = remote.strip()
                 remotes.append(remote)
 
+    required_remotes = {
+        DEFAULT_REMOTE: 'Your fork of the upstream repo',
+        'upstream': 'The upstream repo'
+    }
+    if len(remotes) >= 2 and not set(required_remotes).issubset(set(remotes)):
+        click.echo('Current remotes: {}'.format(' '.join(remotes)))
+        click.echo('Only the following remotes are required -- please set them up accordingly:')
+        for remote in required_remotes:
+            click.echo('  {}: {}'.format(remote, required_remotes[remote]))
+        exit(1)
+
     return remotes
 
 
-def default_remote(repo=None):
-    return all_remotes(repo=repo)[0]
+def default_remote(repo=None, remotes=None):
+    remotes = remotes or all_remotes(repo=repo)
+    if len(remotes) > 1:
+        return DEFAULT_REMOTE
+    else:
+        return remotes[0]
 
 
 def remote_tracking_branch(repo=None):

@@ -38,7 +38,7 @@ class Status(AbstractCommand):
                         output = '# Branches: {}{}'.format(' '.join(show_branches), remotes)
                         nothing_to_commit = False
                     elif len(show_branches) > 1:
-                        output = '# Branches: {}{}\n#\n{}' % (' '.join(show_branches), remotes, output)
+                        output = '# Branches: {}{}\n#\n{}'.format(' '.join(show_branches), remotes, output)
 
                 if output and not nothing_to_commit:
                     pager.write(product_name(repo), output)
