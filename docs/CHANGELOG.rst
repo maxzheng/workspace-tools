@@ -1,5 +1,17 @@
-Version 3.0.17
+Version 3.0.18
 ================================================================================
+
+* Set tracking to upstream remote
+* Require origin/upstream remotes when there are more than 1 remote
+* Show remotes in status
+* Show only child branches at summary view
+* Show when there is just 1 child branch
+* No need to echo deleted branch as git already does that
+* Fix bug to display all branches when there is only 1 repo
+* Show status for child branches only when listing all repos
+
+Version 3.0.17
+--------------------------------------------------------------------------------
 
 * Add skip update flag for merge
 
