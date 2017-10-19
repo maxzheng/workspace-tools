@@ -338,6 +338,8 @@ def parent_branch(branch):
 def update_repo(path=None, quiet=False):
     """ Updates given or current repo to HEAD """
     if not remote_tracking_branch(repo=path):
+        if not quiet:
+            click.echo('Did not update as remote tracking is not setup for branch')
         return
 
     branch = current_branch(repo=path)
@@ -349,7 +351,7 @@ def update_repo(path=None, quiet=False):
     for remote in remotes:
         if len(remotes) > 1 and not quiet:
             click.echo('    ... from ' + remote)
-        silent_run('git pull {} {}'.format(remote, branch), cwd=path)
+        silent_run('git pull --ff-only {} {}'.format(remote, branch), cwd=path)
 
 
 def push_repo(path=None, force=False, remote=None, branch=None):
