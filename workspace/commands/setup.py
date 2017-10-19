@@ -58,7 +58,7 @@ function open_files_from_last_command() {
   if [ "$1" ]; then
     last_command="1 ag '$@'"
   else
-    last_command=`history 100 | grep  -E "^\s+[0-9]+\s+(ag|ack|grep|find|which) " | tail -1`
+    last_command=`history 100 | grep  -E "^\s+[0-9]+\s+(ag|ack|grep|find|which|ls) " | tail -1`
   fi
 
   if [ -z "$last_command" ]; then
