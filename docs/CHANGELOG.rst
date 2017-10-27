@@ -1,5 +1,12 @@
-Version 3.0.18
+Version 3.0.19
 ================================================================================
+
+* Show commits that will be merged
+* Include ls for tv
+* Show error when updating without remote checking and do --ff-only for update
+
+Version 3.0.18
+--------------------------------------------------------------------------------
 
 * Set tracking to upstream remote
 * Require origin/upstream remotes when there are more than 1 remote
