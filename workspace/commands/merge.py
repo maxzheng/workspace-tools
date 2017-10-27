@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import logging
 import sys
+import textwrap
 
 import click
 import git
@@ -100,8 +101,9 @@ class Merge(AbstractCommand):
 
     def show_commit_diff(self, repo, branch, from_branch):
         """ Show commit diffs between from_branch to branch """
-        commits = [c for c in repo.git.log('{}..{}'.format(branch, from_branch)).split('\n\n') if c.startswith('commit ')]
+        commits = repo.git.log('{}..{}'.format(branch, from_branch), oneline=True)
         if commits:
-            click.echo('{} commit(s) would be merged'.format(len(commits)))
+            click.echo('The following commit(s) would be merged:')
+            click.echo(textwrap.indent(commits, '  '))
         else:
             click.echo('Already up-to-date.')
