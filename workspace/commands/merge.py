@@ -22,6 +22,7 @@ class Merge(AbstractCommand):
     :param bool downstreams: Merge current branch to downstream branches defined in config merge.branches
                              that are on the right side of the current branch value and pushes them to all remotes.
                              Branches on the left side are ignored and not merged.
+    :param str strategy: The merge strategy to pass to git merge
     :param bool dry_run: Print out what will happen without making changes.
 
     """
@@ -31,6 +32,7 @@ class Merge(AbstractCommand):
         return [
           cls.make_args('branch', nargs='?', help=docs['branch']),
           cls.make_args('-d', '--downstreams', action='store_true', help=docs['downstreams']),
+          cls.make_args('-s', '--strategy', help=docs['strategy']),
           cls.make_args('-n', '--dry-run', action='store_true', help=docs['dry_run']),
         ]
 
@@ -55,7 +57,7 @@ class Merge(AbstractCommand):
             if self.dry_run:
                 self.show_commit_diff(repo, current, self.branch)
             else:
-                merge_branch(self.branch)
+                merge_branch(self.branch, strategy=self.strategy)
 
         elif self.downstreams:
             if not config.merge.branches:
@@ -86,7 +88,7 @@ class Merge(AbstractCommand):
                     self.show_commit_diff(repo, branch, last)
 
                 else:
-                    merge_branch(last)
+                    merge_branch(last, strategy=self.strategy)
 
                     if repo.branches[branch].commit != repo.remotes.origin.refs[branch].commit:
                         self.commander.run('push', all_remotes=True)
