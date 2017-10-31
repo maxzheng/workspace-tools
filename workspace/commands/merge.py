@@ -14,6 +14,11 @@ from workspace.scm import checkout_branch, current_branch, merge_branch, repo_pa
 log = logging.getLogger(__name__)
 
 
+class NotAllowedCommit(Exception):
+    """ Raised when a commit is not allowed to be merged """
+    pass
+
+
 class Merge(AbstractCommand):
     """
     Merge changes from branch to current branch
@@ -23,6 +28,7 @@ class Merge(AbstractCommand):
                              that are on the right side of the current branch value and pushes them to all remotes.
                              Branches on the left side are ignored and not merged.
     :param str strategy: The merge strategy to pass to git merge
+    :param list allow_commits: Patterns to allow commits to be merged.
     :param bool dry_run: Print out what will happen without making changes.
 
     """
@@ -33,6 +39,7 @@ class Merge(AbstractCommand):
           cls.make_args('branch', nargs='?', help=docs['branch']),
           cls.make_args('-d', '--downstreams', action='store_true', help=docs['downstreams']),
           cls.make_args('-s', '--strategy', help=docs['strategy']),
+          cls.make_args('-a', '--allow-commits', help=docs['allow_commits']),
           cls.make_args('-n', '--dry-run', action='store_true', help=docs['dry_run']),
         ]
 
@@ -55,7 +62,7 @@ class Merge(AbstractCommand):
             click.echo('Merging {} into {}'.format(self.branch, current))
 
             if self.dry_run:
-                self.show_commit_diff(repo, current, self.branch)
+                self.show_unmerged_commits(repo, self.branch, current)
             else:
                 merge_branch(self.branch, strategy=self.strategy)
 
@@ -85,9 +92,22 @@ class Merge(AbstractCommand):
                     self.commander.run('update', quiet=True)
 
                 if self.dry_run:
-                    self.show_commit_diff(repo, branch, last)
+                    self.show_unmerged_commits(repo, last, branch)
 
                 else:
+                    if self.allow_commits:
+                        commits = self._unmerged_commits(repo, last, branch)
+                        if commits:
+                            for commit in commits.split('\n'):
+                                # Not performant / ok as # of allow_commits should be low
+                                allowed_commit = (' Merge branch ' in commit or
+                                                  ' Merge pull request ' in commit or
+                                                  any(allow_commit in commit for allow_commit in self.allow_commits))
+                                if not allowed_commit:
+                                    click.echo('Found a commit that was not allowed to be merged:'.format(last))
+                                    click.echo('  {}'.format(commit))
+                                    raise NotAllowedCommit(commit)
+
                     merge_branch(last, strategy=self.strategy)
 
                     if repo.branches[branch].commit != repo.remotes.origin.refs[branch].commit:
@@ -101,11 +121,15 @@ class Merge(AbstractCommand):
             log.error('Please specify either a branch to merge from or --downstreams to merge to all downstream branches')
             sys.exit(1)
 
-    def show_commit_diff(self, repo, branch, from_branch):
+    def show_unmerged_commits(self, repo, from_branch, branch):
         """ Show commit diffs between from_branch to branch """
-        commits = repo.git.log('{}..{}'.format(branch, from_branch), oneline=True)
+        commits = self._unmerged_commits(repo, from_branch, branch)
         if commits:
             click.echo('The following commit(s) would be merged:')
             click.echo(textwrap.indent(commits, '  '))
         else:
             click.echo('Already up-to-date.')
+        return commits
+
+    def _unmerged_commits(self, repo, from_branch, branch):
+        return repo.git.log('{}..{}'.format(branch, from_branch), oneline=True)
