@@ -29,6 +29,7 @@ class Merge(AbstractCommand):
                              Branches on the left side are ignored and not merged.
     :param str strategy: The merge strategy to pass to git merge
     :param list allow_commits: Patterns to allow commits to be merged.
+    :param bool quiet: Don't print merging if there are no commits to merge
     :param bool dry_run: Print out what will happen without making changes.
 
     """
@@ -40,6 +41,7 @@ class Merge(AbstractCommand):
           cls.make_args('-d', '--downstreams', action='store_true', help=docs['downstreams']),
           cls.make_args('-s', '--strategy', help=docs['strategy']),
           cls.make_args('-a', '--allow-commits', help=docs['allow_commits']),
+          cls.make_args('--quiet', action='store_true', help=docs['quiet']),
           cls.make_args('-n', '--dry-run', action='store_true', help=docs['dry_run']),
         ]
 
@@ -89,8 +91,15 @@ class Merge(AbstractCommand):
                 sys.exit(0)
 
             for branch in downstream_branches:
-                click.echo('Merging {} into {}'.format(last, branch))
                 checkout_branch(branch)
+
+                commits = self._unmerged_commits(repo, last, branch)
+
+                if self.quiet and not commits:
+                    last = branch
+                    continue
+
+                click.echo('Merging {} into {}'.format(last, branch))
 
                 if not self.skip_update:
                     self.commander.run('update', quiet=True)
@@ -100,7 +109,6 @@ class Merge(AbstractCommand):
 
                 else:
                     if self.allow_commits:
-                        commits = self._unmerged_commits(repo, last, branch)
                         if commits:
                             for commit in commits.split('\n'):
                                 # Not performant / ok as # of allow_commits should be low
