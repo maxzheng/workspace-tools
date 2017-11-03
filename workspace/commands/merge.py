@@ -64,6 +64,10 @@ class Merge(AbstractCommand):
             if self.dry_run:
                 self.show_unmerged_commits(repo, self.branch, current)
             else:
+                if not self.skip_update:
+                    checkout_branch(self.branch)
+                    self.commander.run('update', quiet=True)
+                    checkout_branch(current)
                 merge_branch(self.branch, strategy=self.strategy)
 
         elif self.downstreams:
