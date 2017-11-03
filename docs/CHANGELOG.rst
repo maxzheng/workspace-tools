@@ -1,5 +1,11 @@
-Version 3.0.21
+Version 3.0.22
 ================================================================================
+
+* Add quiet option to merge
+* Update source branch before merging
+
+Version 3.0.21
+--------------------------------------------------------------------------------
 
 * Add --allow-commits option for merge
 
