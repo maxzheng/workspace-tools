@@ -1,5 +1,10 @@
-Version 3.0.22
+Version 3.0.23
 ================================================================================
+
+* Skip style check when pushing a merge
+
+Version 3.0.22
+--------------------------------------------------------------------------------
 
 * Add quiet option to merge
 * Update source branch before merging
