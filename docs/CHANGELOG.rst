@@ -1,5 +1,10 @@
-Version 3.0.23
+Version 3.0.24
 ================================================================================
+
+* Remove commit checking as we only merge when there are stuff to be merged
+
+Version 3.0.23
+--------------------------------------------------------------------------------
 
 * Skip style check when pushing a merge
 
