@@ -122,10 +122,7 @@ class Merge(AbstractCommand):
 
                     merge_branch(last, strategy=self.strategy)
 
-                    if repo.branches[branch].commit != repo.remotes.origin.refs[branch].commit:
-                        self.commander.run('push', all_remotes=True, skip_style_check=True)
-                    else:
-                        click.echo('Already up-to-date.')
+                    self.commander.run('push', all_remotes=True, skip_style_check=True)
 
                 last = branch
 
