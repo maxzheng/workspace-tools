@@ -1,5 +1,10 @@
-Version 3.0.24
+Version 3.0.25
 ================================================================================
+
+* Ignore .eggs in flake8
+
+Version 3.0.24
+--------------------------------------------------------------------------------
 
 * Remove commit checking as we only merge when there are stuff to be merged
 
