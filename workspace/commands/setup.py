@@ -201,7 +201,7 @@ commands =
     py.test {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term
 
 [flake8]
-exclude = .git,.tox,__pycache__,docs,build,dist
+exclude = .git,.tox,.eggs,__pycache__,docs,build,dist
 ignore = E111,E121,W292,E123,E226
 max-line-length = 140
 
