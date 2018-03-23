@@ -505,7 +505,7 @@ else:
                         reqs = pkg_resources.parse_requirements(fp.read())
                         if name in [r.project_name for r in reqs]:
                             return True
-                    except:
+                    except Exception:
                         pass
         return False
 
