@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 import os
+from pathlib import Path
 import shutil
 from tempfile import mkdtemp
 
@@ -13,7 +14,7 @@ def temp_dir():
         dtemp = mkdtemp()
         os.chdir(dtemp)
 
-        yield dtemp
+        yield Path(dtemp)
 
     finally:
         os.chdir(cwd)
@@ -21,16 +22,21 @@ def temp_dir():
 
 
 @contextmanager
-def temp_git_repo():
-    with temp_dir() as dir:
+def temp_git_repo(name=None):
+    with temp_dir() as tmpdir:
+        if name:
+            os.makedirs(name)
+            os.chdir(name)
+
         run('git init')
-        yield dir
+
+        yield (tmpdir / name) if name else tmpdir
 
 
 @contextmanager
 def temp_remote_git_repo():
-    with temp_dir() as dir:
+    with temp_dir() as tmpdir:
         run('git clone https://github.com/maxzheng/remoteconfig.git')
-        repo_dir = os.path.join(dir, 'remoteconfig')
+        repo_dir = tmpdir / 'remoteconfig'
         os.chdir(repo_dir)
         yield repo_dir
