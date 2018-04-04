@@ -1,12 +1,11 @@
 import os
 import pytest
+import shutil
 
 from mock import Mock
-
 from bumper.utils import PyPI
 
 from workspace.scm import stat_repo, all_branches, commit_logs
-
 from test_stubs import temp_dir, temp_git_repo, temp_remote_git_repo
 
 
@@ -152,6 +151,8 @@ def test_test(wst):
         assert 'cover' in wst('test cover')
         assert os.path.exists('coverage.xml')
         assert os.path.exists('htmlcov/index.html')
+
+    shutil.rmtree(os.path.expanduser('~/.virtualenvs/foo'), ignore_errors=True)
 
 
 def test_push_without_repo(wst):
