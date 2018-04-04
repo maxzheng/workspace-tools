@@ -37,20 +37,21 @@ function ws() {
 }
 
 function activate() {
+  venv=${1:-${PWD##*/}}
   if [ -e ./activate ]; then
     source ./activate
   elif [ -e bin/activate ]; then
     source bin/activate
-  elif [ -e ../build/${PWD##*/}/venv/bin/activate ]; then
-    source ../build/${PWD##*/}/venv/bin/activate
-  elif [ -e build/${PWD##*/}/venv/bin/activate ]; then
-    source build/${PWD##*/}/venv/bin/activate
-  elif [ -e ${PWD##*/}/activate ]; then
-    source ${PWD##*/}/activate
-  elif [ -e ~/.virtualenvs/${PWD##*/}/bin/activate ]; then
-    source ~/.virtualenvs/${PWD##*/}/bin/activate
-  elif [ -e .tox/${PWD##*/}/bin/activate ]; then
-    source .tox/${PWD##*/}/bin/activate
+  elif [ -e ../build/$venv/venv/bin/activate ]; then
+    source ../build/$venv/venv/bin/activate
+  elif [ -e build/$venv/venv/bin/activate ]; then
+    source build/$venv/venv/bin/activate
+  elif [ -e $venv/activate ]; then
+    source $venv/activate
+  elif [ -e ~/.virtualenvs/$venv/bin/activate ]; then
+    source ~/.virtualenvs/$venv/bin/activate
+  elif [ -e .tox/$venv/bin/activate ]; then
+    source .tox/$venv/bin/activate
   else
     echo "No activate script found. Please setup your venv."
   fi
