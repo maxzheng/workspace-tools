@@ -189,7 +189,7 @@ setenv =
     PIP_DEFAULT_TIMEOUT=60
     ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future
 basepython = python3
-envdir = {toxworkdir}/%s
+envdir = {homedir}/.virtualenvs/%s
 
 [testenv:test]
 commands =
