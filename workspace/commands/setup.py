@@ -47,6 +47,8 @@ function activate() {
     source build/${PWD##*/}/venv/bin/activate
   elif [ -e ${PWD##*/}/activate ]; then
     source ${PWD##*/}/activate
+  elif [ -e ~/.virtualenvs/${PWD##*/}/bin/activate ]; then
+    source ~/.virtualenvs/${PWD##*/}/bin/activate
   elif [ -e .tox/${PWD##*/}/bin/activate ]; then
     source .tox/${PWD##*/}/bin/activate
   else
