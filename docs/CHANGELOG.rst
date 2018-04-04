@@ -1,5 +1,12 @@
-Version 3.0.27
+Version 3.0.28
 ================================================================================
+
+* Fix envvar expansion
+* Use ~/.virtualenvs as the envdir for tox
+* Support venv name for activate
+
+Version 3.0.27
+--------------------------------------------------------------------------------
 
 * Support activate for ~/.virtualenvs
 
