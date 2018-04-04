@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 class ToxIni(LocalConfig):
     """ Represents tox.ini """
 
-    VAR_RE = re.compile('{\[(.+)](.+)}')
+    VAR_RE = re.compile(r'{(.+)}')
 
     def __init__(self, path=None, tox_ini=None):
         """
@@ -54,6 +54,10 @@ class ToxIni(LocalConfig):
     def workdir(self):
         return os.path.join(self.path, self.get('tox', 'toxworkdir', '.tox'))
 
+    @property
+    def homedir(self):
+        return os.path.expanduser('~')
+
     def envdir(self, env):
         default_envdir = os.path.join(self.path, '.tox', env)
         return self.expand_vars(self.get(self.envsection(env), 'envdir', self.get(self.envsection(),
@@ -72,7 +76,7 @@ class ToxIni(LocalConfig):
 
     def expand_vars(self, value):
         if '{' in value:
-            value = self.VAR_RE.sub(lambda m: self.get(m.group(1), m.group(2)), value)
+            value = self.VAR_RE.sub(lambda m: getattr(self, m.group(1), m.group(0)), value)
         return value
 
 
