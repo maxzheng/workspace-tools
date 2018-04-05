@@ -467,10 +467,10 @@ else:
 
         available_products = [os.path.basename(r) for r in product_repos()]
         libs = [d for d in editable_products if d in available_products and d in product_dependencies and
-                tox.workdir in product_dependencies[d]]
+                tox.envdir(env) in product_dependencies[d]]
 
         already_editable = [d for d in editable_products if d in product_dependencies and
-                            tox.workdir not in product_dependencies[d]]
+                            tox.envdir(env) not in product_dependencies[d]]
         for lib in already_editable:
             click.echo('{} is already installed in editable mode.'.format(lib))
 
