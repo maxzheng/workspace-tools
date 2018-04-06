@@ -28,7 +28,7 @@ class Status(AbstractCommand):
                                      'Your branch is ahead of' not in output and
                                      'Your branch is behind' not in output)
 
-                branches = all_branches(repo)
+                branches = all_branches(repo, verbose=True)
                 child_branches = [b for b in branches if '@' in b]
 
                 if len(child_branches) >= 1 or len(scm_repos) == 1:

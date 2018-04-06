@@ -8,7 +8,7 @@ import click
 import requests
 
 from workspace.config import config
-from workspace.utils import run, silent_run, parent_path_with_dir, parent_path_with_file
+from workspace.utils import run, silent_run, parent_path_with_dir, parent_path_with_file, shortest_id
 
 
 log = logging.getLogger(__name__)
@@ -320,22 +320,46 @@ def remote_tracking_branch(repo=None):
         return remote_output
 
 
-def all_branches(repo=None, remotes=False):
+def all_branches(repo=None, remotes=False, verbose=False):
     """ Returns all branches. The first element is the current branch. """
     cmd = ['git', 'branch']
     if remotes:
         cmd.append('--all')
+    if verbose:
+        cmd.append('-vv')
 
     branch_output = silent_run(cmd, cwd=repo, return_output=True)
     branches = []
+    remote_branch_re = re.compile('^(\*)? *([^ ]+) +\w+ +(?:\[(.+)/([^:]+).*])?')
+    remotes = all_remotes(repo=repo)
+    up_remote = remotes and upstream_remote(repo=repo, remotes=remotes)
+    def_remote = remotes and default_remote(repo=repo, remotes=remotes)
 
     if branch_output:
         for branch in branch_output.split('\n'):
             branch = branch.strip()
-            if branch.startswith('*'):
-                branches.insert(0, branch.strip('*').strip())
-            elif branch:
-                branches.append(branch)
+            if branch:
+                if verbose:
+                    star, local_branch, remote, branch = remote_branch_re.search(branch).groups()
+                    if remote and remotes:
+                        # Parent branch = upstream remote
+                        # Child branch = origin remote
+                        rightful_remote = (remote == up_remote and '@' not in local_branch or
+                                           remote == def_remote and '@' in local_branch)
+                        branch = branch if rightful_remote else '{}^{}'.format(branch, shortest_id(remote, remotes))
+                    else:
+                        branch = local_branch
+
+                    if star:
+                        branches.insert(0, branch)
+                    else:
+                        branches.append(branch)
+
+                else:
+                    if branch.startswith('*'):
+                        branches.insert(0, branch.strip('* '))
+                    else:
+                        branches.append(branch)
 
     return branches
 

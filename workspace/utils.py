@@ -18,6 +18,21 @@ import six
 log = logging.getLogger(__name__)
 
 
+def shortest_id(name, names):
+    """ Return shortest name that isn't a duplicate in names """
+    if name in names:
+        names.remove(name)
+
+    for i, letter in enumerate(name):
+        for other_name in names:
+            if other_name[i:i+1] == letter:
+                break
+        else:
+            break
+
+    return name[0:i+1]
+
+
 def prompt_with_editor(instruction):
     """ Prompt user with instruction in $EDITOR and return the response """
 
