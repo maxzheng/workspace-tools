@@ -1,3 +1,14 @@
+Version 3.1.0
+================================================================================
+
+* Use regex to better match update error
+* Checkout using upstream remote and add origin remote for user when checkout.origin_user is set
+* Indicate tracking remote for branch status
+* Always track upstream branch and pull from all remotes
+* Better support to checkout remote/branch combo
+* Use tox.envdir instead of tox.workdir to check if a product is in editable mode or not
+* Remove test venv foo
+
 Version 3.0.28
 ================================================================================
 
