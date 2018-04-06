@@ -12,11 +12,12 @@ def test_checkout_with_alias(wst, mock_run):
         wst('checkout mzheng-repos')
         assert mock_run.call_count == 4
         mock_run.assert_called_with(
-            ['git', 'clone', 'git@github.com:maxzheng/workspace-tools.git', str(tmpdir / 'workspace-tools')], silent=True)
+            ['git', 'clone', 'git@github.com:maxzheng/workspace-tools.git', str(tmpdir / 'workspace-tools'), '--origin', 'origin'],
+            silent=True)
 
         wst('checkout clicast')
         mock_run.assert_called_with(
-            ['git', 'clone', 'git@github.com:maxzheng/clicast.git', str(tmpdir / 'clicast')], silent=True)
+            ['git', 'clone', 'git@github.com:maxzheng/clicast.git', str(tmpdir / 'clicast'), '--origin', 'origin'], silent=True)
 
 
 def test_checkout_with_http_git(wst):

@@ -34,6 +34,9 @@
   # URL to use when checking out a user repo reference (i.e. wst checkout maxzheng/workspace-tools)
   user_repo_url = git@github.com:%s.git
 
+  # User that is mapped to the origin remote. When set, checking out a repo that does not belong to the user
+  # will use upstream remote. e.g. maxzheng
+  origin_user =
 
   ###########################################################################################################
   # Settings for clean command

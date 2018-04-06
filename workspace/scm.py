@@ -330,7 +330,7 @@ def all_branches(repo=None, remotes=False, verbose=False):
 
     branch_output = silent_run(cmd, cwd=repo, return_output=True)
     branches = []
-    remote_branch_re = re.compile('^(\*)? *([^ ]+) +\w+ +(?:\[(.+)/([^:]+).*])?')
+    remote_branch_re = re.compile(r'^(\*)? *([^ ]+) +\w+ +(?:\[(.+)/([^:]+).*])?')
     remotes = all_remotes(repo=repo)
     up_remote = remotes and upstream_remote(repo=repo, remotes=remotes)
     def_remote = remotes and default_remote(repo=repo, remotes=remotes)
@@ -402,7 +402,7 @@ def update_repo(path=None, quiet=False):
             click.echo('    ... from ' + remote)
         output, success = silent_run('git pull --tags --ff-only {} {}'.format(remote, branch), cwd=path, return_output=2)
         if not success:
-            click.echo('    ... ' + output.strip().replace('fatal:', ' '))
+            click.echo('    ... ' + output.split('\n')[0].strip(' .').replace('fatal:', ' ').replace('ERROR:', ' '))
             failed_remotes.append(remote)
 
     if failed_remotes:
@@ -495,7 +495,14 @@ def checkout_product(product_url, checkout_path):
     elif USER_REPO_REFERENCE_RE.match(product_url):
         product_url = config.checkout.user_repo_url % product_url
 
-    silent_run(['git', 'clone', product_url, checkout_path])
+    is_origin = not config.checkout.origin_user or config.checkout.origin_user + '/' in product_url
+    remote_name = DEFAULT_REMOTE if is_origin else UPSTREAM_REMOTE
+
+    silent_run(['git', 'clone', product_url, checkout_path, '--origin', remote_name])
+
+    if not is_origin:
+        origin_url = re.sub(r'(\.com[:/])(\w+)(/)', r'\1{}\3'.format(config.checkout.origin_user), product_url)
+        silent_run(['git', 'remote', 'add', DEFAULT_REMOTE, origin_url], cwd=checkout_path)
 
 
 def checkout_files(files, repo_path=None):
