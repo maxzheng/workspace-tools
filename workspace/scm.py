@@ -189,13 +189,26 @@ def repos(dir=None):
     return repos
 
 
-def checkout_branch(branch, repo_path=None, name=None):
-    """ Checks out the branch in the given or current repo. Raises on error. """
+def checkout_branch(branch, repo_path=None):
+    """
+    Checks out the branch in the given or current repo. Raises on error.
+
+    :param str branch: Branch to checkout. It can be a branch name or remote/branch combo.
+                       if remote is provided, it will always set upstream to :meth:`upstream_remote`
+                       regardless of the downstream remote, as we always want to track downstream changes to the
+                       upstream remote.
+    :param str repo_path: Path to repo to run checkout in. Defaults to current.
+    """
+    name = branch.split('/')[-1] if '/' in branch else None
+
     cmd = ['git', 'checkout', branch]
     if name:
-        cmd.extend(['-b', name])
+        cmd.extend(['-B', name])
 
     silent_run(cmd, cwd=repo_path)
+
+    if name:
+        silent_run('git branch --set-upstream-to {}/{}'.format(upstream_remote(), name))
 
 
 def create_branch(branch, from_branch=None):
@@ -353,7 +366,11 @@ def update_repo(path=None, quiet=False):
     for remote in remotes:
         if len(remotes) > 1 and not quiet:
             click.echo('    ... from ' + remote)
-        silent_run('git pull --ff-only {} {}'.format(remote, branch), cwd=path)
+        silent_run('git pull --tags --ff-only {} {}'.format(remote, branch), cwd=path)
+
+
+def update_tags(remote, path=None):
+    silent_run('git fetch --tags {}'.format(remote), cwd=path)
 
 
 def push_repo(path=None, force=False, remote=None, branch=None):
