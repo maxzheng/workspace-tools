@@ -76,6 +76,10 @@ target/
 """
 
 
+class SCMError(Exception):
+    """ SCM command failed """
+
+
 def workspace_path():
     """ Guess the workspace path based on if we are in a repo or not. """
     repo_path = is_repo()
@@ -208,7 +212,11 @@ def checkout_branch(branch, repo_path=None):
     silent_run(cmd, cwd=repo_path)
 
     if name:
-        silent_run('git branch --set-upstream-to {}/{}'.format(upstream_remote(), name))
+        upstream_branch = '{}/{}'.format(upstream_remote(), name)
+        if 'remotes/{}'.format(upstream_branch) in all_branches(remotes=True):
+            silent_run('git branch --set-upstream-to {}'.format(upstream_branch))
+        else:
+            click.echo('FYI Can not change upstream tracking branch to {} as it does not exist'.format(upstream_branch))
 
 
 def create_branch(branch, from_branch=None):
@@ -363,10 +371,18 @@ def update_repo(path=None, quiet=False):
         click.echo('Updating ' + branch)
 
     remotes = all_remotes(repo=path)
+    failed_remotes = []
+
     for remote in remotes:
         if len(remotes) > 1 and not quiet:
             click.echo('    ... from ' + remote)
-        silent_run('git pull --tags --ff-only {} {}'.format(remote, branch), cwd=path)
+        output, success = silent_run('git pull --tags --ff-only {} {}'.format(remote, branch), cwd=path, return_output=2)
+        if not success:
+            click.echo('    ... ' + output.strip().replace('fatal:', ' '))
+            failed_remotes.append(remote)
+
+    if failed_remotes:
+        raise SCMError('Failed to pull from remote(s): {}'.format(', '.join(failed_remotes)))
 
 
 def update_tags(remote, path=None):
