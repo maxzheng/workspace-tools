@@ -77,9 +77,10 @@ Make a commit and create a new branch for it::
     [updated-readme 0af8850] Updated README.rst
      1 file changed, 1 deletion(-)
 
-    # The commit created the branch 'updated-readme:master', added all files, and then committed
-    # Notice the ":master" that indicates the parent branch. The parent branch will be used
-    # during push. To specify a different branch without parent relationship, use --branch option.
+    # The commit created the branch 'updated-readme@master', added all files, and then committed
+    # Notice the "@master" that indicates the parent branch. The parent branch will be used
+    # during push with --merge and update. To specify a different branch without parent relationship,
+    # use --branch option.
 
 To install your test environment and test your change (with tox/py.test)::
 
@@ -110,10 +111,10 @@ See status for all of your repos::
     no changes added to commit (use "git add" and/or "git commit -a")
 
     [ clicast ]
-    # Branches: master display-changes:master fix-download:master
+    # Branches: master display-changes@master fix-download@master
 
     [ workspace-tools ]
-    # Branches: updated-readme:master master
+    # Branches: updated-readme@master master
 
 See diff for all of your repos::
 
@@ -141,9 +142,9 @@ And finally amend the change and push::
 
     $ wst commit --amend --push
 
-    [updated-readme:master 738f659] Updated README.rst
+    [updated-readme@master 738f659] Updated README.rst
     1 file changed, 2 insertions(+), 1 deletion(-)
-    Pushing updated-readme:master
+    Pushing updated-readme@master
 
     # It will fail at push as you are not a committer, but the change was committed to branch,
     # and then merged into its parent branch (master).
@@ -153,7 +154,7 @@ Or simply push the change in your current branch::
     wst push --merge
 
     # This will update its parent branch (master), rebase branch with parent branch and merge into
-    # parent branch if on child branch (child:parent) and then push.
+    # parent branch if on child branch (child@parent) and then push.
     # Upon success, it will remove the local and remote branch if pushing from child branch.
 
 If you have multiple upstream branches (defined by config [merge] branches) that you need to merge your change into, use auto merge::
