@@ -402,7 +402,9 @@ def update_repo(path=None, quiet=False):
             click.echo('    ... from ' + remote)
         output, success = silent_run('git pull --tags --ff-only {} {}'.format(remote, branch), cwd=path, return_output=2)
         if not success:
-            click.echo('    ... ' + output.split('\n')[0].strip(' .').replace('fatal:', ' ').replace('ERROR:', ' '))
+            error_match = re.search(r'(?:fatal|ERROR): (.+)', output)
+            error = error_match.group(1) if error_match else output
+            click.echo('    ...   ' + error.strip(' .'))
             failed_remotes.append(remote)
 
     if failed_remotes:
