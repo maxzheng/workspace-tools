@@ -330,7 +330,7 @@ def all_branches(repo=None, remotes=False, verbose=False):
 
     branch_output = silent_run(cmd, cwd=repo, return_output=True)
     branches = []
-    remote_branch_re = re.compile(r'^(\*)? *([^ ]+) +\w+ +(?:\[(.+)/([^:]+).*])?')
+    remote_branch_re = re.compile(r'^(\*)? *([^ ]+) +\w+ +(?:\[(.+)/([^:\] ]+).*])?')
     remotes = all_remotes(repo=repo)
     up_remote = remotes and upstream_remote(repo=repo, remotes=remotes)
     def_remote = remotes and default_remote(repo=repo, remotes=remotes)
