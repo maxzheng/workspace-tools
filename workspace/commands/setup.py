@@ -212,12 +212,8 @@ max-line-length = 120
 addopts = -n 4
 """
 SETUP_PY_TMPL = """\
-from pip.req import parse_requirements
 import setuptools
 
-
-# Filters out relative/local requirements (i.e. ../lib/utils)
-remote_requirements = '\\n'.join(str(r.req) for r in parse_requirements("%s", session='dummy') if r.req)
 
 setuptools.setup(
     name='%s',
@@ -231,7 +227,7 @@ setuptools.setup(
 
     url='<PLACEHOLDER>',
 
-    install_requires=remote_requirements,
+    install_requires=open('requirements.txt').read(),
 
     license='MIT',
 
