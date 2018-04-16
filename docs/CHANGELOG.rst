@@ -1,5 +1,16 @@
-Version 3.1.0
+Version 3.1.1
 ================================================================================
+
+* Remove pip.req as it is not used
+* Fix regex for matching tracking branch name
+* Set default max-line-length to 120
+* Set min version to Python 3.6
+* Set Python version to 3 for readthedocs
+* Add readthedocs config
+* Update readme
+
+Version 3.1.0
+--------------------------------------------------------------------------------
 
 * Use regex to better match update error
 * Checkout using upstream remote and add origin remote for user when checkout.origin_user is set
