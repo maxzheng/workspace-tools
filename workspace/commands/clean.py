@@ -16,7 +16,18 @@ log = logging.getLogger(__name__)
 
 
 class Clean(AbstractCommand):
-    """ Clean workspace by removing build, dist, and .pyc files """
+    """
+    Clean workspace by removing build, dist, and .pyc files
+
+    :param bool force: Remove untracked files too.
+    """
+
+    @classmethod
+    def arguments(cls):
+        _, docs = cls.docs()
+        return [
+          cls.make_args('-f', '--force', action='store_true', help=docs['force'])
+        ]
 
     def run(self):
 
@@ -27,6 +38,10 @@ class Clean(AbstractCommand):
 
             click.echo('Removing *.pyc files')
             silent_run("find . -type d \( -path '*/.tox' -o -path '*/mppy-*' \) -prune -o -name *.pyc -exec rm {} \;", cwd=repo, shell=True)
+
+            if self.force:
+                click.echo('Removing untracked files')
+                silent_run('git clean -fdx')
 
         else:
             path = workspace_path()
