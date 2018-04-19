@@ -305,10 +305,11 @@ def default_remote(repo=None, remotes=None):
 def upstream_remote(repo=None, remotes=None):
     """ Upstream remote to track against """
     remotes = remotes or all_remotes(repo=repo)
-    if len(remotes) > 1:
-        return UPSTREAM_REMOTE
-    else:
-        return remotes[0]
+    if remotes:
+        if len(remotes) > 1:
+            return UPSTREAM_REMOTE
+        else:
+            return remotes[0]
 
 
 def remote_tracking_branch(repo=None):
@@ -330,7 +331,7 @@ def all_branches(repo=None, remotes=False, verbose=False):
 
     branch_output = silent_run(cmd, cwd=repo, return_output=True)
     branches = []
-    remote_branch_re = re.compile(r'^(\*)? *([^ ]+) +\w+ +(?:\[(.+)/([^:\] ]+).*])?')
+    remote_branch_re = re.compile(r'^(\*)? *(\(HEAD detached at )?([^ )]+)\)? +\w+ +(?:\[(.+)/([^:\] ]+).*])?')
     remotes = all_remotes(repo=repo)
     up_remote = remotes and upstream_remote(repo=repo, remotes=remotes)
     def_remote = remotes and default_remote(repo=repo, remotes=remotes)
@@ -340,13 +341,17 @@ def all_branches(repo=None, remotes=False, verbose=False):
             branch = branch.strip()
             if branch:
                 if verbose:
-                    star, local_branch, remote, branch = remote_branch_re.search(branch).groups()
+                    star, detached, local_branch, remote, branch = remote_branch_re.search(branch).groups()
                     if remote and remotes:
                         # Parent branch = upstream remote
                         # Child branch = origin remote
                         rightful_remote = (remote == up_remote and '@' not in local_branch or
                                            remote == def_remote and '@' in local_branch)
                         branch = branch if rightful_remote else '{}^{}'.format(branch, shortest_id(remote, remotes))
+
+                    elif detached:
+                        branch = local_branch + '*'
+
                     else:
                         branch = local_branch
 

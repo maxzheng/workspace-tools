@@ -227,7 +227,7 @@ setuptools.setup(
 
     url='<PLACEHOLDER>',
 
-    install_requires=open('requirements.txt').read(),
+    install_requires=open('%s').read(),
 
     license='MIT',
 
@@ -449,7 +449,7 @@ class Setup(AbstractCommand):
             requirements_name = os.path.basename(requirements_file)
 
             with open(setup_py_file, 'w') as fp:
-                fp.write(SETUP_PY_TMPL % (requirements_name, name, readme_name))
+                fp.write(SETUP_PY_TMPL % (name, readme_name, requirements_name))
 
             click.echo('Created {} {}'.format(self._relative_path(setup_py_file), placeholder_info))
 

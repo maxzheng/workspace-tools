@@ -34,7 +34,7 @@ class Checkout(AbstractCommand):
                     return
 
                 else:
-                    possible_remotes = set(upstream_remote())
+                    possible_remotes = {upstream_remote()}
                     if '/' in self.target[0]:
                         possible_remotes.add(self.target[0].split('/')[0])
 
