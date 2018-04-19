@@ -442,7 +442,7 @@ def stat_repo(path=None, return_output=False):
     return run(cmd, cwd=path, return_output=return_output)
 
 
-def diff_repo(path=None, branch=None, context=None, return_output=False, name_only=False):
+def diff_repo(path=None, branch=None, context=None, return_output=False, name_only=False, color=False):
     cmd = ['git', 'diff']
     if branch:
         cmd.append(branch)
@@ -450,6 +450,8 @@ def diff_repo(path=None, branch=None, context=None, return_output=False, name_on
         cmd.append(context)
     if name_only:
         cmd.append('--name-only')
+    if color:
+        cmd.append('--color')
 
     return run(cmd, cwd=path, return_output=return_output)
 

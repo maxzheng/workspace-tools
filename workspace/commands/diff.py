@@ -42,7 +42,9 @@ class Diff(AbstractCommand):
             with log_exception():
                 cur_branch = current_branch(repo)
                 branch = (parent_branch(cur_branch) or 'master') if self.parent else None
-                output = diff_repo(repo, branch=branch, context=self.context, return_output=True, name_only=self.name_only)
+                color = not pager.pager or 'less' in pager.pager.args
+                output = diff_repo(repo, branch=branch, context=self.context, return_output=True,
+                                   name_only=self.name_only, color=color)
                 if output:
                     pager.write(product_name(repo), output, cur_branch)
 

@@ -115,7 +115,7 @@ def create_pager(highlight_text=None):
     pager_cmd = os.environ.get('PAGER')
 
     if not pager_cmd:
-        pager_cmd = ['less']
+        pager_cmd = ['less', '-r']
         if highlight_text:
             pager_cmd.extend(['-p', highlight_text])
 
