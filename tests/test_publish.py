@@ -5,7 +5,7 @@ from workspace.utils import run
 from test_stubs import temp_git_repo
 
 
-def test_status(wst, monkeypatch):
+def test_publish(wst, monkeypatch):
     silent_run_mock = Mock()
     config_mock = Mock()
     monkeypatch.setattr('workspace.commands.publish.LocalConfig', config_mock)
