@@ -1,5 +1,14 @@
-Version 3.1.1
+Version 3.1.2
 ================================================================================
+
+* Support color in diff pager
+* Add test for merge
+* Add test for publish
+* Support detached head in status
+* Add -f/--force option to clean to remove untracked files
+
+Version 3.1.1
+--------------------------------------------------------------------------------
 
 * Remove pip.req as it is not used
 * Fix regex for matching tracking branch name
