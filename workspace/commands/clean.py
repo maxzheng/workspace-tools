@@ -40,7 +40,7 @@ class Clean(AbstractCommand):
             silent_run("find . -type d \( -path '*/.tox' -o -path '*/mppy-*' \) -prune -o -name *.pyc -exec rm {} \;", cwd=repo, shell=True)
 
             if self.force:
-                click.echo('Removing untracked files')
+                click.echo('Removing untracked/ignored files')
                 silent_run('git clean -fdx')
 
         else:
