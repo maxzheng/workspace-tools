@@ -82,7 +82,7 @@ Make a commit and create a new branch for it::
     # during push with --merge and update. To specify a different branch without parent relationship,
     # use --branch option.
 
-To install your test environment and test your change (with tox/py.test)::
+To install your test environment and test your change (with tox/pytest)::
 
     wst test
 

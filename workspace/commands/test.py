@@ -28,10 +28,10 @@ class Test(AbstractCommand):
     """
       Run tests and manage test environments for product.
 
-      Extra optional boolean args (such as -s, -v, -vv, etc) are passed to py.test.
+      Extra optional boolean args (such as -s, -v, -vv, etc) are passed to pytest.
 
-      :param list env_or_file: The tox environment to act upon, or a file to pass to py.test (only used
-                               if file exists, we don't need to redevelop, and py.test is used as a command
+      :param list env_or_file: The tox environment to act upon, or a file to pass to pytest (only used
+                               if file exists, we don't need to redevelop, and pytest is used as a command
                                for the default environements). Defaults to the envlist in tox.
       :param str repo: Repo path to test instead of current repo
       :param bool show_dependencies: Show where product dependencies are installed from and their versions.
@@ -52,11 +52,11 @@ class Test(AbstractCommand):
       :param str tox_ini: Path to tox_ini file.
       :param dict tox_commands: Map of env to list of commands to override "[testenv:env] commands" setting for env.
                                 Only used when not developing.
-      :param list args: Additional args to pass to py.test
-      :param bool silent: Run tox/py.test silently. Only errors are printed and followed by exit.
+      :param list args: Additional args to pass to pytest
+      :param bool silent: Run tox/pytest silently. Only errors are printed and followed by exit.
       :param bool debug: Turn on debug logging
       :param list install_editable: List of products or product groups to install in editable mode.
-      :param list extra_args: Extra args from argparse to be passed to py.test
+      :param list extra_args: Extra args from argparse to be passed to pytest
       :return: Dict of env to commands ran on success. If return_output is True, return a string output.
                If test_dependents is True, return a mapping of product name to the mentioned results.
     """
@@ -329,7 +329,7 @@ class Test(AbstractCommand):
 
                     command_path = full_command.split()[0]
                     if os.path.exists(command_path):
-                        if 'py.test' in full_command:
+                        if 'pytest' in full_command:
                             if 'PYTESTARGS' in full_command:
                                 full_command = full_command.replace('{env:PYTESTARGS:}', pytest_args)
                             else:

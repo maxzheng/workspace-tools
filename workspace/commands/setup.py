@@ -193,7 +193,7 @@ envdir = {homedir}/.virtualenvs/%s
 
 [testenv:test]
 commands =
-    py.test {env:PYTESTARGS:}
+    pytest {env:PYTESTARGS:}
 
 [testenv:style]
 commands =
@@ -201,7 +201,7 @@ commands =
 
 [testenv:cover]
 commands =
-    py.test {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term --cov-fail-under=80
+    pytest {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term --cov-fail-under=80
 
 [flake8]
 exclude = .git,.tox,.eggs,__pycache__,docs,build,dist
