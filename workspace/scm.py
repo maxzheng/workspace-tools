@@ -331,7 +331,7 @@ def all_branches(repo=None, remotes=False, verbose=False):
 
     branch_output = silent_run(cmd, cwd=repo, return_output=True)
     branches = []
-    remote_branch_re = re.compile(r'^(\*)? *(\(HEAD detached at )?([^ )]+)\)? +\w+ +(?:\[(.+)/([^:\] ]+).*])?')
+    remote_branch_re = re.compile(r'^(\*)? *(\((?:HEAD detached at|no branch, rebasing) )?([^ )]+)\)? +\w+ +(?:\[(.+)/([^:\] ]+).*])?')
     remotes = all_remotes(repo=repo)
     up_remote = remotes and upstream_remote(repo=repo, remotes=remotes)
     def_remote = remotes and default_remote(repo=repo, remotes=remotes)
@@ -437,8 +437,11 @@ def push_repo(path=None, force=False, remote=None, branch=None):
     silent_run('git push ' + ' '.join(push_opts), cwd=path)
 
 
-def stat_repo(path=None, return_output=False):
-    cmd = 'git status'
+def stat_repo(path=None, return_output=False, with_color=False):
+    if with_color:
+        cmd = 'git -c color.status=always status'
+    else:
+        cmd = 'git status'
     return run(cmd, cwd=path, return_output=return_output)
 
 

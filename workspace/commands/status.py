@@ -23,7 +23,7 @@ class Status(AbstractCommand):
 
             for repo in scm_repos:
                 stat_path = os.getcwd() if in_repo else repo
-                output = stat_repo(stat_path, True)
+                output = stat_repo(stat_path, return_output=True, with_color=True)
                 nothing_to_commit = ('nothing to commit' in output and
                                      'Your branch is ahead of' not in output and
                                      'Your branch is behind' not in output)
