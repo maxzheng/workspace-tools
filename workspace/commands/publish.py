@@ -6,11 +6,11 @@ import re
 import sys
 
 import click
+from utils.process import silent_run
 
 from localconfig import LocalConfig
 from workspace.commands import AbstractCommand
 from workspace.scm import repo_check, repo_path, commit_logs, extract_commit_msgs
-from workspace.utils import silent_run
 from six.moves import range
 
 

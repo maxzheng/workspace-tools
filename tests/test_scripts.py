@@ -1,7 +1,7 @@
 import pytest
 import subprocess
 
-from workspace.utils import run
+from utils.process import run
 
 
 @pytest.mark.parametrize("script", ['wst'])

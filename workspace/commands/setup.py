@@ -8,12 +8,12 @@ import sys
 import click
 
 from localconfig import LocalConfig
-from workspace.config import product_groups
+from utils.process import run
 
+from workspace.config import product_groups
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
 from workspace.scm import is_repo, product_name, product_path
-from workspace.utils import run
 
 
 log = logging.getLogger(__name__)

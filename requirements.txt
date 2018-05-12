@@ -10,3 +10,4 @@ setproctitle
 simplejson
 six
 tabulate
+utils-core

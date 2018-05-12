@@ -6,9 +6,10 @@ import sys
 
 import click
 import requests
+from utils.process import run, silent_run
 
 from workspace.config import config
-from workspace.utils import run, silent_run, parent_path_with_dir, parent_path_with_file, shortest_id
+from workspace.utils import parent_path_with_dir, parent_path_with_file, shortest_id
 
 
 log = logging.getLogger(__name__)

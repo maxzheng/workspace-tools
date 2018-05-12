@@ -4,7 +4,7 @@ from pathlib import Path
 import shutil
 from tempfile import mkdtemp
 
-from workspace.utils import run
+from utils.process import run
 
 
 @contextmanager

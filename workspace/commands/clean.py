@@ -5,12 +5,12 @@ import shutil
 from time import time
 
 import click
+from utils.process import silent_run
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups
 from workspace.config import config
 from workspace.scm import workspace_path, product_name, repos, stat_repo, all_branches, repo_path
-from workspace.utils import silent_run
 
 log = logging.getLogger(__name__)
 

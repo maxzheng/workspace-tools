@@ -9,14 +9,15 @@ import sys
 import tempfile
 
 import click
-import simplejson as json
+import json
+from utils.process import run
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups, ToxIni
 from workspace.config import config
 from workspace.scm import (product_name, repo_path, product_repos, product_path, repos,
                            workspace_path, current_branch, project_path)
-from workspace.utils import run, log_exception, parallel_call
+from workspace.utils import log_exception, parallel_call
 
 log = logging.getLogger(__name__)
 

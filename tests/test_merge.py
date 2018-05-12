@@ -1,5 +1,6 @@
+from utils.process import run
+
 from workspace.config import config
-from workspace.utils import run
 
 from test_stubs import temp_git_repo
 
