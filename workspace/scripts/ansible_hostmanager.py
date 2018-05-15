@@ -42,7 +42,12 @@ def ssh(host):
     if hosts:
         if len(hosts) > 1:
             click.echo('Found multiple matches and will use first one: ' + ', '.join(h.name for h in hosts))
-        run(['ssh', hosts[0].vars.get('ansible_host', hosts[0].name)])
+
+        try:
+            run(['ssh', hosts[0].vars.get('ansible_host', hosts[0].name)])
+
+        except Exception as e:
+            pass
 
 
 @main.command('set-hosts')
