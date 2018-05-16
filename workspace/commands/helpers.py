@@ -21,10 +21,14 @@ class ToxIni(LocalConfig):
         :param str path: The path to load tox*.ini from.
         :param str tox_ini: Path to tox ini file. Defaults to tox.ini in path root.
         """
-        self.path = path
-        self.tox_ini = tox_ini or self.find_tox_ini(self.path)
+        if not tox_ini:
+            tox_ini = self.find_tox_ini(path)
 
-        super(ToxIni, self).__init__(self.tox_ini)
+        super().__init__(tox_ini)
+
+        # These must be set after super() otherwise there will be recursion error
+        self.path = path
+        self.tox_ini = tox_ini
 
     @classmethod
     def find_tox_ini(cls, path):

@@ -176,8 +176,9 @@ deps =
     flake8
     mock
     pytest
-    pytest-xdist
     pytest-cov
+    pytest-fixtures
+    pytest-xdist
     sphinx!=1.2b2
 install_command =
     pip install -U {packages}
@@ -260,10 +261,15 @@ setuptools.setup(
 )
 """
 README_TMPL = """\
-%s
+{name}
 ===========
 
 <PLACEHOLDER DESCRIPTION>
+
+To install::
+
+    pip install {name}
+
 """
 COVERAGERC_TMPL = """\
 [run]
@@ -430,7 +436,7 @@ class Setup(AbstractCommand):
         else:
             readme_file = os.path.join(project_path, 'README.rst')
             with open(readme_file, 'w') as fp:
-                fp.write(README_TMPL % name)
+                fp.write(README_TMPL.format(name=name))
             click.echo('Created {} {}'.format(self._relative_path(readme_file), placeholder_info))
 
         coveragerc_file = os.path.join(project_path, '.coveragerc')

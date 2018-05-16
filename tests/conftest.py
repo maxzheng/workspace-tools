@@ -23,9 +23,3 @@ def mock_run(monkeypatch):
     monkeypatch.setattr('workspace.commands.setup.run', r)
     monkeypatch.setattr('workspace.commands.test.run', r)
     return r
-
-
-@pytest.fixture(scope='session')
-def cli_runner():
-    from workspace.cli import CliRunner
-    return CliRunner()
