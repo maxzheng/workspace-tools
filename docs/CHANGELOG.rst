@@ -1,5 +1,19 @@
-Version 3.1.2
+Version 3.1.3
 ================================================================================
+
+* Switch to use pytest-fixtures
+* Add link to standard classifiers
+* Remove ansible-hosts as it has been moved to its own repo
+* Ignore errors from ssh
+* Add --text option for test coverage
+* Switch to use utils-core
+* Add ah / ansible hostmanager script
+* Fix status for rebase conflict and add color
+* Switch to pytest
+* git clean also removes ignored files
+
+Version 3.1.2
+--------------------------------------------------------------------------------
 
 * Support color in diff pager
 * Add test for merge
