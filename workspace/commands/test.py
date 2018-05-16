@@ -334,7 +334,7 @@ class Test(AbstractCommand):
 
                     command_path = full_command.split()[0]
                     if os.path.exists(command_path):
-                        if 'pytest' in full_command:
+                        if 'pytest' in full_command or 'py.test' in full_command:
                             if 'PYTESTARGS' in full_command:
                                 full_command = full_command.replace('{env:PYTESTARGS:}', pytest_args)
                             else:

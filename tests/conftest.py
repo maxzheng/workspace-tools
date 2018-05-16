@@ -22,7 +22,6 @@ def mock_run(monkeypatch):
     monkeypatch.setattr('workspace.scm.run', r)
     monkeypatch.setattr('workspace.commands.setup.run', r)
     monkeypatch.setattr('workspace.commands.test.run', r)
-    monkeypatch.setattr('workspace.scripts.ansible_hostmanager.run', r)
     return r
 
 

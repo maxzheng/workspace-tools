@@ -1,4 +1,3 @@
-ansible
 bumper-lib>=2
 click
 GitPython

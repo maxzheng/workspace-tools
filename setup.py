@@ -24,7 +24,6 @@ setuptools.setup(
     entry_points={
         'console_scripts': [
             'wst = workspace.controller:Commander.main',
-            'ah = workspace.scripts.ansible_hostmanager:main',
         ],
     },
 
