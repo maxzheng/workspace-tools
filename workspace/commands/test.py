@@ -251,11 +251,15 @@ class Test(AbstractCommand):
             envs = tox.envlist
 
             # Prefer 'test' over 'cover' when there are pytest args as cover is likely to fail and distract from
-            # test results.
-            if 'cover' in envs and pytest_args and not self.text:
-                for i, env in enumerate(envs):
-                    if env == 'cover':
-                        envs[i] = 'test'
+            # test results. And also remove style as user is focused on fixing a test, and style for the whole project
+            # isn't interesting yet.
+            if pytest_args and not self.text:
+                if 'cover' in envs:
+                    for i, env in enumerate(envs):
+                        if env == 'cover':
+                            envs[i] = 'test'
+                if 'style' in envs:
+                    envs.remove('style')
 
         env_commands = {}
 

@@ -166,7 +166,7 @@ complete -o default di
 TOX_INI_FILE = 'tox.ini'
 TOX_INI_TMPL = """\
 [tox]
-envlist = test
+envlist = cover,style
 
 [testenv]
 # Consolidate all deps here instead of separately in test/style/cover so we

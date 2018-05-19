@@ -127,11 +127,11 @@ def test_test(wst):
         with open('tests/test_pass.py', 'w') as fp:
             fp.write(pass_test)
         commands = wst('test')
-        assert 'test' in commands
-        assert 'tox' in commands['test']
+        assert set(commands.keys()) == {'cover', 'style'}
+        assert 'tox' in commands['cover']
 
         with open('tests/test_fail.py', 'w') as fp:
-            fp.write(pass_test + '\n' + fail_test)
+            fp.write(pass_test + '\n\n\n' + fail_test)
         with pytest.raises(SystemExit):
             wst('test')
 
@@ -141,8 +141,11 @@ def test_test(wst):
         os.utime('requirements.txt', None)
         assert 'test' in wst('test -k test_pass')
 
+        with open('tests/test_fail.py', 'w') as fp:
+            fp.write(pass_test + '\n' + fail_test)
         with pytest.raises(SystemExit):
             wst('test style')
+
         with open('tests/test_fail.py', 'w') as fp:
             fp.write(pass_test + '\n\n\n' + fail_test)
         assert 'style' in wst('test style')
