@@ -250,6 +250,13 @@ class Test(AbstractCommand):
         if not envs:
             envs = tox.envlist
 
+            # Prefer 'test' over 'cover' when there are pytest args as cover is likely to fail and distract from
+            # test results.
+            if 'cover' in envs and pytest_args and not self.text:
+                for i, env in enumerate(envs):
+                    if env == 'cover':
+                        envs[i] = 'test'
+
         env_commands = {}
 
         if self.install_only and not self.redevelop:
@@ -323,9 +330,6 @@ class Test(AbstractCommand):
                                            debug=self.debug, extra_args=self.extra_args))
                     continue
 
-                if len(envs) > 1 and not self.silent:
-                    print(env)
-
                 commands = self.tox_commands.get(env) or tox.commands(env)
                 env_commands[env] = '\n'.join(commands)
 
@@ -348,8 +352,8 @@ class Test(AbstractCommand):
                             else:
                                 sys.exit(1)
 
-                        if env != envs[-1] and not self.silent:
-                            print()
+                        if not self.silent and (len(envs) > 1 or env == 'style'):
+                            click.secho(f'{env}: OK', fg='green')
 
                         if self.return_output:
                             return output
