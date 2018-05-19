@@ -146,7 +146,8 @@ class Test(AbstractCommand):
                 else:
                     append_summary('No test summary found in output', name)
 
-                summary_lines = [l for l in product_tests[name].replace('xfailed', '').split('\n') if l.startswith('===')]
+                summary_lines = [l for l in product_tests[name].replace('xfailed', '').split('\n')
+                                 if l.startswith('===') and 'warnings summary' not in l]
                 if not len(summary_lines) == 2 or 'failed' in summary_lines[-1] or 'error' in summary_lines[-1]:
                     success = False
 
@@ -203,7 +204,9 @@ class Test(AbstractCommand):
 
             repo_results = parallel_call(test_repo, test_args, callback=test_done, show_progress=show_remaining, progress_title='Remaining')
 
-            for _, result in list(repo_results.values()):
+            for result in list(repo_results.values()):
+                if isinstance(result, tuple):
+                    _, result = result
                 success, _ = self.summarize(result)
                 if not (success or self.return_output):
                     sys.exit(1)
@@ -267,10 +270,14 @@ class Test(AbstractCommand):
             self.redevelop = 1
 
         if self.show_dependencies:
+            if 'style' in envs:
+                envs.remove('style')
             for env in envs:
                 self.show_installed_dependencies(tox, env, filter_name=self.show_dependencies)
 
         elif self.install_editable:
+            if 'style' in envs:
+                envs.remove('style')
             for env in envs:
                 if len(envs) > 1:
                     print(env + ':')
@@ -402,8 +409,14 @@ class Test(AbstractCommand):
         script_template = """
 import json
 import os
-import pip
 import sys
+
+try:
+    from pip._internal.utils.misc import get_installed_distributions
+
+# pip < 10
+except Exception:
+    from pip import get_installed_distributions
 
 # Required params to run this script
 package = '%s'
@@ -415,35 +428,35 @@ cwd = os.getcwd()
 workspace_dir = os.path.dirname(cwd)
 
 try:
-  libs = [(p.key, p.version, p.location) for p in pip.get_installed_distributions()]
+    libs = [(p.key, p.version, p.location) for p in get_installed_distributions()]
 except Exception as e:
-  print(e)
-  sys.exit(1)
+    print(e)
+    sys.exit(1)
 
 output = []
 
 if not json_output:
-  print(env + ':')
+    print(env + ':')
 
 def strip_cwd(dir):
-  if dir.startswith(cwd + '/'):
-    dir = dir[len(cwd):].lstrip('/')
-  elif dir.startswith(workspace_dir):
-    dir = os.path.join('..', dir[len(workspace_dir):].lstrip('/'))
-  return dir
+    if dir.startswith(cwd + '/'):
+        dir = dir[len(cwd):].lstrip('/')
+    elif dir.startswith(workspace_dir):
+        dir = os.path.join('..', dir[len(workspace_dir):].lstrip('/'))
+    return dir
 
 for lib, version, location in sorted(libs):
-  if filter_name and filter_name not in lib:
-    continue
-  if json_output:
-    output.append((lib, version, location))
-  else:
-    output.append('  %%-25s %%-10s  %%s' %% (lib, version, strip_cwd(location)))
+    if filter_name and filter_name not in lib:
+        continue
+    if json_output:
+        output.append((lib, version, location))
+    else:
+        output.append('  %%-25s %%-10s  %%s' %% (lib, version, strip_cwd(location)))
 
 if json_output:
-  print(json.dumps(output))
+    print(json.dumps(output))
 else:
-  print('\\n'.join(output))
+    print('\\n'.join(output))
     """
 
         name = product_name(tox.path)
@@ -527,7 +540,7 @@ def test_repo(repo, test_args, test_class):
     name = product_name(repo)
 
     branch = current_branch(repo)
-    on_branch = '#' + branch if branch != 'master' else ''
+    on_branch = '#' + branch if branch != 'master' and branch is not None else ''
     click.echo('Testing {} {}'.format(name, on_branch))
 
     return name, test_class(repo=repo, **dict(test_args)).run()

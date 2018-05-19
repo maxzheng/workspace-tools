@@ -105,7 +105,7 @@ def test_commit(wst):
         assert 1 == len(list(filter(None, logs.split('commit'))))
 
 
-def test_test(wst):
+def test_test(wst, capsys):
     with temp_dir():
         with pytest.raises(SystemExit):
             wst('test')
@@ -129,6 +129,14 @@ def test_test(wst):
         commands = wst('test')
         assert set(commands.keys()) == {'cover', 'style'}
         assert 'tox' in commands['cover']
+
+        wst('test --show-dependencies')
+        wst('test --install-editable flake8')
+        wst('test --install-editable foo')
+
+        results = wst('test --test-dependents')
+        assert set(results.keys()) == {'foo'}
+        assert '2 passed' in results['foo']
 
         with open('tests/test_fail.py', 'w') as fp:
             fp.write(pass_test + '\n\n\n' + fail_test)

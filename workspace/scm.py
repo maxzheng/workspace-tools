@@ -378,7 +378,8 @@ def master_branch(repo=None):
 
 
 def current_branch(repo=None):
-    return all_branches(repo)[0]
+    branches = all_branches(repo)
+    return branches[0] if branches else None
 
 
 def parent_branch(branch):
