@@ -1,3 +1,15 @@
+Version 3.2.0
+================================================================================
+
+* Publish current version and then bump the version instead of the other way around
+* Add actual tests for clean
+* Remove unused repo_url function
+* Remove run_in_bg as it is not used
+* Remove unused product group setup and add tests for setup
+* Fix test --show-dependencies to work in pip 10
+* Default style to cover,test and use test env when pytest args are provided
+* Show tox result and prefer test over cover when pytest args are provided
+
 Version 3.1.3
 ================================================================================
 
