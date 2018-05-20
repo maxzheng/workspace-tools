@@ -27,11 +27,11 @@
   ###########################################################################################################
   [checkout]
 
-  # API used to find git repo for single word checkout (i.e. wst checkout workspace-tools)
+  # API used to find git repo for single word checkout (e.g. wst checkout workspace-tools)
   # It should accept a ?q=singleWord param
   search_api_url = https://api.github.com/search/repositories
 
-  # URL to use when checking out a user repo reference (i.e. wst checkout maxzheng/workspace-tools)
+  # URL to use when checking out a user repo reference (e.g. wst checkout maxzheng/workspace-tools)
   user_repo_url = git@github.com:%s.git
 
   # User mapped to the origin remote. When set, checking out a repo that does not belong to the user
@@ -67,7 +67,7 @@
   ###########################################################################################################
   [merge]
 
-  # Branches to merge separated by space (i.e. 3.2.x 3.3.x master)
+  # Branches to merge separated by space (e.g. 3.2.x 3.3.x master)
   branches =
 """
 from __future__ import absolute_import

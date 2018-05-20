@@ -9,27 +9,30 @@ and less repetive experience when working with one or more repositories. Feature
 limited to what the author uses as, currently, it is foremost a personal tool to enhance the
 author's own productivity, but sharing it as others might find it useful.
 
+
 Overview
 ========
 
 * One tool to seamlessly manage / integrate all workspace tools, from setup to publish.
 * Simplified command execution for common workflow - just run one command, instead of many individual native ones.
-* Command execution is also smart / optimized - i.e. test command auto detects requirement changes to redevelop.
-* Path aware context commands that run across all checkouts - i.e. see status / diff for all repos.
-* Get the most out of other products by easily update your dependencies to the latest
-* Automatically install dependencies in editable mode for testing if configured
+* Command execution is also smart / optimized - e.g. test command auto detects requirement changes to redevelop.
+* Path aware context commands that run across all checkouts - e.g. see status / diff for all repos.
+* Get the most out of other products by easily updating your dependencies to the latest
 * Templates included to setup new product quickly
 * Support for multiple branches with child/parent relationship.
 * Cool and sensible shortcut aliases to help you do more by typing less - you will love "tv" [if you know ag]!
+
 
 Quick Start Tutorial
 ====================
 
 First, install it with::
 
-    $ pip install workspace-tools
+    pip install workspace-tools
 
-Second, optionally setup environment with bash functions/aliases::
+Second, optionally setup environment with bash functions/aliases:
+
+.. code-block:: console
 
     $ cd ~/workspace
 
@@ -38,64 +41,111 @@ Second, optionally setup environment with bash functions/aliases::
     [INFO] Added "ws" bash function with workspace directory set to ~/workspace
     [INFO] Added bash functions: bump, checkout, clean, commit, log, publish, push, status, test, update
     [INFO] Added aliases: co=checkout, ci=commit, di=diff, st=status, up=update
-    [INFO] Added special aliases: a='source .tox/${PWD##*/}/bin/activate', d='deactivate', tv='open_files_from_last_command'  # from ag/ack/grep/find/which [t]o [v]im
+    [INFO] Added special aliases: a='activate', d='deactivate',
+           tv='open_files_from_last_command'  # from ag/ack/grep/find/which [t]o [v]im
     [INFO] To use, run "source ~/.wstrc" or open a new shell.
 
     $ source ~/.wstrc
 
-To go to your workspace directory (if setup was run), run::
+Then witness the awesome power of workspace-tools:
 
-    ws
+.. code-block:: console
 
-To checkout a repo::
+    $ ws
+    # Runs `cd ~/workspace && ls`
+    aiohttp-requests               localconfig              python-examples
+    ansible-hostmanager            pytest-fixtures          utils-core
+    ...
 
-    wst checkout https://github.com/maxzheng/workspace-tools.git
+    $ cd localconfig
+    # Use your favorite editor to make some changes
 
-    # Or checkout a group of repos as defined in workspace.cfg (using 'ws' alias from setup)
-    # ws checkout mzheng-repos
+    $ ci -tp 'This adds/commits all files, runs style check/tests with coverage, and then pushes to all remotes!'
+    Checking style
+    Running tests
+    ...........................
+    ----------- coverage: platform linux, python 3.6.5-final-0 -----------
+    Name                      Stmts   Miss  Cover
+    ---------------------------------------------
+    localconfig/__init__.py       2      0   100%
+    localconfig/manager.py      215     14    93%
+    localconfig/utils.py         20      0   100%
+    ---------------------------------------------
+    TOTAL                       237     14    94%
+    Required test coverage of 80% reached. Total coverage: 81.90%
+    ==================  22 passed in 0.82 seconds  =======================
+    cover: OK
+    style: OK
+    [master d5f6e6b] This adds/commits all files, runs style check/tests with coverage, ...
+     1 file changed, 78 insertions(+), 38 deletions(-)
+    Pushing master
 
-    # Or checkout a repo from GitHub (using 'co' alias from setup above, or use 'wst checkout'):
-    # co workspace-tools                # Best match
-    # co maxzheng/workspace-tools       # Exact match
-
-For more info about workspace.cfg, refer to Configuration_ doc.
-
-The remaining tutorial will assume 'wst setup' was not run for the sake of clarity, though setup is
+The remaining tutorial will assume `wst setup -a` was not run for the sake of clarity, though setup is
 recommended as there are many useful aliases provided.
 
-To update all repos in your workspace concurrently::
+To checkout a repo:
 
-    wst update
+.. code-block:: console
 
-Make a commit and create a new branch for it::
+    $ wst checkout maxzheng/workspace-tools       # Exact match from Github
+    $ wst checkout workspace-tools                # Best match from Github
+    $ wst checkout https://github.com/maxzheng/workspace-tools.git
+
+To update all repos in your workspace concurrently:
+
+.. code-block:: console
+
+    $ wst update
+
+    Updating aiohttp-requests
+    Updating ansible-hostmanager
+    ...
+
+Make a commit and create a new branch for it:
+
+.. code-block:: console
 
     $ cd workspace-tools
     # vi README.rst and make some changes
 
     $ wst commit "Updated README.rst"
 
-    [updated-readme 0af8850] Updated README.rst
+    [updated-readme@master 0af8850] Updated README.rst
      1 file changed, 1 deletion(-)
 
-    # The commit created the branch 'updated-readme@master', added all files, and then committed
+    # The commit created the branch 'updated-readme@master', added all files, and then committed change.
     # Notice the "@master" that indicates the parent branch. The parent branch will be used
-    # during push with --merge and update. To specify a different branch without parent relationship,
-    # use --branch option.
+    # during push with --merge and when updating the branch (updates parent and rebases branch on top).
+    # To create a branch without parent relationship, use --branch option with any name that you like.
 
-To install your test environment and test your change (with tox/pytest)::
+To install your test environment and run all tests (via tox/pytest):
 
-    wst test
+.. code-block:: console
 
-    # To setup tox with test, style, and coverage environments, run:
-    # wst setup --product
-    #
-    # To check style or generate coverage report, run (using 'test' alias from setup):
-    # test style
-    # test cover
+    $ wst test
+    ...
+    cover: OK
+    style: OK
 
-See status for all of your repos::
+    # To setup a new project with tox test, cover, and style environments:
+    $ cd new-product
+    $ wst setup --product
 
-    $ cd ~/workspace
+    # To check style or generate coverage report:
+    $ wst test style
+    $ wst test cover
+
+    # To run a specific test only:
+    $ wst test -k test_filter
+
+To see status for a single repo or all of your repos:
+
+.. code-block:: console
+
+    $ wst status
+    # Branches: updated-readme@master master
+
+    $ cd ..
 
     $ wst status
 
@@ -116,26 +166,10 @@ See status for all of your repos::
     [ workspace-tools ]
     # Branches: updated-readme@master master
 
-See diff for all of your repos::
 
-    $ wst diff
+To amend a change and push:
 
-    [ bumper-lib ]
-    diff --git a/src/bumper/cars.py b/src/bumper/cars.py
-    index d552c2c..2d7bd12 100644
-    --- a/src/bumper/cars.py
-    +++ b/src/bumper/cars.py
-    @@ -281,7 +281,7 @@ class AbstractBumper(object):
-       @classmethod
-        def requirements_for_changes(self, changes):
-           """
-      -      Parse changes for requirements
-      +      Parse changes for requirements.
-
-             :param list changes:
-           """
-
-And finally amend the change and push::
+.. code-block:: console
 
     $ cd workspace-tools
     # vi README.rst and make more changes
@@ -149,26 +183,32 @@ And finally amend the change and push::
     # It will fail at push as you are not a committer, but the change was committed to branch,
     # and then merged into its parent branch (master).
 
-Or simply push the change in your current branch::
+Or simply push the change in your current branch:
 
-    wst push --merge
+.. code-block:: console
+
+    $ wst push --merge
 
     # This will update its parent branch (master), rebase branch with parent branch and merge into
     # parent branch if on child branch (child@parent) and then push.
     # Upon success, it will remove the local and remote branch if pushing from child branch.
 
-If you have multiple upstream branches (defined by config [merge] branches) that you need to merge your change into, use auto merge::
+If you have multiple upstream branches (defined by merge config in ~/.config/workspace.cfg) that you need to merge
+your change into, use auto merge:
+
+.. code-block:: console
 
     # Assuming you are currently on 3.2.x branch and have these branches: 3.3.x, master
-    wst merge --all
+    $ wst merge --all
 
     [INFO] Merging 3.2.x into 3.3.x
     [INFO] Pushing 3.3.x
     [INFO] Merging 3.3.x into master
     [INFO] Pushing master
 
+If you have pinned your dependency requirements and want to update to latest version:
 
-If you have pinned your dependency requirements and want to update to latest version::
+.. code-block:: console
 
     $ wst bump
 
@@ -179,13 +219,14 @@ If you have pinned your dependency requirements and want to update to latest ver
     [bump ac06160] Require remoteconfig==0.2.4, requests==2.6.0
      1 file changed, 2 insertions(+), 2 deletions(-)
 
-    # Or bump a defined group of products as defined in workspace.cfg
-    # wst bump mzheng
-    #
-    # Or to a specific version (why not just vi? This validates the version for you and pulls in the changelog)
-    # wst bump requests==2.5.1
+    # To bump to a specific version (why not just vi? This validates the version for you and pulls in the changelog)
+    $ wst bump requests==2.5.1
 
-Now you are ready to try out the other commands yourself::
+Now you are ready to try out the other commands yourself:
+
+.. code-block:: console
+
+    $ wst -h
 
     usage: wst [-h] [-v] [--debug] <sub-command> ...
 
@@ -218,6 +259,9 @@ Now you are ready to try out the other commands yourself::
                             workspace
         test                Run tests and manage test environments for product.
         update (up)         Update current product or all products in workspace
+
+To configure wst, refer to Configuration_ doc.
+
 
 Links & Contact Info
 ====================

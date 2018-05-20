@@ -21,7 +21,7 @@ class Bump(AbstractCommand):
       :param str names: Only bump dependencies that match the name.
                         Name can be a product group name defined in workspace.cfg.
                         To bump to a specific version instead of latest, append version to name
-                        (i.e. requests==1.2.3 or 'requests>=1.2.3'). When > or < is used, be sure to quote.
+                        (e.g. requests==1.2.3 or 'requests>=1.2.3'). When > or < is used, be sure to quote.
       :param int test: Run tests.
       :param bool push: Push the change. Use with --test to test before pushing.
       :param bool add: Add the `names` to the requirements file if they don't exist.
