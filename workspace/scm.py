@@ -553,21 +553,3 @@ def product_path(name, workspace_dir=None):
         workspace_dir = workspace_path()
 
     return os.path.join(workspace_dir, name)
-
-
-def repo_url(path=None, name='origin', action='push'):
-    """
-      :param str path: Local repo path
-      :param str source: Remote name
-      :param str action: Action for the corresponding URL
-      :return: Remote url for repo or None if not found
-    """
-    cmd = 'git remote -v'
-
-    output = run(cmd, cwd=path, return_output=True)
-
-    for line in output.split('\n'):
-        if line:
-            remote_name, remote_url, remote_action = line.split()
-            if remote_name == name and action in remote_action:
-                return remote_url
