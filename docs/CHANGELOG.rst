@@ -1,5 +1,14 @@
-Version 3.2.0
+Version 3.2.1
 ================================================================================
+
+* Exit with code 1 when failed to upload
+* Comment out concurrency in pytest as it generally causes more problems than it solves.
+  
+  It is something that only large projects need, so it should be something added later
+* Update README with better examples using new features
+
+Version 3.2.0
+--------------------------------------------------------------------------------
 
 * Publish current version and then bump the version instead of the other way around
 * Add actual tests for clean
