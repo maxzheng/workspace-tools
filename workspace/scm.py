@@ -14,6 +14,7 @@ from workspace.utils import parent_path_with_dir, parent_path_with_file, shortes
 
 log = logging.getLogger(__name__)
 
+REMOTE_BRANCH_RE = re.compile(r'^(\*)? *(\((?:HEAD detached at|no branch, rebasing) )?([^ )]+)\)? +\w+ +(?:\[(.+)/([^:\] ]+).*])?')
 DEFAULT_REMOTE = 'origin'
 UPSTREAM_REMOTE = 'upstream'
 USER_REPO_REFERENCE_RE = re.compile('^[\w-]+/[\w-]+$')
@@ -332,7 +333,6 @@ def all_branches(repo=None, remotes=False, verbose=False):
 
     branch_output = silent_run(cmd, cwd=repo, return_output=True)
     branches = []
-    remote_branch_re = re.compile(r'^(\*)? *(\((?:HEAD detached at|no branch, rebasing) )?([^ )]+)\)? +\w+ +(?:\[(.+)/([^:\] ]+).*])?')
     remotes = all_remotes(repo=repo)
     up_remote = remotes and upstream_remote(repo=repo, remotes=remotes)
     def_remote = remotes and default_remote(repo=repo, remotes=remotes)
@@ -342,13 +342,14 @@ def all_branches(repo=None, remotes=False, verbose=False):
             branch = branch.strip()
             if branch:
                 if verbose:
-                    star, detached, local_branch, remote, branch = remote_branch_re.search(branch).groups()
+                    star, detached, local_branch, remote, branch = REMOTE_BRANCH_RE.search(branch).groups()
                     if remote and remotes:
-                        # Parent branch = upstream remote
-                        # Child branch = origin remote
+                        # Rightful/tracking remote differs based on parent vs child branch:
+                        #   Parent branch = upstream remote
+                        #   Child branch = origin remote
                         rightful_remote = (remote == up_remote and '@' not in local_branch or
                                            remote == def_remote and '@' in local_branch)
-                        branch = branch if rightful_remote else '{}^{}'.format(branch, shortest_id(remote, remotes))
+                        branch = local_branch if rightful_remote else '{}^{}'.format(local_branch, shortest_id(remote, remotes))
 
                     elif detached:
                         branch = local_branch + '*'
