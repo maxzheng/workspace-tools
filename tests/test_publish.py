@@ -3,6 +3,8 @@ import pytest
 
 from utils.process import run
 
+from workspace.scm import commit_logs
+
 from test_stubs import temp_git_repo
 
 
@@ -50,6 +52,8 @@ Version 0.0.1
 
         wst('publish --minor')
 
+        assert 'Bump minor version' in commit_logs()
+
         changes = open('docs/CHANGELOG.rst').read()
         print(changes)
         assert changes == """\
@@ -71,6 +75,8 @@ Version 0.0.1
         run('git commit --allow-empty -m feature2')
 
         wst('publish --major')
+
+        assert 'Bump major version' in commit_logs()
 
         changes = open('docs/CHANGELOG.rst').read()
         print(changes)
