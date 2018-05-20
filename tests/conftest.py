@@ -20,6 +20,5 @@ def mock_run(monkeypatch):
     monkeypatch.setattr('utils.process.run', r)
     monkeypatch.setattr('workspace.utils.run', r)
     monkeypatch.setattr('workspace.scm.run', r)
-    monkeypatch.setattr('workspace.commands.setup.run', r)
     monkeypatch.setattr('workspace.commands.test.run', r)
     return r

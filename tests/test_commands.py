@@ -105,7 +105,7 @@ def test_commit(wst):
         assert 1 == len(list(filter(None, logs.split('commit'))))
 
 
-def test_test(wst, capsys):
+def test_test(wst):
     with temp_dir():
         with pytest.raises(SystemExit):
             wst('test')
@@ -206,3 +206,23 @@ def test_push(wst, monkeypatch):
         assert ['master'] == all_branches()
 
         assert "ahead of 'origin/master' by 1 commit." in stat_repo(return_output=True)
+
+
+def test_setup(wst, monkeypatch):
+    with temp_git_repo(name='foo') as tmpdir:
+        bashrc_file = os.path.join(tmpdir, '.bashrc')
+        wstrc_file = os.path.join(tmpdir, '.wstrc')
+        with open(bashrc_file, 'w') as fp:
+            fp.write('export EXISTING=true')
+        monkeypatch.setattr('workspace.commands.setup.BASHRC_FILE', os.path.join(tmpdir, '.bashrc'))
+        monkeypatch.setattr('workspace.commands.setup.WSTRC_FILE', os.path.join(tmpdir, '.wstrc'))
+        wst('setup --commands-with-aliases')
+
+        bashrc = open(bashrc_file).read().split('\n')
+        wstrc = open(wstrc_file).read()
+
+        assert bashrc[0] == 'export EXISTING=true'
+        assert bashrc[1] == ''
+        assert bashrc[2].startswith('source ') and bashrc[2].endswith('.wstrc')
+
+        assert 'function ws()' in wstrc

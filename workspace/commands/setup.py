@@ -7,13 +7,8 @@ import sys
 
 import click
 
-from localconfig import LocalConfig
-from utils.process import run
-
-from workspace.config import product_groups
 from workspace.commands import AbstractCommand
-from workspace.commands.helpers import expand_product_groups
-from workspace.scm import is_repo, product_name, product_path
+from workspace.scm import is_repo, product_name
 
 
 log = logging.getLogger(__name__)
@@ -287,8 +282,6 @@ class Setup(AbstractCommand):
     """
       Sets up workspace or product environment.
 
-      :param str product_group: Setup product group by checking them out, developing them, and running any setup scripts and
-                                exports as defined by setup.cfg in each product.
       :param bool product: Initialize product by setting up tox with py27, style, and coverage test environments.
                            Also create setup.py, README.rst, and test directories if they don't exist.
       :param bool commands: Add convenience bash function for certain commands, such as checkout to run
@@ -306,7 +299,6 @@ class Setup(AbstractCommand):
     def arguments(cls):
         _, docs = cls.docs()
         return [
-          cls.make_args('product_group', nargs='?', help=docs['product_group']),
           cls.make_args('--product', action='store_true', help=docs['product']),
           cls.make_args('--commands', action='store_true', help=docs['commands']),
           cls.make_args('-a', '--commands-with-aliases', action='store_true', help=docs['commands_with_aliases']),
@@ -314,7 +306,7 @@ class Setup(AbstractCommand):
         ]
 
     def run(self):
-        num_options = len([_f for _f in [self.product_group, self.product, self.commands, self.commands_with_aliases, self.uninstall]
+        num_options = len([_f for _f in [self.product, self.commands, self.commands_with_aliases, self.uninstall]
                           if _f])
         if num_options > 1:
             log.error('Only one setup option can be selected at a time.')
@@ -324,96 +316,10 @@ class Setup(AbstractCommand):
             log.error('At least one option must be selected. See -h for options.')
             sys.exit(1)
 
-        if self.product_group:
-            self.setup_product_group()
-        elif self.product:
+        if self.product:
             self.setup_product()
         else:
             self.setup_workspace()
-
-    def setup_product_group(self):
-        if is_repo():
-            log.error('This should be run from your workspace directory and not within a product repo')
-            sys.exit(1)
-
-        if self.product_group not in product_groups():
-            log.error('Product group "%s" is not defined in workspace.cfg', self.product_group)
-            sys.exit(1)
-
-        click.echo('Setting up {} products'.format(self.product_group))
-
-        # Checkout product
-        self.commander.run('checkout', target=[self.product_group])
-
-        # Develop the environment
-        current_dir = os.getcwd()
-
-        for product in expand_product_groups([self.product_group]):
-            click.echo('Developing environment for ' + product)
-            try:
-                repo = product_path(product)
-                os.chdir(repo)
-                self.commander.run('test', redevelop=True, install_only=True)
-
-            except Exception as e:
-                log.error('Error occurred when developing %s: %s', product, e)
-
-            finally:
-                os.chdir(current_dir)
-
-        # Process setup.cfg
-        exports = {}
-        products = expand_product_groups([self.product_group])
-        for product in products:
-            repo = product_path(product)
-
-            if os.path.join(repo, product, 'setup.cfg'):
-                setup_cfg = os.path.join(repo, product, 'setup.cfg')
-            else:
-                setup_cfg = os.path.join(repo, 'setup.cfg')
-
-            if os.path.exists(setup_cfg):
-                setup = LocalConfig(setup_cfg)
-                setup._parser.optionxform = str
-                if 'scripts' in setup or 'exports' in setup:
-                    click.echo('Processing scripts/exports in setup.cfg for ' + product)
-
-                    if 'scripts' in setup:
-                        cwd = os.getcwd()
-                        try:
-                            os.chdir(repo)
-                            for name, script in setup.scripts:
-                                click.echo('Running ' + name)
-                                run(['bash', '-c', '; '.join([_f for _f in script.split('\n') if _f])])
-                        except Exception as e:
-                            log.error('Error occurred running script: %s', e)
-                        finally:
-                            os.chdir(cwd)
-
-                    if 'exports' in setup:
-                        for name, value in setup.exports:
-                            exports[name] = value
-
-        if exports:
-            activate_group = 'activate_%s' % self.product_group
-            with open(activate_group, 'w') as fp:
-                for name in sorted(exports):
-                    fp.write('export %s=%s\n' % (name, exports[name]))
-                fp.write('\n')
-
-                fp.write('if [[ $PS1 != *{%s}* ]]; then\n' % self.product_group)
-                fp.write('  export PS1="{%s}$PS1"\n' % self.product_group)
-                fp.write('fi\n\n')
-
-                fp.write('deactivate_%s() {\n' % self.product_group)
-                for name in sorted(exports):
-                    fp.write('  unset %s\n' % name)
-                fp.write('\n')
-                fp.write('  export PS1=${PS1/{%s\}/}\n' % self.product_group)
-                fp.write('  unset deactivate_%s\n' % self.product_group)
-                fp.write('}\n')
-            click.echo('Created ./{}. To activate, run: source {}. To deactivate, run: deactivate_{}'.format(
-                activate_group, activate_group, self.product_group))
 
     def setup_product(self):
         project_path = os.getcwd()
