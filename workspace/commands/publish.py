@@ -6,7 +6,7 @@ import re
 import sys
 
 import click
-from utils.process import silent_run
+from utils.process import run, silent_run
 
 from localconfig import LocalConfig
 from workspace.commands import AbstractCommand
@@ -18,6 +18,7 @@ log = logging.getLogger(__name__)
 new_version = None  # Doesn't work if it is in bump_version
 PUBLISH_VERSION_PREFIX = 'Publish version '
 IGNORE_CHANGE_RE = re.compile('^(?:Update changelog|Fix tests?)\s*$', flags=re.IGNORECASE)
+VERSION_RE = re.compile('version\s*=\s*([\'"])(.*)[\'"]')
 
 
 class Publish(AbstractCommand):
@@ -67,7 +68,7 @@ class Publish(AbstractCommand):
 
         self.commander.run('update')
 
-        changes = self.changes_since_last_publish()
+        published_version, changes = self.changes_since_last_publish()
 
         if not changes:
             click.echo('There are no changes since last publish')
@@ -75,34 +76,53 @@ class Publish(AbstractCommand):
 
         silent_run('rm -rf dist/*', shell=True, cwd=repo_path())
 
-        new_version, setup_file = self.bump_version()
-        changelog_file = self.update_changelog(new_version, changes, self.minor or self.major)
+        if self.major or self.minor:
+            new_version, setup_file = self.bump_version(major=self.major, minor=self.minor)
 
-        self.commander.run('commit', msg=PUBLISH_VERSION_PREFIX + new_version, push=2, files=[setup_file, changelog_file],
-                           skip_style_check=True)
+        else:
+            current_version, setup_file = self.get_version()
+
+            # Previously, we publish the current version in setup.py, so need to bump it first before
+            # we can publish a new version.
+            if published_version == current_version:
+                new_version, setup_file = self.bump_version()
+            else:
+                new_version = current_version
+
+        changelog_file = self.update_changelog(new_version, changes, self.minor or self.major)
 
         click.echo('Building source distribution')
         silent_run('python setup.py sdist', cwd=repo_path())
 
         click.echo('Uploading to ' + repo_title)
 
-        silent_run('twine upload -r "{repo}" -u "{username}" -p "{password}" dist/*'.format(
-            repo=self.repo,
-            username=username,
-            password=password), shell=True, cwd=repo_path())
+        try:
+            run('twine upload -r "{repo}" -u "{username}" -p "{password}" dist/*'.format(
+                repo=self.repo,
+                username=username,
+                password=password), shell=True, cwd=repo_path(), silent=2)
+
+        except Exception:
+            click.secho(f'Failed to upload', fg='red')
+
+        self.bump_version()
+        self.commander.run('commit', msg=PUBLISH_VERSION_PREFIX + new_version, push=2, files=[setup_file, changelog_file],
+                           skip_style_check=True)
 
     def changes_since_last_publish(self):
         commit_msgs = extract_commit_msgs(commit_logs(limit=100, repo=repo_path()), True)
         changes = []
+        published_version = None
 
         for msg in commit_msgs:
             if msg.startswith(PUBLISH_VERSION_PREFIX):
+                published_version = msg.split(PUBLISH_VERSION_PREFIX)[-1]
                 break
             if len(msg) < 7 or IGNORE_CHANGE_RE.match(msg):
                 continue
             changes.append(msg)
 
-        return changes
+        return published_version, changes
 
     def update_changelog(self, new_version, changes, skip_title_change=False):
         """
@@ -135,9 +155,23 @@ class Publish(AbstractCommand):
 
         return changelog_file
 
-    def bump_version(self):
+    def get_version(self):
+        """ Get current version and setup.py file """
+        setup_file = os.path.join(repo_path(), 'setup.py')
+        match = VERSION_RE.search(open(setup_file).read())
+
+        if not match:
+            log.error('Failed to find "version=" in setup.py to get version')
+            sys.exit(1)
+
+        return match.group(2), setup_file
+
+    def bump_version(self, major=False, minor=False):
         """
-          Bump the version (defaults to patch) in setup.py
+        Bump the version (defaults to patch) in setup.py
+
+        :param bool major: Bump major version only
+        :param bool minor: Bump minor version only
         """
         setup_file = os.path.join(repo_path(), 'setup.py')
 
@@ -149,7 +183,7 @@ class Publish(AbstractCommand):
             global new_version
 
             version_parts = match.group(2).split('.')
-            i = 0 if self.major else (1 if self.minor else 2)
+            i = 0 if major else (1 if minor else 2)
 
             while len(version_parts) < i + 1:
                 version_parts.append(0)
@@ -162,7 +196,7 @@ class Publish(AbstractCommand):
 
             return 'version=' + match.group(1) + new_version + match.group(1)
 
-        content = re.sub('version\s*=\s*([\'"])(.*)[\'"]', replace_version, open(setup_file).read())
+        content = VERSION_RE.sub(replace_version, open(setup_file).read())
 
         with open(setup_file, 'w') as fp:
             fp.write(content)
