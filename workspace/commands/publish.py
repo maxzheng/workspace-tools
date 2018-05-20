@@ -103,7 +103,7 @@ class Publish(AbstractCommand):
                 password=password), shell=True, cwd=repo_path(), silent=2)
 
         except Exception:
-            click.secho(f'Failed to upload', fg='red')
+            sys.exit(1)
 
         self.bump_version()
         self.commander.run('commit', msg=PUBLISH_VERSION_PREFIX + new_version, push=2, files=[setup_file, changelog_file],
