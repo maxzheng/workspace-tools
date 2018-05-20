@@ -1,5 +1,11 @@
-Version 3.2.1
+Version 3.2.2
 ================================================================================
+
+* Display local branch instead of remote branch in status
+* Add commit for major/minor version bump
+
+Version 3.2.1
+--------------------------------------------------------------------------------
 
 * Exit with code 1 when failed to upload
 * Comment out concurrency in pytest as it generally causes more problems than it solves.
