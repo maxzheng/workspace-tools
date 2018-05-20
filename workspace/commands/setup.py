@@ -204,8 +204,9 @@ exclude = .git,.tox,.eggs,__pycache__,docs,build,dist
 ignore = E111,E121,W292,E123,E226
 max-line-length = 120
 
-[pytest]
-addopts = -n 4
+# Uncomment to enable concurrency for pytest
+#[pytest]
+#addopts = -n 4
 """
 SETUP_PY_TMPL = """\
 import setuptools
