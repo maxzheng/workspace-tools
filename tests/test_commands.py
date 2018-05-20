@@ -2,9 +2,11 @@ import os
 import pytest
 import shutil
 
-from mock import Mock
 from bumper.utils import PyPI
+from mock import Mock
+from utils.process import run
 
+from workspace.config import config
 from workspace.scm import stat_repo, all_branches, commit_logs
 from test_stubs import temp_dir, temp_git_repo, temp_remote_git_repo
 
@@ -57,8 +59,26 @@ def test_bump(wst, monkeypatch):
 
 
 def test_cleanrun(wst):
+    config.clean.remove_products_older_than_days = 30
+
     with temp_dir():
+        repos = ['repo', 'old_repo', 'old_repo_dirty']
+        run('touch file; mkdir ' + ' '.join(repos), shell=True)
+        for repo in repos:
+            run('cd {}; git init; git commit --allow-empty -m "Initial commit"'.format(repo), shell=True)
+            if repo.startswith('old'):
+                run('touch -t 200001181205.09 ' + repo)
+        run('cd old_repo_dirty; touch new_file', shell=True)
+        run('ls -l')
         wst('clean')
+
+        assert os.listdir() == ['old_repo_dirty', 'repo', 'file']
+
+    with temp_git_repo():
+        run('touch hello.py hello.pyc')
+        wst('clean')
+
+        assert os.listdir() == ['.git', 'hello.py']
 
 
 def test_commit(wst):
