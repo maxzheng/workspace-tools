@@ -322,6 +322,23 @@ class Setup(AbstractCommand):
         else:
             self.setup_workspace()
 
+    def _create_or_update_file(self, path, content):
+        """ Create or update the file depending on if it already exists or not
+
+        :param str path: Path of file to create or update
+        :param str content: Text content to write into file
+        """
+        if os.path.exists(path):
+            change = None if open(path).read() == content else 'Updated'
+        else:
+            change = 'Created'
+
+        if change:
+            with open(path, 'w') as fp:
+                fp.write(content)
+
+            click.echo('{} {}'.format(change, self._relative_path(path)))
+
     def setup_product(self):
         project_path = os.getcwd()
 
@@ -331,11 +348,7 @@ class Setup(AbstractCommand):
 
         tox_ini = TOX_INI_TMPL % name
         tox_ini_file = os.path.join(project_path, TOX_INI_FILE)
-        tox_change_word = 'Updated' if os.path.exists(tox_ini_file) else 'Created'
-        with open(tox_ini_file, 'w') as fp:
-            fp.write(tox_ini)
-
-        click.echo('{} {}'.format(tox_change_word, self._relative_path(tox_ini_file)))
+        self._create_or_update_file(tox_ini_file, tox_ini)
 
         readme_files = glob(os.path.join(project_path, 'README*'))
         if readme_files:
@@ -347,9 +360,7 @@ class Setup(AbstractCommand):
             click.echo('Created {} {}'.format(self._relative_path(readme_file), placeholder_info))
 
         coveragerc_file = os.path.join(project_path, '.coveragerc')
-        with open(coveragerc_file, 'w') as fp:
-            fp.write(COVERAGERC_TMPL)
-        click.echo('Created ' + self._relative_path(coveragerc_file))
+        self._create_or_update_file(coveragerc_file, COVERAGERC_TMPL)
 
         setup_py_file = os.path.join(project_path, 'setup.py')
         if not os.path.exists(setup_py_file):
