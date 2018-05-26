@@ -88,8 +88,8 @@ To checkout a repo:
 .. code-block:: console
 
     $ wst checkout maxzheng/workspace-tools       # Exact match from Github
-    $ wst checkout workspace-tools                # Best match from Github
-    $ wst checkout https://github.com/maxzheng/workspace-tools.git
+    $ wst checkout requests                       # Best match from Github
+    $ wst checkout https://github.com/maxzheng/aiohttp-requests.git
 
 To update all repos in your workspace concurrently:
 
