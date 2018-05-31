@@ -1,5 +1,10 @@
-Version 3.2.3
+Version 3.2.4
 ================================================================================
+
+* Push version bump commit and skip style check
+
+Version 3.2.3
+--------------------------------------------------------------------------------
 
 * Always generate text cover report and remove --text option
 * Use better example for checkout
