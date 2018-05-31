@@ -79,7 +79,8 @@ class Publish(AbstractCommand):
         if self.major or self.minor:
             new_version, setup_file = self.bump_version(major=self.major, minor=self.minor)
             major_minor = 'major' if self.major else 'minor'
-            self.commander.run('commit', msg=f'Bump {major_minor} version', files=[setup_file])
+            self.commander.run('commit', msg=f'Bump {major_minor} version', files=[setup_file], push=2,
+                               skip_style_check=True)
 
         else:
             current_version, setup_file = self.get_version()
