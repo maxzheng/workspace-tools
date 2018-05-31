@@ -1,5 +1,12 @@
-Version 3.2.2
+Version 3.2.3
 ================================================================================
+
+* Always generate text cover report and remove --text option
+* Use better example for checkout
+* Add create or update function for setup
+
+Version 3.2.2
+--------------------------------------------------------------------------------
 
 * Display local branch instead of remote branch in status
 * Add commit for major/minor version bump
