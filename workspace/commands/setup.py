@@ -197,7 +197,8 @@ commands =
 
 [testenv:cover]
 commands =
-    pytest {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term --cov-fail-under=80
+    pytest {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term --cov-report=annotate:textcov \
+                             --cov-fail-under=80
 
 [flake8]
 exclude = .git,.tox,.eggs,__pycache__,docs,build,dist

@@ -58,7 +58,6 @@ class Test(AbstractCommand):
       :param bool debug: Turn on debug logging
       :param list install_editable: List of products or product groups to install in editable mode.
       :param list extra_args: Extra args from argparse to be passed to pytest
-      :param bool text: Add "--cov-report=annotate:textcov" to pytest args.
       :return: Dict of env to commands ran on success. If return_output is True, return a string output.
                If test_dependents is True, return a mapping of product name to the mentioned results.
     """
@@ -81,7 +80,6 @@ class Test(AbstractCommand):
           cls.make_args('-r', '--redevelop', action='count', help=docs['redevelop']),
           cls.make_args('-o', action='store_true', dest='install_only', help=argparse.SUPPRESS),
           cls.make_args('-e', '--install-editable', nargs='+', help=docs['install_editable']),
-          cls.make_args('--text', action='store_true', help=docs['text'])
         ]
 
     @classmethod
@@ -233,14 +231,12 @@ class Test(AbstractCommand):
                     envs.append(ef)
 
         pytest_args = ''
-        if self.match_test or self.num_processes is not None or files or self.extra_args or self.text:
+        if self.match_test or self.num_processes is not None or files or self.extra_args:
             pytest_args = []
             if self.match_test:
                 pytest_args.append('-k ' + self.match_test)
             if self.num_processes is not None:
                 pytest_args.append('-n ' + str(self.num_processes))
-            if self.text:
-                pytest_args.append('--cov-report=annotate:textcov')
             if self.extra_args:
                 pytest_args.extend(self.extra_args)
             if files:
@@ -256,7 +252,7 @@ class Test(AbstractCommand):
             # Prefer 'test' over 'cover' when there are pytest args as cover is likely to fail and distract from
             # test results. And also remove style as user is focused on fixing a test, and style for the whole project
             # isn't interesting yet.
-            if pytest_args and not self.text:
+            if pytest_args:
                 if 'cover' in envs:
                     for i, env in enumerate(envs):
                         if env == 'cover':

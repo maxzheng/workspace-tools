@@ -76,6 +76,7 @@ class ToxIni(LocalConfig):
     def commands(self, env):
         envsection = self.envsection(env)
         commands = self.get(envsection, 'commands', self.get('testenv', 'commands', 'pytest {env:PYTESTARGS:}'))
+        commands = commands.replace('\\\n', '')
         return [_f for _f in self.expand_vars(commands).split('\n') if _f]
 
     def expand_vars(self, value):
