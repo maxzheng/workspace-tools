@@ -235,6 +235,8 @@ class Test(AbstractCommand):
             pytest_args = []
             if self.match_test:
                 pytest_args.append('-k ' + self.match_test)
+                if self.num_processes is None:  # Skip parallel for targeted test run / works better with pdb
+                    self.num_processes = 0
             if self.num_processes is not None:
                 pytest_args.append('-n ' + str(self.num_processes))
             if self.extra_args:
