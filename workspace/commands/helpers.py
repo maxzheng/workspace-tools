@@ -27,8 +27,8 @@ class ToxIni(LocalConfig):
         super().__init__(tox_ini)
 
         # These must be set after super() otherwise there will be recursion error
-        self.path = path
         self.tox_ini = tox_ini
+        self.path = path or os.path.dirname(tox_ini)
 
     @classmethod
     def find_tox_ini(cls, path):

@@ -1,4 +1,5 @@
 from mock import Mock, call
+from pathlib import Path
 import pytest
 
 from utils.process import run
@@ -38,9 +39,11 @@ Version 0.0.1
         setup_py = open('setup.py').read().split('\n')
         assert setup_py[5] == "    version='0.0.2',"
 
+        python = Path('~/.virtualenvs').expanduser() / Path(cwd).name / 'bin' / 'python'
+
         assert silent_run_mock.call_args_list == [
             call('rm -rf dist/*', cwd=str(cwd), shell=True),
-            call('python setup.py sdist', cwd=str(cwd)),
+            call(f'{python} setup.py sdist bdist_wheel', cwd=str(cwd)),
             call('twine upload -r "pypi" -u "user" -p "pass" dist/*', cwd=str(cwd), shell=True, silent=2)]
 
         # No changes

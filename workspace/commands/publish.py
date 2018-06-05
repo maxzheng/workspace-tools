@@ -10,6 +10,7 @@ from utils.process import run, silent_run
 
 from localconfig import LocalConfig
 from workspace.commands import AbstractCommand
+from workspace.commands.helpers import ToxIni
 from workspace.scm import repo_check, repo_path, commit_logs, extract_commit_msgs
 from six.moves import range
 
@@ -94,8 +95,24 @@ class Publish(AbstractCommand):
 
         changelog_file = self.update_changelog(new_version, changes, self.minor or self.major)
 
-        click.echo('Building source distribution')
-        silent_run('python setup.py sdist', cwd=repo_path())
+        tox = ToxIni()
+        envs = [e for e in tox.envlist if e != 'style']
+
+        if envs:
+            env = envs[0]
+            if len(envs) > 1:
+                click.echo('Found multiple default envs in tox.ini, will use first one for build: ', env)
+
+        else:
+            click.echo('Odd, there are no default envs in tox.ini, so we can not build.')
+            sys.exit(1)
+
+        envdir = tox.envdir(env)
+        python = os.path.join(envdir, 'bin', 'python')
+
+        click.echo('Building source/built distribution')
+
+        silent_run(f'{python} setup.py sdist bdist_wheel', cwd=repo_path())
 
         click.echo('Uploading to ' + repo_title)
 
