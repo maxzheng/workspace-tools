@@ -222,6 +222,19 @@ If you have pinned your dependency requirements and want to update to latest ver
     # To bump to a specific version (why not just vi? This validates the version for you and pulls in the changelog)
     $ wst bump requests==2.5.1
 
+To bump version, update changelog, and release to PyPI:
+
+.. code-block:: console
+
+    $ publish
+    PyPI Password:
+    Updating master
+    Building source/built distribution
+    Uploading to PyPI
+    [master a58b001] Publish version 1.0.7
+     2 files changed, 8 insertions(+), 2 deletions(-)
+    Pushing master
+
 Now you are ready to try out the other commands yourself:
 
 .. code-block:: console
