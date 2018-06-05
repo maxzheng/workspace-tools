@@ -1,3 +1,10 @@
+Version 3.3.0
+================================================================================
+
+* Fix string concat
+* Build and publish wheel
+* Skip parallel for targeted test run / works better with pdb
+
 Version 3.2.4
 ================================================================================
 
