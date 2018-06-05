@@ -101,7 +101,7 @@ class Publish(AbstractCommand):
         if envs:
             env = envs[0]
             if len(envs) > 1:
-                click.echo('Found multiple default envs in tox.ini, will use first one for build: ', env)
+                click.echo('Found multiple default envs in tox.ini, will use first one to build: ' + env)
 
         else:
             click.echo('Odd, there are no default envs in tox.ini, so we can not build.')
