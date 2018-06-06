@@ -28,7 +28,8 @@ Quick Start Tutorial
 
 First, install it with::
 
-    pip install workspace-tools
+    sudo pip3 install autopip
+    app install workspace-tools
 
 Second, optionally setup environment with bash functions/aliases:
 
