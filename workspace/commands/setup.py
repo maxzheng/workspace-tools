@@ -6,6 +6,7 @@ import re
 import sys
 
 import click
+import requests
 
 from workspace.commands import AbstractCommand
 from workspace.scm import is_repo, product_name
@@ -362,6 +363,11 @@ class Setup(AbstractCommand):
 
         coveragerc_file = os.path.join(project_path, '.coveragerc')
         self._create_or_update_file(coveragerc_file, COVERAGERC_TMPL)
+
+        gitignore_file = os.path.join(project_path, '.gitignore')
+        resp = requests.get('https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore')
+        gitignore_content = resp.text.replace('htmlcov', 'htmlcov/ntextcov')
+        self._create_or_update_file(gitignore_file, gitignore_content)
 
         setup_py_file = os.path.join(project_path, 'setup.py')
         if not os.path.exists(setup_py_file):
