@@ -1,5 +1,13 @@
-Version 3.3.0
+Version 3.3.1
 ================================================================================
+
+* Use autopip and update setup
+* Update setup.py to add wheel
+* Update gitignore file
+* Add publish example
+
+Version 3.3.0
+--------------------------------------------------------------------------------
 
 * Fix string concat
 * Build and publish wheel
