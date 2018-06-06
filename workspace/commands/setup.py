@@ -162,7 +162,7 @@ complete -o default di
 TOX_INI_FILE = 'tox.ini'
 TOX_INI_TMPL = """\
 [tox]
-envlist = cover,style
+envlist = cover, style
 
 [testenv]
 # Consolidate all deps here instead of separately in test/style/cover so we
@@ -175,7 +175,7 @@ deps =
     pytest-cov
     pytest-fixtures
     pytest-xdist
-    sphinx!=1.2b2
+    sphinx
 install_command =
     pip install -U {packages}
 recreate = False
@@ -198,7 +198,7 @@ commands =
 
 [testenv:cover]
 commands =
-    pytest {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term --cov-report=annotate:textcov \
+    pytest {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term --cov-report=annotate:textcov \\
                              --cov-fail-under=80
 
 [flake8]
@@ -366,11 +366,18 @@ class Setup(AbstractCommand):
 
         gitignore_file = os.path.join(project_path, '.gitignore')
         resp = requests.get('https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore')
-        gitignore_content = resp.text.replace('htmlcov', 'htmlcov/ntextcov')
+        gitignore_content = resp.text.replace('htmlcov', 'htmlcov/\ntextcov')
         self._create_or_update_file(gitignore_file, gitignore_content)
 
         setup_py_file = os.path.join(project_path, 'setup.py')
-        if not os.path.exists(setup_py_file):
+        if os.path.exists(setup_py_file):
+            setup_content = open(setup_py_file).read()
+            if 'wheel' not in setup_content:
+                setup_content = setup_content.replace("setup_requires=['setuptools-git'],",
+                                                      "setup_requires=['setuptools-git', 'wheel'],")
+                self._create_or_update_file(setup_py_file, setup_content)
+
+        else:
             requirements_file = os.path.join(project_path, 'requirements.txt')
             if not os.path.exists(requirements_file):
                 with open(requirements_file, 'w') as fp:
