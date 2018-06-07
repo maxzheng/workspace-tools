@@ -40,12 +40,16 @@ class ToxIni(LocalConfig):
         :raise IOError: if there is no tox.ini found
         """
 
-        tox_ini = project_path(path=path)
+        repo_path = project_path(path=path)
 
-        if not tox_ini:
+        if not repo_path:
             raise IOError('No tox.ini found in %s. Please run "wst setup --product" first to setup tox.' % path)
 
-        return os.path.join(tox_ini, 'tox.ini')
+        tox_ini = os.path.join(repo_path, 'tox.ini')
+
+        log.debug('Using %s', tox_ini)
+
+        return tox_ini
 
     @property
     def envlist(self):
