@@ -1,5 +1,11 @@
-Version 3.3.1
+Version 3.3.2
 ================================================================================
+
+* Use abspath instead of realpath so symlinks are not resolved
+* Show where tox.ini is from
+
+Version 3.3.1
+--------------------------------------------------------------------------------
 
 * Use autopip and update setup
 * Update setup.py to add wheel
