@@ -448,7 +448,7 @@ class Setup(AbstractCommand):
             fh.write('source %s\n' % WSTRC_FILE)
 
         with open(wstrc_path, 'w') as fh:
-            fh.write(WS_FUNCTION_TEMPLATE % (os.path.realpath(sys.argv[0]), workspace_dir))
+            fh.write(WS_FUNCTION_TEMPLATE % (os.path.abspath(sys.argv[0]), workspace_dir))
             click.echo('Added "ws" bash function with workspace directory set to ' + workspace_dir)
 
             if self.additional_commands:
