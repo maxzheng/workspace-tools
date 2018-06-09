@@ -350,7 +350,7 @@ def update_repo(path=None, quiet=False):
     for remote in remotes:
         if len(remotes) > 1 and not quiet:
             click.echo('    ... from ' + remote)
-        output, success = silent_run('git pull --tags --ff-only {} {}'.format(remote, branch), cwd=path, return_output=2)
+        output, success = silent_run('git pull --ff-only --tags {} {}'.format(remote, branch), cwd=path, return_output=2)
         if not success:
             error_match = re.search(r'(?:fatal|ERROR): (.+)', output)
             error = error_match.group(1) if error_match else output
