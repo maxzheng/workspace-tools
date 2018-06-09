@@ -1,5 +1,10 @@
-Version 3.3.2
+Version 3.3.3
 ================================================================================
+
+* Reverse order of ff vs tags arg as older git version has a bug
+
+Version 3.3.2
+--------------------------------------------------------------------------------
 
 * Use abspath instead of realpath so symlinks are not resolved
 * Show where tox.ini is from
