@@ -1,5 +1,10 @@
-Version 3.3.3
+Version 3.3.4
 ================================================================================
+
+* Remove unused dependencies
+
+Version 3.3.3
+--------------------------------------------------------------------------------
 
 * Reverse order of ff vs tags arg as older git version has a bug
 
