@@ -2,11 +2,7 @@ bumper-lib>=2
 click
 GitPython
 localconfig>=1
-psutil
 remoteconfig>=1
 requests
-setproctitle
-simplejson
 six
-tabulate
 utils-core
