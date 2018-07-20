@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 class ToxIni(LocalConfig):
     """ Represents tox.ini """
 
-    VAR_RE = re.compile(r'{(.+)}')
+    VAR_RE = re.compile(r'{(\w+)}')
 
     def __init__(self, path=None, tox_ini=None):
         """
@@ -69,7 +69,8 @@ class ToxIni(LocalConfig):
     def envdir(self, env):
         default_envdir = os.path.join(self.path, '.tox', env)
         return self.expand_vars(self.get(self.envsection(env), 'envdir', self.get(self.envsection(),
-                                         'envdir', default_envdir)).replace('{toxworkdir}', self.workdir))
+                                         'envdir', default_envdir)).replace('{toxworkdir}', self.workdir),
+                                {'envname': env})
 
     def bindir(self, env, script=None):
         dir = os.path.join(self.envdir(env), 'bin')
@@ -83,9 +84,9 @@ class ToxIni(LocalConfig):
         commands = commands.replace('\\\n', '')
         return [_f for _f in self.expand_vars(commands).split('\n') if _f]
 
-    def expand_vars(self, value):
+    def expand_vars(self, value, extra_vars={}):
         if '{' in value:
-            value = self.VAR_RE.sub(lambda m: getattr(self, m.group(1), m.group(0)), value)
+            value = self.VAR_RE.sub(lambda m: extra_vars.get(m.group(1), getattr(self, m.group(1), m.group(0))), value)
         return value
 
 

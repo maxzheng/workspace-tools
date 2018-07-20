@@ -162,7 +162,7 @@ complete -o default di
 TOX_INI_FILE = 'tox.ini'
 TOX_INI_TMPL = """\
 [tox]
-envlist = cover, style
+envlist = cover, py37, style
 
 [testenv]
 # Consolidate all deps here instead of separately in test/style/cover so we
@@ -185,18 +185,22 @@ setenv =
     PIP_PROCESS_DEPENDENCY_LINKS=1
     PIP_DEFAULT_TIMEOUT=60
     ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future
-basepython = python3
-envdir = {homedir}/.virtualenvs/%s
-
-[testenv:test]
+envdir = {homedir}/.virtualenvs/{name}_{envname}
 commands =
     pytest {env:PYTESTARGS:}
 
+[testenv:py36]
+envdir = {homedir}/.virtualenvs/{name}
+
 [testenv:style]
+basepython = python3.6
+envdir = {homedir}/.virtualenvs/{name}
 commands =
     flake8 --config tox.ini
 
 [testenv:cover]
+basepython = python3.6
+envdir = {homedir}/.virtualenvs/{name}
 commands =
     pytest {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term --cov-report=annotate:textcov \\
                              --cov-fail-under=80
@@ -348,7 +352,7 @@ class Setup(AbstractCommand):
         sanitized_name = re.sub('[^A-Za-z]', '_', name)
         placeholder_info = '- please update <PLACEHOLDER> with appropriate value'
 
-        tox_ini = TOX_INI_TMPL % name
+        tox_ini = TOX_INI_TMPL.replace('{name}', name)
         tox_ini_file = os.path.join(project_path, TOX_INI_FILE)
         self._create_or_update_file(tox_ini_file, tox_ini)
 
@@ -400,7 +404,7 @@ class Setup(AbstractCommand):
             click.echo('Created ' + self._relative_path(init_file))
 
         test_dir = os.path.join(project_path, 'tests')
-        if not os.path.exists(test_dir):
+        if not os.path.exists(test_dir) and not os.path.exists(os.path.join(project_path, 'test')):
             os.makedirs(test_dir)
             test_file = os.path.join(test_dir, 'test_%s.py' % sanitized_name)
             with open(test_file, 'w') as fp:

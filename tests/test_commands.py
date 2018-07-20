@@ -1,6 +1,5 @@
 import os
 import pytest
-import shutil
 
 from bumper.utils import PyPI
 from mock import Mock
@@ -125,65 +124,65 @@ def test_commit(wst):
         assert 1 == len(list(filter(None, logs.split('commit'))))
 
 
-def test_test(wst):
-    with temp_dir():
-        with pytest.raises(SystemExit):
-            wst('test')
-
+def test_test(wst, monkeypatch):
     if 'PYTESTARGS' in os.environ:
         del os.environ['PYTESTARGS']
 
-    with temp_git_repo(name='foo'):
-        with pytest.raises(SystemExit):
-            wst('test')
-        wst('setup --product')
+    with temp_dir() as cwd:
+        monkeypatch.setenv('HOME', cwd)  # tox creates virtualenvs in ~/.virtualenvs
 
-        with open('foo/__init__.py', 'w') as fp:
-            fp.write('hello = "world"')
-
-        pass_test = 'from foo import hello\n\n\ndef test_pass():\n  assert hello == "world"'
-        fail_test = 'def test_fail():\n  assert False'
-
-        with open('tests/test_pass.py', 'w') as fp:
-            fp.write(pass_test)
-        commands = wst('test')
-        assert set(commands.keys()) == {'cover', 'style'}
-        assert 'tox' in commands['cover']
-
-        wst('test --show-dependencies')
-        wst('test --install-editable flake8')
-        wst('test --install-editable foo')
-
-        results = wst('test --test-dependents')
-        assert set(results.keys()) == {'foo'}
-        assert '2 passed' in results['foo']
-
-        with open('tests/test_fail.py', 'w') as fp:
-            fp.write(pass_test + '\n\n\n' + fail_test)
         with pytest.raises(SystemExit):
             wst('test')
 
-        output = wst('test tests/test_pass.py')
-        assert 'test' in output
+        with temp_git_repo(name='foo') as cwd:
+            with pytest.raises(SystemExit):
+                wst('test')
+            wst('setup --product')
 
-        os.utime('requirements.txt', None)
-        assert 'test' in wst('test -k test_pass')
+            with open('foo/__init__.py', 'w') as fp:
+                fp.write('hello = "world"')
 
-        with open('tests/test_fail.py', 'w') as fp:
-            fp.write(pass_test + '\n' + fail_test)
-        with pytest.raises(SystemExit):
-            wst('test style')
+            pass_test = 'from foo import hello\n\n\ndef test_pass():\n  assert hello == "world"'
+            fail_test = 'def test_fail():\n  assert False'
 
-        with open('tests/test_fail.py', 'w') as fp:
-            fp.write(pass_test + '\n\n\n' + fail_test)
-        assert 'style' in wst('test style')
+            with open('tests/test_pass.py', 'w') as fp:
+                fp.write(pass_test)
+            commands = wst('test')
+            assert set(commands.keys()) == {'cover', 'py37', 'style'}
+            assert 'tox' in commands['cover']
 
-        os.unlink('tests/test_fail.py')
-        assert 'cover' in wst('test cover')
-        assert os.path.exists('coverage.xml')
-        assert os.path.exists('htmlcov/index.html')
+            wst('test --show-dependencies')
+            wst('test --install-editable flake8')
+            wst('test --install-editable foo')
 
-    shutil.rmtree(os.path.expanduser('~/.virtualenvs/foo'), ignore_errors=True)
+            results = wst('test --test-dependents')
+            assert set(results.keys()) == {'foo'}
+            assert '2 passed' in results['foo']
+
+            with open('tests/test_fail.py', 'w') as fp:
+                fp.write(pass_test + '\n\n\n' + fail_test)
+            with pytest.raises(SystemExit):
+                wst('test')
+
+            output = wst('test tests/test_pass.py')
+            assert output == {'py36': 'pytest {env:PYTESTARGS:}', 'py37': 'pytest {env:PYTESTARGS:}'}
+
+            os.utime('requirements.txt', None)
+            assert list(wst('test -k test_pass').keys()) == ['py36', 'py37']
+
+            with open('tests/test_fail.py', 'w') as fp:
+                fp.write(pass_test + '\n' + fail_test)
+            with pytest.raises(SystemExit):
+                wst('test style')
+
+            with open('tests/test_fail.py', 'w') as fp:
+                fp.write(pass_test + '\n\n\n' + fail_test)
+            assert 'style' in wst('test style')
+
+            os.unlink('tests/test_fail.py')
+            assert 'cover' in wst('test cover')
+            assert os.path.exists('coverage.xml')
+            assert os.path.exists('htmlcov/index.html')
 
 
 def test_push_without_repo(wst):

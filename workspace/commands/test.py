@@ -256,9 +256,7 @@ class Test(AbstractCommand):
             # isn't interesting yet.
             if pytest_args:
                 if 'cover' in envs:
-                    for i, env in enumerate(envs):
-                        if env == 'cover':
-                            envs[i] = 'test'
+                    envs[envs.index('cover')] = 'py36'
                 if 'style' in envs:
                     envs.remove('style')
 
