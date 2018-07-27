@@ -1,5 +1,12 @@
-Version 3.3.4
+Version 3.3.5
 ================================================================================
+
+* Pass ssh auth to tox
+* Update tox.ini to support multiple Python version
+* Support multiple Python in tox template
+
+Version 3.3.4
+--------------------------------------------------------------------------------
 
 * Remove unused dependencies
 
