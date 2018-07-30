@@ -1,5 +1,10 @@
-Version 3.3.5
+Version 3.3.6
 ================================================================================
+
+* Support different version of Python as the default
+
+Version 3.3.5
+--------------------------------------------------------------------------------
 
 * Pass ssh auth to tox
 * Update tox.ini to support multiple Python version
