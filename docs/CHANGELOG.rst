@@ -1,5 +1,10 @@
-Version 3.3.6
+Version 3.3.7
 ================================================================================
+
+* Print help when no command is provided
+
+Version 3.3.6
+--------------------------------------------------------------------------------
 
 * Support different version of Python as the default
 
