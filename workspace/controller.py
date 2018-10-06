@@ -68,6 +68,10 @@ class Commander(object):
 
         args, extra_args = self.parser.parse_known_args()
 
+        if not args.command:
+            self.parser.print_help()
+            sys.exit()
+
         if args.command not in [c.name() for c in list(self.commands().values()) if 'extra_args' in c.docs()[1]] and extra_args:
             log.error('Unrecognized arguments: %s', ' '.join(extra_args))
             sys.exit(1)
@@ -124,7 +128,7 @@ class Commander(object):
 
         self._setup_parser()
 
-        self.subparsers = self.parser.add_subparsers(title='sub-commands', help='List of sub-commands')
+        self.subparsers = self.parser.add_subparsers(title='sub-commands', help='List of sub-commands', dest='command')
         self.subparsers.remove_parser = lambda *args, **kwargs: _remove_parser(self.subparsers, *args, **kwargs)
 
         for name, command in sorted(self.commands().items()):
@@ -134,7 +138,6 @@ class Commander(object):
 
             parser = self.subparsers.add_parser(name, aliases=aliases, description=textwrap.dedent(doc), help=help,
                                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-            parser.set_defaults(command=name)
 
             cmd_args = command.arguments()
 
