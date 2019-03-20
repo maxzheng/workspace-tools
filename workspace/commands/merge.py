@@ -27,6 +27,10 @@ class Merge(AbstractCommand):
     :param bool downstreams: Merge current branch to downstream branches defined in config merge.branches
                              that are on the right side of the current branch value and pushes them to all remotes.
                              Branches on the left side are ignored and not merged.
+    :param str merge_branches: List of branches used to perform merge operations on. This overrides values set in config
+                               merge.branches and is used with :param:`downstreams` to compute the list of merges from
+                               the current branch, which must be in the list as well. Use quotes and seperate multiple
+                               values using a space.  E.g. "1.0.0 1.0.2 1.0.x master"
     :param str strategy: The merge strategy to pass to git merge
     :param list allow_commits: Patterns to allow commits to be merged.
     :param bool quiet: Don't print merging if there are no commits to merge
@@ -39,6 +43,7 @@ class Merge(AbstractCommand):
         return [
           cls.make_args('branch', nargs='?', help=docs['branch']),
           cls.make_args('-d', '--downstreams', action='store_true', help=docs['downstreams']),
+          cls.make_args('--merge-branches', help=docs['merge_branches']),
           cls.make_args('-s', '--strategy', help=docs['strategy']),
           cls.make_args('-a', '--allow-commits', help=docs['allow_commits']),
           cls.make_args('--quiet', action='store_true', help=docs['quiet']),
@@ -73,13 +78,17 @@ class Merge(AbstractCommand):
                 merge_branch(self.branch, strategy=self.strategy)
 
         elif self.downstreams:
-            if not config.merge.branches:
-                log.error('Config merge.branches must be configured with a list of branches to merge to')
+            if not self.merge_branches:
+                self.merge_branches = config.merge.branches
+
+            if not self.merge_branches:
+                log.error('Config merge.branches must be configured with a list of branches to merge to, or '
+                          'use --merge-branches to provide a list')
                 sys.exit(1)
 
-            branches = config.merge.branches.split()
+            branches = self.merge_branches.split()
             if current not in branches:
-                log.error('Current branch %s not found in config merge.branches (%s)', current, config.merge.branches)
+                log.error('Current branch %s not found in config merge.branches (%s)', current, self.merge_branches)
                 sys.exit(1)
 
             last = current
@@ -112,9 +121,9 @@ class Merge(AbstractCommand):
                         if commits:
                             for commit in commits.split('\n'):
                                 # Not performant / ok as # of allow_commits should be low
-                                allowed_commit = (' Merge branch ' in commit or
-                                                  ' Merge pull request ' in commit or
-                                                  any(allow_commit in commit for allow_commit in self.allow_commits))
+                                allowed_commit = (' Merge branch ' in commit
+                                                  or ' Merge pull request ' in commit
+                                                  or any(allow_commit in commit for allow_commit in self.allow_commits))
                                 if not allowed_commit:
                                     click.echo('Found a commit that was not allowed to be merged:'.format(last))
                                     click.echo('  {}'.format(commit))
