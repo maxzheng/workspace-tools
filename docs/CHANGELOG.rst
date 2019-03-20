@@ -1,5 +1,10 @@
-Version 3.3.7
+Version 3.3.8
 ================================================================================
+
+* Add --merge-branches option to merge command to allow config.merge.branches to be overriden
+
+Version 3.3.7
+--------------------------------------------------------------------------------
 
 * Print help when no command is provided
 
