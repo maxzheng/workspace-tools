@@ -59,11 +59,13 @@ class ToxIni(LocalConfig):
         return 'testenv:%s' % env if env else 'testenv'
 
     @property
+    def toxinidir(self):
+        return self.path
+
+    @property
     def workdir(self):
-        toxworkdir = self.get('tox', 'toxworkdir', '.tox')
-        toxworkdir = toxworkdir.replace('{homedir}', self.homedir)
-        toxworkdir = toxworkdir.replace('{toxinidir}', self.path)
-        return os.path.join(self.path, toxworkdir)
+        toxworkdir = self.get('tox', 'toxworkdir', '{toxinidir}/.tox')
+        return self.expand_vars(toxworkdir)
 
     @property
     def homedir(self):
