@@ -59,7 +59,7 @@ class ToxIni(LocalConfig):
         return 'testenv:%s' % env if env else 'testenv'
 
     @property
-    def toxinidir(self):
+    def inidir(self):
         return self.path
 
     @property
@@ -77,7 +77,6 @@ class ToxIni(LocalConfig):
         default_envdir = self.get(default_envsection, 'envdir', default_envdir)
         envsection = self.envsection(env)
         envdir = self.get(envsection, 'envdir', default_envdir)
-        envdir = envdir.replace('{toxworkdir}', self.workdir)
         return self.expand_vars(envdir, {'envname': env})
 
     def bindir(self, env, script=None):
@@ -94,7 +93,8 @@ class ToxIni(LocalConfig):
 
     def expand_vars(self, value, extra_vars={}):
         if '{' in value:
-            value = self.VAR_RE.sub(lambda m: extra_vars.get(m.group(1), getattr(self, m.group(1), m.group(0))), value)
+            value = self.VAR_RE.sub(lambda m: extra_vars.get(
+                m.group(1), getattr(self, m.group(1), m.group(0)) or getattr(self, m.group(1)[3:], m.group(0))), value)
         return value
 
 
