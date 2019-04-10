@@ -1,5 +1,29 @@
-Version 3.3.8
+Version 3.3.9
 ================================================================================
+
+* Strip out tox prefix when doing expand vars
+* Merge pull request #1 from dnozay/pr-envdir
+  
+  fix envdir to substitute {homedir}, {toxworkdir} properly.
+* more fixes
+* fix envdir to substitute {homedir}, {toxworkdir} properly.
+  
+  e.g.
+  
+  ```
+  [tox]
+  envlist = py27,py3
+  toxworkdir = {homedir}/.virtualenvs/my-app
+  
+  [testenv:py27]
+  basepython = python2.7
+  
+  [testenv:py3]
+  basepython = python3
+  ```
+
+Version 3.3.8
+--------------------------------------------------------------------------------
 
 * Add --merge-branches option to merge command to allow config.merge.branches to be overriden
 
