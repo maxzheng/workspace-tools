@@ -59,18 +59,26 @@ class ToxIni(LocalConfig):
         return 'testenv:%s' % env if env else 'testenv'
 
     @property
+    def toxinidir(self):
+        return self.path
+
+    @property
     def workdir(self):
-        return os.path.join(self.path, self.get('tox', 'toxworkdir', '.tox'))
+        toxworkdir = self.get('tox', 'toxworkdir', '{toxinidir}/.tox')
+        return self.expand_vars(toxworkdir)
 
     @property
     def homedir(self):
         return os.path.expanduser('~')
 
     def envdir(self, env):
-        default_envdir = os.path.join(self.path, '.tox', env)
-        return self.expand_vars(self.get(self.envsection(env), 'envdir', self.get(self.envsection(),
-                                         'envdir', default_envdir)).replace('{toxworkdir}', self.workdir),
-                                {'envname': env})
+        default_envdir = os.path.join('{toxworkdir}', env)
+        default_envsection = self.envsection()
+        default_envdir = self.get(default_envsection, 'envdir', default_envdir)
+        envsection = self.envsection(env)
+        envdir = self.get(envsection, 'envdir', default_envdir)
+        envdir = envdir.replace('{toxworkdir}', self.workdir)
+        return self.expand_vars(envdir, {'envname': env})
 
     def bindir(self, env, script=None):
         dir = os.path.join(self.envdir(env), 'bin')
