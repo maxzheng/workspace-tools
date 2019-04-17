@@ -134,7 +134,7 @@ class Merge(AbstractCommand):
                                     raise NotAllowedCommit(commit)
 
                     merge_branch(last, strategy=self.strategy)
-                    
+
                     if self.validation:
                       process_run(self.validation)
 
