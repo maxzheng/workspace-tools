@@ -10,6 +10,8 @@ from workspace.config import config
 from workspace.commands import AbstractCommand
 from workspace.scm import checkout_branch, current_branch, merge_branch, repo_path
 
+from utils.process import run as process_run
+
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +37,7 @@ class Merge(AbstractCommand):
     :param list allow_commits: Patterns to allow commits to be merged.
     :param bool quiet: Don't print merging if there are no commits to merge
     :param bool dry_run: Print out what will happen without making changes.
+    :param str validation: A command to run after the merge and before a push to validate the change.
 
     """
     @classmethod
@@ -48,6 +51,7 @@ class Merge(AbstractCommand):
           cls.make_args('-a', '--allow-commits', help=docs['allow_commits']),
           cls.make_args('--quiet', action='store_true', help=docs['quiet']),
           cls.make_args('-n', '--dry-run', action='store_true', help=docs['dry_run']),
+          cls.make_args('--validation', help=docs['validation']),
         ]
 
     def run(self):
@@ -130,6 +134,9 @@ class Merge(AbstractCommand):
                                     raise NotAllowedCommit(commit)
 
                     merge_branch(last, strategy=self.strategy)
+                    
+                    if self.validation:
+                      process_run(self.validation)
 
                     self.commander.run('push', all_remotes=True, skip_style_check=True)
 
