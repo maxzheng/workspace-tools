@@ -1,5 +1,20 @@
-Version 3.3.9
+Version 3.3.10
 ================================================================================
+
+* Remove white space
+* Merge pull request #2 from vvcephei/patch-1
+  
+  Ability to run a validation before pushing merge
+* Ability to run a validation before pushing merge
+  
+  Adds a optional command for Merge to execute before pushing the merge result.
+  
+  For example, `--validation 'mvn clean test-compile'`, or even more safely `--validation 'mvn clean verify'`
+  will make sure that the project still builds (or the tests still pass) after performing the merge and before
+  pushing potentially broken code to the remote.
+
+Version 3.3.9
+--------------------------------------------------------------------------------
 
 * Strip out tox prefix when doing expand vars
 * Merge pull request #1 from dnozay/pr-envdir
