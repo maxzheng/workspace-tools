@@ -71,7 +71,7 @@ class Commit(AbstractCommand):
                 remove_branch(self.branch, raises=True, force=True)
 
             else:
-                match = re.match('([a-f0-9]+)(?: \(.*\))\n', changes[0])
+                match = re.match(r'([a-f0-9]+)(?: \(.*\))\n', changes[0])
 
                 if match:
                     last_commit = match.group(1)
@@ -109,14 +109,12 @@ class Commit(AbstractCommand):
             branches = all_branches()
             cur_branch = branches and branches[0]
 
-            if (not (self.push or self.amend) and config.commit.commit_branch_indicator not in cur_branch and
-                    not self.branch and self.msg and config.commit.auto_branch_from_commit_words):
+            if (not (self.push or self.amend) and config.commit.commit_branch_indicator not in cur_branch
+                    and not self.branch and self.msg and config.commit.auto_branch_from_commit_words):
                 self.branch = self._branch_for_msg(self.msg,
                                                    words=config.commit.auto_branch_from_commit_words,
-                                                   branches=branches)
-                if cur_branch:
-                    self.branch = '{}@{}'.format(self.branch, cur_branch)
-
+                                                   branches=branches,
+                                                   current_branch=cur_branch)
             if self.branch:
                 if branches:
                     if self.branch in branches:
@@ -146,17 +144,18 @@ class Commit(AbstractCommand):
             return test_output
 
     @classmethod
-    def _branch_for_msg(cls, msg, words=3, branches=None):
-        ignored_num_re = re.compile('^\d+$')
+    def _branch_for_msg(cls, msg, words=3, branches=None, current_branch=None):
+        ignored_num_re = re.compile(r'^\d+$')
         ignored_words = ['and', 'but', 'for', 'from']
         ignored_word_length = 2
         branch_name = []
         word_count = 0
+        branch_suffix = '@' + current_branch if current_branch else ''
 
         if msg.startswith('DRAFT: '):
             msg = msg.replace('DRAFT: ', '', 1)
 
-        for word in re.split('[\W\_]+', msg):
+        for word in re.split(r'[\W\_]+', msg):
             if not word:
                 continue
 
@@ -165,19 +164,19 @@ class Commit(AbstractCommand):
             if word not in ignored_words and not ignored_num_re.match(word) and len(word) > ignored_word_length:
                 word_count += 1
 
-            if word_count >= words and (not branches or '-'.join(branch_name) not in branches):
-                break
+                if word_count >= words and (not branches or ('-'.join(branch_name) + branch_suffix) not in branches):
+                    break
 
         if not branch_name:
             raise Exception('No words found in commit msg to create branch name')
 
         has_ignored_or_short_name = branch_name[-1] in ignored_words or not ignored_num_re.match(word) \
             and len(branch_name[-1]) <= ignored_word_length
-        no_name_conflict = not branches or '-'.join(branch_name[:-1]) not in branches
+        no_name_conflict = not branches or ('-'.join(branch_name[:-1]) + branch_suffix) not in branches
         if has_ignored_or_short_name and no_name_conflict:
             branch_name = branch_name[:-1]
 
-        branch_name = '-'.join(branch_name)
+        branch_name = '-'.join(branch_name) + branch_suffix
 
         if branches and branch_name in branches:
             raise Exception('Branch "%s" already exist.\n\tPlease use a more unique commit message or specify '
