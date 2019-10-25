@@ -6,10 +6,10 @@
   ###########################################################################################################
   [product_groups]
   mzheng-repos =
-    git@github.com:maxzheng/workspace-tools.git
-    git@github.com:maxzheng/clicast.git
-    git@github.com:maxzheng/localconfig.git
-    git@github.com:maxzheng/remoteconfig.git
+    https://github.com/maxzheng/workspace-tools.git
+    https://github.com/maxzheng/clicast.git
+    https://github.com/maxzheng/localconfig.git
+    https://github.com/maxzheng/remoteconfig.git
   mzheng = workspace-tools clicast localconfig remoteconfig
 
 

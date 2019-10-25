@@ -28,7 +28,7 @@ def test_checkout_with_http_git(wst):
 
 def test_checkout_with_git(wst):
     with temp_dir():
-        wst('checkout git@github.com:maxzheng/clicast.git')
+        wst('checkout https://github.com/maxzheng/clicast.git')
         assert os.path.exists('clicast/README.rst')
 
 
