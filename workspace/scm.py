@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 REMOTE_BRANCH_RE = re.compile(r'^(\*)? *(\((?:HEAD detached at|no branch, rebasing) )?([^ )]+)\)? +\w+ +(?:\[(.+)/([^:\] ]+).*])?')
 DEFAULT_REMOTE = 'origin'
 UPSTREAM_REMOTE = 'upstream'
-USER_REPO_REFERENCE_RE = re.compile('^[\w-]+/[\w-]+$')
+USER_REPO_REFERENCE_RE = re.compile(r'^[\w-]+/[\w-]+$')
 
 
 class SCMError(Exception):
@@ -289,8 +289,8 @@ def all_branches(repo=None, remotes=False, verbose=False):
                         # Rightful/tracking remote differs based on parent vs child branch:
                         #   Parent branch = upstream remote
                         #   Child branch = origin remote
-                        rightful_remote = (remote == up_remote and '@' not in local_branch or
-                                           remote == def_remote and '@' in local_branch)
+                        rightful_remote = (remote == up_remote and '@' not in local_branch
+                                           or remote == def_remote and '@' in local_branch)
                         branch = local_branch if rightful_remote else '{}^{}'.format(local_branch, shortest_id(remote, remotes))
 
                     elif detached:
@@ -432,7 +432,7 @@ def checkout_product(product_url, checkout_path):
         checkout_branch('master', checkout_path)
         return update_repo(checkout_path)
 
-    if re.match('[\w-]+$', product_url):
+    if re.match(r'[\w-]+$', product_url):
         try:
             logging.getLogger('requests').setLevel(logging.WARN)
             response = requests.get(config.checkout.search_api_url, params={'q': product_url}, timeout=10)

@@ -17,7 +17,7 @@ def wst(monkeypatch):
 @pytest.fixture()
 def mock_run(monkeypatch):
     r = Mock()
-    monkeypatch.setattr('utils.process.run', r)
+    monkeypatch.setattr('utils_core.process.run', r)
     monkeypatch.setattr('workspace.utils.run', r)
     monkeypatch.setattr('workspace.scm.run', r)
     monkeypatch.setattr('workspace.commands.test.run', r)

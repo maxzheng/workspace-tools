@@ -24,4 +24,4 @@ def test_status(wst, capsys):
         run('git checkout HEAD^0')
         wst('status')
         out, _ = capsys.readouterr()
-        assert re.fullmatch('# Branches: \w+\* feature master\n', out)
+        assert re.fullmatch(r'# Branches: \w+\* feature master\n', out)

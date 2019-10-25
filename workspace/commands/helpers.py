@@ -110,7 +110,7 @@ class ProductPager(object):
     def write(self, product, output, branch=None):
         if not self.pager:
             if not self.optional or len(output.split('\n')) > self.MAX_TERMINAL_ROWS:
-                self.pager = create_pager('^\[.*]')
+                self.pager = create_pager(r'^\[.*]')
 
         if self.pager:
             self.pager.stdin.write('[ {} ]\n'.format(product).encode())

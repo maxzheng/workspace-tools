@@ -24,9 +24,9 @@ class Status(AbstractCommand):
             for repo in scm_repos:
                 stat_path = os.getcwd() if in_repo else repo
                 output = stat_repo(stat_path, return_output=True, with_color=True)
-                nothing_to_commit = ('nothing to commit' in output and
-                                     'Your branch is ahead of' not in output and
-                                     'Your branch is behind' not in output)
+                nothing_to_commit = ('nothing to commit' in output
+                                     and 'Your branch is ahead of' not in output
+                                     and 'Your branch is behind' not in output)
 
                 branches = all_branches(repo, verbose=True)
                 child_branches = [b for b in branches if '@' in b]

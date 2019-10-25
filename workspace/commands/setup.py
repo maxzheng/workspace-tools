@@ -20,7 +20,7 @@ WSTRC_FILE = "~/.wstrc"
 WS_SETUP_START = '# Added by "workspace setup" (do not remove comments before / after function)'
 WS_SETUP_END = "# workspace setup - end"
 
-WS_FUNCTION_TEMPLATE = """\
+WS_FUNCTION_TEMPLATE = r"""\
 alias _wst=%s
 
 function ws() {
@@ -128,7 +128,7 @@ COMMANDS = {
   '_pb': 'publish',
   '_te': 'test',
 }
-AUTO_COMPLETE_TEMPLATE = """
+AUTO_COMPLETE_TEMPLATE = r"""
 function _branch_file_completer() {
   local cur=${COMP_WORDS[COMP_CWORD]}
 

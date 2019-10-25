@@ -37,7 +37,8 @@ class Clean(AbstractCommand):
             silent_run("rm -rf build dist docs/_build */activate", cwd=repo, shell=True)
 
             click.echo('Removing *.pyc files')
-            silent_run("find . -type d \( -path '*/.tox' -o -path '*/mppy-*' \) -prune -o -name *.pyc -exec rm {} \;", cwd=repo, shell=True)
+            silent_run(r"find . -type d \( -path '*/.tox' -o -path '*/mppy-*' \) -prune -o -name *.pyc -exec rm {} \;",
+                       cwd=repo, shell=True)
 
             if self.force:
                 click.echo('Removing untracked/ignored files')
@@ -66,9 +67,9 @@ class Clean(AbstractCommand):
                     modified_time = os.stat(repo).st_mtime
                     if keep_products and name not in keep_products or keep_time and modified_time < keep_time:
                         status = stat_repo(repo, return_output=True)
-                        if (not status or 'nothing to commit' in status and
-                                ('working directory clean' in status or 'working tree clean' in status) and
-                                len(all_branches(repo)) <= 1):
+                        if (not status or 'nothing to commit' in status
+                                and ('working directory clean' in status or 'working tree clean' in status)
+                                and len(all_branches(repo)) <= 1):
                             shutil.rmtree(repo)
                             removed_products.append(name)
                         else:

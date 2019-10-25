@@ -21,7 +21,7 @@ from workspace.utils import log_exception, parallel_call
 
 log = logging.getLogger(__name__)
 
-TEST_RE = re.compile('\d+ (?:passed|error|failed|xfailed).* in [\d\.]+ seconds')
+TEST_RE = re.compile(r'\d+ (?:passed|error|failed|xfailed).* in [\d\.]+ seconds')
 BUILD_RE = re.compile('BUILD SUCCESSFUL')
 
 
@@ -381,7 +381,7 @@ class Test(AbstractCommand):
         script_bin = tox.bindir(env)
 
         if os.path.exists(script_bin):
-            name_version_re = re.compile('%s==[0-9\.]+' % name)
+            name_version_re = re.compile(r'%s==[0-9\.]+' % name)
             removed_from = []
             for script in os.listdir(script_bin):
                 script_path = os.path.join(script_bin, script)
@@ -490,11 +490,11 @@ else:
             product_dependencies[dep] = path
 
         available_products = [os.path.basename(r) for r in product_repos()]
-        libs = [d for d in editable_products if d in available_products and d in product_dependencies and
-                tox.envdir(env) in product_dependencies[d]]
+        libs = [d for d in editable_products if d in available_products and d in product_dependencies
+                and tox.envdir(env) in product_dependencies[d]]
 
-        already_editable = [d for d in editable_products if d in product_dependencies and
-                            tox.envdir(env) not in product_dependencies[d]]
+        already_editable = [d for d in editable_products if d in product_dependencies
+                            and tox.envdir(env) not in product_dependencies[d]]
         for lib in already_editable:
             click.echo('{} is already installed in editable mode.'.format(lib))
 
