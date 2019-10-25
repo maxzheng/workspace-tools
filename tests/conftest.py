@@ -3,7 +3,10 @@ import shlex
 from mock import Mock
 import pytest
 
+from workspace.config import config
 from workspace.controller import Commander
+
+config._last_source = None  # Don't read from user config for tests
 
 
 @pytest.fixture()
