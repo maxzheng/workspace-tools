@@ -129,7 +129,7 @@ def test_test(wst, monkeypatch):
         del os.environ['PYTESTARGS']
 
     with temp_dir() as cwd:
-        monkeypatch.setenv('HOME', cwd)  # tox creates virtualenvs in ~/.virtualenvs
+        monkeypatch.setenv('HOME', str(cwd))  # tox creates virtualenvs in ~/.virtualenvs
 
         with pytest.raises(SystemExit):
             wst('test')

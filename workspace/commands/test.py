@@ -10,7 +10,7 @@ import tempfile
 
 import click
 import json
-from utils.process import run
+from utils_core.process import run
 
 from workspace.commands import AbstractCommand
 from workspace.commands.helpers import expand_product_groups, ToxIni
@@ -215,10 +215,11 @@ class Test(AbstractCommand):
             self.repo = project_path()
 
         # Strip out venv bin path to python to avoid issues with it being removed when running tox
-        if 'VIRTUAL_ENV' in os.environ:
-            venv_bin = os.environ['VIRTUAL_ENV']
-            os.environ['PATH'] = os.pathsep.join([p for p in os.environ['PATH'].split(os.pathsep)
-                                                  if os.path.exists(p) and not p.startswith(venv_bin)])
+        environ = os.environ.copy()
+        if 'VIRTUAL_ENV' in environ:
+            venv_bin = os.environ.pop('VIRTUAL_ENV')
+            environ['PATH'] = os.pathsep.join([p for p in environ['PATH'].split(os.pathsep)
+                                               if os.path.exists(p) and not p.startswith(venv_bin)])
 
         envs = []
         files = []
@@ -296,7 +297,8 @@ class Test(AbstractCommand):
             if self.install_only:
                 cmd.append('--notest')
 
-            output = run(cmd, cwd=self.repo, raises=not self.return_output, silent=self.silent, return_output=self.return_output)
+            output = run(cmd, cwd=self.repo, raises=not self.return_output, silent=self.silent,
+                         return_output=self.return_output, env=environ)
 
             if not output:
                 if self.return_output:
@@ -354,7 +356,7 @@ class Test(AbstractCommand):
                                 full_command += ' ' + pytest_args
                         activate = '. ' + os.path.join(envdir, 'bin', 'activate')
                         output = run(activate + '; ' + full_command, shell=True, cwd=self.repo, raises=False, silent=self.silent,
-                                     return_output=self.return_output)
+                                     return_output=self.return_output, env=environ)
                         if not output:
                             if self.return_output:
                                 return False
