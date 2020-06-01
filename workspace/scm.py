@@ -187,7 +187,6 @@ def rename_branch(branch, new_branch):
     silent_run(['git', 'branch', '-m', branch, new_branch])
 
 
-# skar will edit this
 def merge_branch(branch, squash=False, strategy=None,):
     cmd = ['git', 'merge', branch]
     if squash:
@@ -196,8 +195,11 @@ def merge_branch(branch, squash=False, strategy=None,):
         cmd.append('--strategy=' + strategy)
 
     current = current_branch()  # uses current_branch() method  to get current branch
-    message = "Merge branch %s into %s" % (branch, current)
-    message = message + "\nUsing strategy " + strategy
+    message = ""
+    if current:
+        message = "Merge branch %s into %s" % (branch, current)
+    if strategy:
+        message = message + "\nUsing strategy " + strategy
     cmd.append('-m ' + message)
 
     silent_run(cmd)
