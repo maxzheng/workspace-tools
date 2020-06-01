@@ -187,6 +187,7 @@ def rename_branch(branch, new_branch):
     silent_run(['git', 'branch', '-m', branch, new_branch])
 
 
+# skar will edit this
 def merge_branch(branch, squash=False, strategy=None):
     cmd = ['git', 'merge', branch]
     if squash:
