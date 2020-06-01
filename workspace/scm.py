@@ -187,7 +187,7 @@ def rename_branch(branch, new_branch):
     silent_run(['git', 'branch', '-m', branch, new_branch])
 
 
-def merge_branch(branch, squash=False, strategy=None,):
+def merge_branch(branch, squash=False, strategy=None):
     cmd = ['git', 'merge', branch]
     if squash:
         cmd.append('--squash')
