@@ -33,7 +33,7 @@ def prompt_with_editor(instruction):
         fh.flush()
         editor = os.environ.get('EDITOR', 'vim')
         run([editor, fh.name])
-        return '\n'.join([l for l in open(fh.name).read().split('\n') if not l.startswith('#')]).strip()
+        return '\n'.join([line for line in open(fh.name).read().split('\n') if not line.startswith('#')]).strip()
 
 
 def parent_path_with_dir(directory, path=None):

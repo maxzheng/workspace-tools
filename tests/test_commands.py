@@ -71,13 +71,13 @@ def test_cleanrun(wst):
         run('ls -l')
         wst('clean')
 
-        assert os.listdir() == ['old_repo_dirty', 'repo', 'file']
+        assert sorted(os.listdir()) == ['file', 'old_repo_dirty', 'repo']
 
     with temp_git_repo():
         run('touch hello.py hello.pyc')
         wst('clean')
 
-        assert os.listdir() == ['.git', 'hello.py']
+        assert sorted(os.listdir()) == ['.git', 'hello.py']
 
 
 def test_commit(wst):

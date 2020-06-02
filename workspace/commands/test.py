@@ -144,8 +144,8 @@ class Test(AbstractCommand):
                 else:
                     append_summary('No test summary found in output', name)
 
-                summary_lines = [l for l in product_tests[name].replace('xfailed', '').split('\n')
-                                 if l.startswith('===') and 'warnings summary' not in l]
+                summary_lines = [line for line in product_tests[name].replace('xfailed', '').split('\n')
+                                 if line.startswith('===') and 'warnings summary' not in line]
                 if not len(summary_lines) == 2 or 'failed' in summary_lines[-1] or 'error' in summary_lines[-1]:
                     success = False
 

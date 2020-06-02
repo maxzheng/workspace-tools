@@ -445,7 +445,7 @@ class Setup(AbstractCommand):
             if self.uninstall:
                 if os.path.exists(wstrc_path):
                     os.unlink(wstrc_path)
-                click.echo('Removed %s and its sourcing reference from %s'.format(WSTRC_FILE, BASHRC_FILE))
+                click.echo('Removed {} and its sourcing reference from {}'.format(WSTRC_FILE, BASHRC_FILE))
                 click.echo('Please restart your bash session for the change to take effect')
                 return
 

@@ -129,7 +129,7 @@ class Merge(AbstractCommand):
                                                   or ' Merge pull request ' in commit
                                                   or any(allow_commit in commit for allow_commit in self.allow_commits))
                                 if not allowed_commit:
-                                    click.echo('Found a commit that was not allowed to be merged:'.format(last))
+                                    click.echo('Found a commit that was not allowed to be merged: {}'.format(last))
                                     click.echo('  {}'.format(commit))
                                     raise NotAllowedCommit(commit)
 
