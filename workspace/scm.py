@@ -196,9 +196,8 @@ def merge_branch(branch, squash=False, strategy=None):
 
     if strategy:
         current = current_branch()
-        if current:
-            message = "\"Merge branch {} into {}\nUsing strategy {}\"".format(branch, current, strategy)
-            cmd.append('-m ' + message)
+        message = f"Merge branch {branch} into {current} (using strategy {strategy})"
+        cmd.append('-m ' + message)
 
     silent_run(cmd)
 
