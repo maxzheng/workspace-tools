@@ -1,5 +1,43 @@
-Version 3.4.0
+Version 3.4.1
 ================================================================================
+
+* Merge if strategy block
+* Merge pull request #3 from sohinik/ST-2637
+  
+  ST-2637 Updating merge_branch in scm.py to add message option to merge command
+* Deleted .DS_STORE and removed check for current
+* Deleted .DS_STORE
+* Revert "Deleted .DS_STORE"
+  
+  This reverts commit 8f820157819074362bca1a321044d8780b0ca645.
+* Deleted .DS_STORE
+* Merge branch 'ST-2637' of github.com:sohinik/workspace-tools into ST-2637
+* Worked through comments on draft PR, message only added if both strategy and current branch found
+* Fix test and style checks
+* Deleting .idea files manually
+* Deleting .idea files manually
+* Deleting .idea files manually
+* Deleting .idea files manually
+* Deleting .idea files manually
+* Deleting .idea files manually
+  
+  Deleting the .idea files manually
+* ST-2637: Updated merge_branch to include some dependencies
+* ST-2637: Updated merge_branch to include some dependencied
+* Deleted temp.txt file
+* Edited merge_branch() to include a commit message when calling git merge
+* Added a comment to merge_branch
+  
+          ADDING THIS
+* Skip reading user config for tests
+* Fix style check
+* Update pythonpackage.yml
+* Update pythonpackage.yml
+* Switch to use https when checking out repos so it works in test host
+* Update pythonpackage.yml
+
+Version 3.4.0
+--------------------------------------------------------------------------------
 
 * Bump minor version
 
