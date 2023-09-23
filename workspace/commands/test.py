@@ -257,9 +257,10 @@ class Test(AbstractCommand):
             # isn't interesting yet.
             if pytest_args:
                 if 'cover' in envs:
-                    python = tox.get(tox.envsection('cover'), 'basepython')
-                    version = ''.join(python.strip('python').split('.')) if python else '36'
-                    envs[envs.index('cover')] = 'py' + version
+                    python = tox.get(tox.envsection('cover'), 'basepython') or tox.get(tox.envsection(), 'basepython')
+                    if python:
+                        version = ''.join(python.strip('python').split('.'))
+                        envs[envs.index('cover')] = 'py' + version
                 if 'style' in envs:
                     envs.remove('style')
 
