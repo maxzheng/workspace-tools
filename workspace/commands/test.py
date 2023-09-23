@@ -287,7 +287,7 @@ class Test(AbstractCommand):
             if self.tox_cmd:
                 cmd = self.tox_cmd
             else:
-                cmd = ['tox', '-c', tox.tox_ini]
+                cmd = ['tox', '-q', '-c', tox.tox_ini]
 
             if envs:
                 cmd.extend(['-e', ','.join(envs)])
