@@ -64,7 +64,7 @@ class ToxIni(LocalConfig):
 
     @property
     def workdir(self):
-        toxworkdir = self.get('tox', 'toxworkdir', '{toxinidir}/.tox')
+        toxworkdir = self.get('tox', 'work_dir', '{toxinidir}/.tox')
         return self.expand_vars(toxworkdir)
 
     @property
@@ -77,7 +77,7 @@ class ToxIni(LocalConfig):
         default_envdir = self.get(default_envsection, 'env_dir', self.get(default_envsection, 'envdir', default_envdir))
         envsection = self.envsection(env)
         envdir = self.get(envsection, 'env_dir', self.get(envsection, 'envdir', default_envdir))
-        return self.expand_vars(envdir, {'envname': env})
+        return self.expand_vars(envdir, {'envname': env, 'work_dir': self.workdir})
 
     def bindir(self, env, script=None):
         dir = os.path.join(self.envdir(env), 'bin')
