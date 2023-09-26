@@ -1,5 +1,15 @@
-Version 3.4.1
+Version 3.4.2
 ================================================================================
+
+* Update to use work_dir
+* Quiet tox
+* Check env_dir too
+* Fix version lookup
+* Update tox.ini to 4.0
+* Switch to use python3
+
+Version 3.4.1
+--------------------------------------------------------------------------------
 
 * Merge if strategy block
 * Merge pull request #3 from sohinik/ST-2637
