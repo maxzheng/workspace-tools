@@ -80,7 +80,7 @@ class Publish(AbstractCommand):
         if self.major or self.minor:
             new_version, setup_file = self.bump_version(major=self.major, minor=self.minor)
             major_minor = 'major' if self.major else 'minor'
-            self.commander.run('commit', msg=f'Bump {major_minor} version', files=[setup_file], push=2,
+            self.commander.run('commit', msg='Bump {} version'.format(major_minor), files=[setup_file], push=2,
                                skip_style_check=True)
 
         else:
@@ -112,7 +112,7 @@ class Publish(AbstractCommand):
 
         click.echo('Building source/built distribution')
 
-        silent_run(f'{python} setup.py sdist bdist_wheel', cwd=repo_path())
+        silent_run('{} setup.py sdist bdist_wheel'.format(python), cwd=repo_path())
 
         click.echo('Uploading to ' + repo_title)
 

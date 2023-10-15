@@ -365,7 +365,7 @@ class Test(AbstractCommand):
                                 sys.exit(1)
 
                         if not self.silent and (len(envs) > 1 or env == 'style'):
-                            click.secho(f'{env}: OK', fg='green')
+                            click.secho('{}: OK'.format(env), fg='green')
 
                         if self.return_output:
                             return output
