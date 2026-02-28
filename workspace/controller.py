@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import argparse
 import logging
-import pkg_resources
+from importlib.metadata import version
 import sys
 import textwrap
 
@@ -114,7 +114,7 @@ class Commander(object):
         versions = []
         for pkg in [_f for _f in [getattr(self, 'package_name', None), 'workspace-tools'] if _f]:
             try:
-                versions.append('%s %s' % (pkg, pkg_resources.get_distribution(pkg).version))
+                versions.append('%s %s' % (pkg, version(pkg)))
             except Exception:
                 pass
 
