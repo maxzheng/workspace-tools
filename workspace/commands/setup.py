@@ -15,6 +15,7 @@ from workspace.scm import is_repo, product_name
 log = logging.getLogger(__name__)
 
 BASHRC_FILE = "~/.bashrc"
+ZSHRC_FILE = "~/.zshrc"
 WSTRC_FILE = "~/.wstrc"
 
 WS_SETUP_START = '# Added by "workspace setup" (do not remove comments before / after function)'
@@ -55,9 +56,27 @@ function activate() {
 
 function open_files_from_last_command() {
   if [ "$1" ]; then
-    last_command="1 ag '$@'"
+    # If args provided, use ag with those args
+    pattern=+/"$1"
+    if [[ -n "$ZSH_VERSION" ]]; then
+      file_array=(${(f)"$(ag -l "$@")"})
+    else
+      readarray -t file_array < <(ag -l "$@")
+    fi
+
+    if [ ${#file_array[@]} -eq 0 ]; then
+      echo No files found from output
+    else
+      vim -p "${file_array[@]}" "$pattern" --cmd "set ignorecase smartcase"
+    fi
+    return
+  fi
+
+  # Get last ag/ack/grep/find/which/ls command from history
+  if [[ -n "$ZSH_VERSION" ]]; then
+    last_command=`fc -l -100 | grep -E "^\s+[0-9]+\*?\s+(ag|ack|grep|find|which|ls) " | tail -1`
   else
-    last_command=`history 100 | grep  -E "^\s+[0-9]+\s+(ag|ack|grep|find|which|ls) " | tail -1`
+    last_command=`history 100 | grep -E "^\s+[0-9]+\s+(ag|ack|grep|find|which|ls) " | tail -1`
   fi
 
   if [ -z "$last_command" ]; then
@@ -65,45 +84,65 @@ function open_files_from_last_command() {
     return
   fi
 
-  declare -a "parts=($last_command)"
-  command=${parts[1]}
+  # Extract command line by splitting on whitespace and skipping the line number
+  if [[ -n "$ZSH_VERSION" ]]; then
+    # Split into array and skip first element (line number)
+    parts=(${=last_command})
+    # Remove first element (line number, may have *)
+    shift parts
+    command=${parts[1]}
+    cmd_line="${parts[@]}"
+  else
+    # Bash: split and skip first element
+    declare -a "parts=($last_command)"
+    command=${parts[1]}
+    cmd_line="${parts[@]:1}"
+  fi
 
   if [[ "$command" = "ag" || "$command" = "ack" || "$command" = "grep" ]]; then
-    full_command=${parts[@]:1}
-    pattern=+/${parts[2]}
-
-    raw_parts=(${last_command// / })  # Need the quote retained to sub properly
-    last_part=${raw_parts[@]:(-1)}
-
-    if [[ $last_part != "-l" ]]; then
-        sub_expr=" $last_part= $last_part -l"
+    # Extract search pattern for vim
+    if [[ -n "$ZSH_VERSION" ]]; then
+      pattern=+/${parts[2]}
     else
-        sub_expr=
+      pattern=+/${parts[2]}
     fi
 
-    if [ "$1" ]; then
-      files=`ag -l "$@"`
-    elif [ -z "$sub_expr" ]; then
-      files=`fc -s $command`
+    # Check if -l flag is already present and get file list as array
+    if [[ "$cmd_line" == *" -l"* ]]; then
+      # Already has -l flag, just re-run the command
+      if [[ -n "$ZSH_VERSION" ]]; then
+        file_array=(${(f)"$(eval "$cmd_line")"})
+      else
+        readarray -t file_array < <(eval "$cmd_line")
+      fi
     else
-      files=`fc -s "$sub_expr" $command`
+      # Add -l flag to get file list
+      if [[ -n "$ZSH_VERSION" ]]; then
+        file_array=(${(f)"$(eval "$cmd_line -l")"})
+      else
+        readarray -t file_array < <(eval "$cmd_line -l")
+      fi
     fi
 
-    if [ -z "$files" ]; then
+    if [ ${#file_array[@]} -eq 0 ]; then
       echo No files found from output
     else
-      vim -p $files "$pattern" --cmd "set ignorecase smartcase"
+      vim -p "${file_array[@]}" "$pattern" --cmd "set ignorecase smartcase"
     fi
 
   else
-    files=`fc -s $command`
-
-    if [ -z "$files" ]; then
-      echo No files found from output
+    # For find/which/ls commands, just re-run them
+    if [[ -n "$ZSH_VERSION" ]]; then
+      file_array=(${(f)"$(eval "$cmd_line")"})
     else
-      vim -p $files
+      readarray -t file_array < <(eval "$cmd_line")
     fi
 
+    if [ ${#file_array[@]} -eq 0 ]; then
+      echo No files found from output
+    else
+      vim -p "${file_array[@]}"
+    fi
   fi
 }
 """
@@ -129,35 +168,69 @@ COMMANDS = {
   '_te': 'test',
 }
 AUTO_COMPLETE_TEMPLATE = r"""
-function _branch_file_completer() {
-  local cur=${COMP_WORDS[COMP_CWORD]}
+if [[ -n "$ZSH_VERSION" ]]; then
+  # Initialize zsh completion system if not already done
+  autoload -Uz compinit
+  compinit -C
 
-  if git status &> /dev/null; then
-    branches=`git branch`
-  else
-    branches=
-  fi
+  # Zsh completion functions
+  function _branch_file_completer() {
+    local -a branches
+    if git status &> /dev/null; then
+      branches=(${(f)"$(git branch | sed 's/^[* ]*//')"})
+      _describe 'branches' branches
+    else
+      _files
+    fi
+  }
 
-  if [ ! -z "$branches" ]; then
-    COMPREPLY=( $( compgen -W "$branches" -- $cur ) )
-  fi
-}
-function _env_file_completer() {
-  local cur=${COMP_WORDS[COMP_CWORD]}
+  function _env_file_completer() {
+    local -a envs
+    if ls tox*.ini &>/dev/null || ls .tox*.ini &>/dev/null; then
+      envs=(${(f)"$(grep -h '^\[testenv:' .tox*.ini tox*.ini 2>/dev/null | sed -E 's/^\[testenv:(.+)]/\1/' | grep -vE '^(py|pydev)$')"})
+      _describe 'test environments' envs
+    else
+      _files
+    fi
+  }
 
-  if ls tox*.ini &>/dev/null || ls .tox*.ini &>/dev/null; then
-    envs=`grep -h '^\[testenv:' .tox*.ini tox*.ini 2>/dev/null | sed -E 's/^\[testenv:(.+)]/\\1/' | grep -vE '^(py|pydev)$'`
-    COMPREPLY=( $( compgen -W "$envs" -- $cur ) )
-  fi
-}
+  compdef _branch_file_completer co
+  compdef _branch_file_completer checkout
+  compdef _env_file_completer test
+  compdef _branch_file_completer push
+else
+  # Bash completion functions
+  function _branch_file_completer() {
+    local cur=${COMP_WORDS[COMP_CWORD]}
 
-complete -o default -F _branch_file_completer co
-complete -o default -F _branch_file_completer checkout
-complete -o default -F _env_file_completer test
-complete -F _branch_file_completer push
+    if git status &> /dev/null; then
+      branches=`git branch`
+    else
+      branches=
+    fi
 
-complete -o default log
-complete -o default di
+    if [ ! -z "$branches" ]; then
+      COMPREPLY=( $( compgen -W "$branches" -- $cur ) )
+    fi
+  }
+
+  function _env_file_completer() {
+    local cur=${COMP_WORDS[COMP_CWORD]}
+
+    if ls tox*.ini &>/dev/null || ls .tox*.ini &>/dev/null; then
+      envs=`grep -h '^\[testenv:' .tox*.ini tox*.ini 2>/dev/null | sed -E 's/^\[testenv:(.+)]/\\1/' | grep -vE '^(py|pydev)$'`
+      COMPREPLY=( $( compgen -W "$envs" -- $cur ) )
+    fi
+  }
+
+  complete -o default -F _branch_file_completer co
+  complete -o default -F _branch_file_completer checkout
+  complete -o default -F _env_file_completer test
+  complete -F _branch_file_completer push
+
+  complete -o default log
+  complete -o default di
+fi
 """
 TOX_INI_FILE = 'tox.ini'
 TOX_INI_TMPL = """\
@@ -412,25 +485,36 @@ class Setup(AbstractCommand):
             click.echo('Created ' + self._relative_path(test_file))
 
     def setup_workspace(self):
-        bashrc_content = None
-        bashrc_path = os.path.expanduser(BASHRC_FILE)
+        # Detect shell: prefer zsh if SHELL env var contains zsh or if .zshrc exists
+        shell_env = os.environ.get('SHELL', '')
+        is_zsh = 'zsh' in shell_env or os.path.exists(os.path.expanduser(ZSHRC_FILE))
+
+        if is_zsh:
+            shellrc_file = ZSHRC_FILE
+            shell_name = 'zsh'
+        else:
+            shellrc_file = BASHRC_FILE
+            shell_name = 'bash'
+
+        shellrc_content = None
+        shellrc_path = os.path.expanduser(shellrc_file)
         wstrc_path = os.path.expanduser(WSTRC_FILE)
 
-        bashrc_script = []
+        shellrc_script = []
 
-        if os.path.exists(bashrc_path):
-            with open(bashrc_path) as fh:
-                bashrc_content = fh.read()
+        if os.path.exists(shellrc_path):
+            with open(shellrc_path) as fh:
+                shellrc_content = fh.read()
 
             skip = False
-            for line in bashrc_content.split('\n'):
+            for line in shellrc_content.split('\n'):
                 if line in (WS_SETUP_START, WS_SETUP_END):
                     skip = not skip
                     continue
                 if not skip and WSTRC_FILE not in line:
-                    bashrc_script.append(line)
+                    shellrc_script.append(line)
 
-            bashrc_script = '\n'.join(bashrc_script).strip().split('\n')  # could be better
+            shellrc_script = '\n'.join(shellrc_script).strip().split('\n')  # could be better
 
         repo_path = is_repo()
         if repo_path:
@@ -438,22 +522,22 @@ class Setup(AbstractCommand):
         else:
             workspace_dir = os.getcwd().replace(os.path.expanduser('~'), '~')
 
-        with open(bashrc_path, 'w') as fh:
-            if bashrc_script:
-                fh.write('\n'.join(bashrc_script) + '\n\n')
+        with open(shellrc_path, 'w') as fh:
+            if shellrc_script:
+                fh.write('\n'.join(shellrc_script) + '\n\n')
 
             if self.uninstall:
                 if os.path.exists(wstrc_path):
                     os.unlink(wstrc_path)
-                click.echo('Removed {} and its sourcing reference from {}'.format(WSTRC_FILE, BASHRC_FILE))
-                click.echo('Please restart your bash session for the change to take effect')
+                click.echo('Removed {} and its sourcing reference from {}'.format(WSTRC_FILE, shellrc_file))
+                click.echo('Please restart your {} session for the change to take effect'.format(shell_name))
                 return
 
             fh.write('source %s\n' % WSTRC_FILE)
 
         with open(wstrc_path, 'w') as fh:
             fh.write(WS_FUNCTION_TEMPLATE % (os.path.abspath(sys.argv[0]), workspace_dir))
-            click.echo('Added "ws" bash function with workspace directory set to ' + workspace_dir)
+            click.echo('Added "ws" shell function with workspace directory set to ' + workspace_dir)
 
             if self.additional_commands:
                 COMMANDS.update(self.additional_commands)
@@ -466,7 +550,7 @@ class Setup(AbstractCommand):
                 fh.write('\n')
                 for func in functions:
                     fh.write(COMMAND_FUNCTION_TEMPLATE % (func, func.lstrip('_')))
-                click.echo('Added bash functions: ' + ', '.join([f for f in functions if not f.startswith('_')]))
+                click.echo('Added shell functions: ' + ', '.join([f for f in functions if not f.startswith('_')]))
 
             if self.commands_with_aliases:
                 fh.write('\n')
