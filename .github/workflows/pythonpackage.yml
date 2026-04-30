@@ -4,25 +4,25 @@ on: [push, pull_request]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v1
+    - uses: actions/checkout@v6
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
       with:
-        python-version: 3.7
+        python-version: '3.x'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install tox
+
     - name: Setup git
       run: |
         git config --global user.email "maxzheng.os+tester@gmail.com"
         git config --global user.name "Max Tester"
+
     - name: Run tox
-      run: |
-        tox
+      run: tox
