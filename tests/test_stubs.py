@@ -12,6 +12,8 @@ def temp_dir():
     try:
         cwd = os.getcwd()
         dtemp = mkdtemp()
+        # Resolve symlinks (e.g., /var -> /private/var on macOS)
+        dtemp = os.path.realpath(dtemp)
         os.chdir(dtemp)
 
         yield Path(dtemp)
@@ -28,7 +30,7 @@ def temp_git_repo(name=None):
             os.makedirs(name)
             os.chdir(name)
 
-        run('git init')
+        run('git init -b master')
 
         yield (tmpdir / name) if name else tmpdir
 

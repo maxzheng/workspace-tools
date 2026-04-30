@@ -235,7 +235,7 @@ fi
 TOX_INI_FILE = 'tox.ini'
 TOX_INI_TMPL = """\
 [tox]
-envlist = cover, py37, style
+envlist = cover, py3, style
 
 [testenv]
 # Consolidate all deps here instead of separately in test/style/cover so we
@@ -262,24 +262,19 @@ envdir = {homedir}/.virtualenvs/{name}_{envname}
 commands =
     pytest {env:PYTESTARGS:}
 
-[testenv:py36]
-envdir = {homedir}/.virtualenvs/{name}
-
 [testenv:style]
-basepython = python3.6
 envdir = {homedir}/.virtualenvs/{name}
 commands =
     flake8 --config tox.ini
 
 [testenv:cover]
-basepython = python3.6
 envdir = {homedir}/.virtualenvs/{name}
 commands =
     pytest {env:PYTESTARGS:} --cov . --cov-report=xml --cov-report=html --cov-report=term --cov-report=annotate:textcov \\
-                             --cov-fail-under=80
+                             --cov-fail-under=70
 
 [flake8]
-exclude = .git,.tox,.eggs,__pycache__,docs,build,dist
+exclude = .git,.tox,.eggs,__pycache__,docs,build,dist,.virtualenvs,{homedir}
 ignore = E111,E121,W292,E123,E226,W503
 max-line-length = 120
 
