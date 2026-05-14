@@ -107,11 +107,13 @@ function open_files_from_last_command() {
   fi
 
   if [[ "$command" = "ag" || "$command" = "ack" || "$command" = "grep" ]]; then
-    # Extract search pattern for vim
-    if [[ -n "$ZSH_VERSION" ]]; then
-      pattern=+/${parts[2]}
+    # Extract search pattern for vim by properly parsing the command line arguments
+    # This preserves quoted strings like "Making view for"
+    eval "set -- ${cmd_line#$command}"
+    if [ -n "$1" ]; then
+      pattern=+/"$1"
     else
-      pattern=+/${parts[2]}
+      pattern=""
     fi
 
     # Check if -l flag is already present and get file list as array

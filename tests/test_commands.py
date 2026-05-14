@@ -254,3 +254,29 @@ def test_setup(wst, monkeypatch):
         assert bashrc[2].startswith('source ') and bashrc[2].endswith('.wstrc')
 
         assert 'function ws()' in wstrc
+
+
+def test_setup_tv_handles_quoted_search_patterns(wst, monkeypatch):
+    """Test that the tv alias (open_files_from_last_command) properly handles quoted search patterns"""
+    with temp_git_repo(name='foo') as tmpdir:
+        bashrc_file = os.path.join(tmpdir, '.bashrc')
+        wstrc_file = os.path.join(tmpdir, '.wstrc')
+        with open(bashrc_file, 'w') as fp:
+            fp.write('export EXISTING=true')
+        monkeypatch.setattr('workspace.commands.setup.BASHRC_FILE', bashrc_file)
+        monkeypatch.setattr('workspace.commands.setup.ZSHRC_FILE', os.path.join(tmpdir, '.zshrc-nonexistent'))
+        monkeypatch.setattr('workspace.commands.setup.WSTRC_FILE', wstrc_file)
+        monkeypatch.setenv('SHELL', '/bin/bash')
+
+        wst('setup --commands-with-aliases')
+
+        wstrc = open(wstrc_file).read()
+
+        # Verify the fix is present: should use eval "set --" to properly handle quoted strings
+        # The old broken code used: pattern=+/${parts[2]}
+        # The new fixed code uses: eval "set -- ${cmd_line#$command}" followed by pattern=+/"$1"
+        assert 'eval "set -- ${cmd_line#$command}"' in wstrc
+        assert 'pattern=+/"$1"' in wstrc
+
+        # Verify the old broken pattern extraction is NOT present
+        assert 'pattern=+/${parts[2]}' not in wstrc
