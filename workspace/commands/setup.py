@@ -49,6 +49,13 @@ function activate() {
     source ~/.virtualenvs/$venv/bin/activate
   elif [ -e .tox/$venv/bin/activate ]; then
     source .tox/$venv/bin/activate
+  elif [ -e pyproject.toml ] && command -v poetry &> /dev/null; then
+    poetry_env=$(poetry env info -p 2>/dev/null)
+    if [ -n "$poetry_env" ] && [ -e "$poetry_env/bin/activate" ]; then
+      source "$poetry_env/bin/activate"
+    else
+      echo "No Poetry virtualenv found. Run 'poetry install' to create one."
+    fi
   else
     echo "No activate script found. Please setup your venv."
   fi
